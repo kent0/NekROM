@@ -621,13 +621,15 @@ c     This routine reads average files specificed in avg.list
          endif
       enddo
 
+
+  999 continue  ! clean up averages
+
       s=1./ttime
       call opcmult(ua,va,wa,s)
       call opcopy(vx,vy,vz,t1,t2,t3)
 
       time=tmp
 
-  999 continue  ! clean up averages
       if (nid.eq.0) close(77)
 
       nsave = icount ! Actual number of files read
