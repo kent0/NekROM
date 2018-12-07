@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
          xmin=glmax(x,n)
 
          do i=1,nelv
-            isplit=1+integer(nsplit*(xm1(2,2,1,i)-xmin)/(xmax-xmin))
+            isplit=1+nint(nsplit*(xm1(2,2,1,i)-xmin)/(xmax-xmin))
             call ifill(domain(1,1,1,i),isplit,lxyz)
          enddo
       else
@@ -24,7 +24,7 @@ c-----------------------------------------------------------------------
          zmin=glmax(z,n)
 
          do i=1,nelv
-            isplit=1+integer(nsplit*(zm1(2,2,1,i)-zmin)/(zmax-zmin))
+            isplit=1+nint(nsplit*(zm1(2,2,1,i)-zmin)/(zmax-zmin))
             call ifill(domain(1,1,1,i),isplit,lxyz)
          enddo
       endif
