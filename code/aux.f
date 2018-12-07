@@ -375,7 +375,7 @@ c-----------------------------------------------------------------------
          if (u(i,1).gt.cmax(i)) cmax(i)=u(i,1)
       enddo
 
-      call ctke_rom(tke,u)
+      call ctke_rom(tke,u,savg)
       if (nio.eq.0) write (6,*) istep,time,tke,'ctke'
 
       if (mod(ad_step,max(ad_iostep,1)).eq.0) then
@@ -423,19 +423,19 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine ctke_rom(tke,coef)
+      subroutine ctke_rom(tke,coef,acoef)
 
       include 'SIZE'
       include 'MOR'
 
       parameter (lt=lx1*ly1*lz1*lelt)
 
-      real coef(0:nb), cdiff(0:nb)
+      real coef(0:nb), acoef(0:nb), cdiff(0:nb)
 
       tke=0.
 
       do i=0,nb
-         cdiff(i)=coef(i)-usa(i)
+         cdiff(i)=coef(i)-acoef(i)
       enddo
 
       do j=0,nb
