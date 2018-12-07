@@ -53,18 +53,26 @@ c-----------------------------------------------------------------------
          return
       endif
 
-      xmin=glmin(xm1,n)
-      xmax=glmax(xm1,n)
+      if (ldim.eq.2) then
+         xmin=glmin(xm1,n)
+         xmax=glmax(xm1,n)
+      else
+         xmin=glmin(zm1,n)
+         xmax=glmax(zm1,n)
+      endif
 
       dx=(xmax-xmin)/real(nsplit-1)
+
       dxi=1./dx
       x0=dx*real(isplit-1)
-      write (6,*) 'xs',xmin,xmax,real(nsplit-1)
-      write (6,*) 'x0=',x0
-      write (6,*) 'dx=',dx
 
       do i=1,lx1*ly1*lz1*nelv
-         x=xm1(i,1,1,1)
+         if (ldim.eq.2) then
+            x=xm1(i,1,1,1)
+         else
+            x=zm1(i,1,1,1)
+         endif
+
          if (abs(x-x0).lt.dx) then
             dmask(i)=((1.+cos(pi*(x-x0)*dxi))*.5)
          else
@@ -96,15 +104,25 @@ c-----------------------------------------------------------------------
          return
       endif
 
-      xmin=glmin(xm1,n)
-      xmax=glmax(xm1,n)
+      if (ldim.eq.2) then
+         xmin=glmin(xm1,n)
+         xmax=glmax(xm1,n)
+      else
+         xmin=glmin(zm1,n)
+         xmax=glmax(zm1,n)
+      endif
 
       dx=1./real(nsplit)
       dxi=1./dx
       x0=dx*real(isplit-1)
 
       do i=1,lx1*ly1*lz1*nelv
-         x=xm1(i,1,1,1)
+         if (ldim.eq.2) then
+            x=xm1(i,1,1,1)
+         else
+            x=zm1(i,1,1,1)
+         endif
+            
          xp=(x-xmin)/(xmax-xmin)
          d=min(abs(xp-x0),abs(xp-x0-1.))
          if (isplit.eq.1) then
