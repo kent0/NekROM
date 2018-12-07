@@ -2,6 +2,7 @@ c-----------------------------------------------------------------------
       subroutine split_domain(domain,nsplit)
 
       include 'SIZE'
+      include 'GEOM'
 
       integer domain(lx1,ly1,lz1,lelt)
 
@@ -34,6 +35,7 @@ c-----------------------------------------------------------------------
       subroutine domain_mask(dmask,domain,isplit)
 
       include 'SIZE'
+      include 'GEOM'
 
       real dmask(lx1*ly1*lz1*lelt)
       integer domain(lx1*ly1*lz1*lelt)
