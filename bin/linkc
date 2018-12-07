@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cwd="$(pwd -P)"
-base="$(cd .. ; dirname $(pwd -P))"
+: ${MOR_DIR:=$(cd ..; dirname $(pwd -P))}
 
 rm rom.f    &> /dev/null
 rm pod.f    &> /dev/null
@@ -14,15 +14,15 @@ rm test.usr &> /dev/null
 rm part.f  &> /dev/null
 rm MOR      &> /dev/null
 
-ln -s {${base}/code,${cwd}}/rom.f
-ln -s {${base}/code,${cwd}}/pod.f
-ln -s {${base}/code,${cwd}}/aux.f
-ln -s {${base}/code,${cwd}}/read.f
-ln -s {${base}/code,${cwd}}/dump.f
-ln -s {${base}/code,${cwd}}/part.f
+ln -s {$MOR_DIR/code,$cwd}/rom.f
+ln -s {$MOR_DIR/code,$cwd}/pod.f
+ln -s {$MOR_DIR/code,$cwd}/aux.f
+ln -s {$MOR_DIR/code,$cwd}/read.f
+ln -s {$MOR_DIR/code,$cwd}/dump.f
+ln -s {$MOR_DIR/code,$cwd}/part.f
 
-ln -s {${base}/tests,${cwd}}/usr.f
-ln -s {${base}/tests,${cwd}}/unit.f
-ln -s {${base}/tests,${cwd}}/test.usr
+ln -s {$MOR_DIR/tests,$cwd}/usr.f
+ln -s {$MOR_DIR/tests,$cwd}/unit.f
+ln -s {$MOR_DIR/tests,$cwd}/test.usr
 
-ln -s {${base}/code,${cwd}}/MOR
+ln -s {$MOR_DIR/code,${cwd}}/MOR
