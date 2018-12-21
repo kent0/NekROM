@@ -565,6 +565,86 @@ c     This routine reads files specificed in file.list
       return
       end
 c-----------------------------------------------------------------------
+      subroutine load_avg_snap
+
+c     This routine reads average files specificed in avg.list
+
+      include 'SIZE'
+      include 'MOR'
+      include 'TOTAL'
+      include 'ZPER'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      common /scrk5/ t1(lt),t2(lt),t3(lt)
+
+      if (nio.eq.0) write (6,*) 'inside load_avg'
+
+      ierr = 0
+
+      if (nid.eq.0) open(77,file='avg.list',status='old',err=199)
+
+      ierr = iglmax(ierr,1)
+
+      if (ierr.gt.0) goto 199
+
+      n = lx1*ly1*lz1*nelt
+
+      call opcopy(t1,t2,t3,vx,vy,vz)
+      call opzero(ua,va,wa)
+
+      tmp=time
+
+      ttime=0.
+
+      icount = 0
+
+      do ipass=1,10000
+         call blank(initc,127)
+         initc(1) = 'done '
+         if (nid.eq.0) read(77,127,end=998) initc(1)
+  998    call bcast(initc,127)
+  127    format(a127)
+
+         if (indx1(initc,'done ',5).eq.0) then ! We're not done
+
+            nfiles = 1
+
+            call restart(nfiles)  ! Note -- time is reset.
+            ttime=ttime+time
+
+c           call opadds(ua,va,wa,vx,vy,vz,time,n,2)
+            call opadd2(ua,va,wa,vx,vy,vz)
+
+            icount = icount+1
+         else
+            goto 999
+         endif
+      enddo
+
+
+  999 continue  ! clean up averages
+
+      s=1./real(icount)
+      call opcmult(ua,va,wa,s)
+      call opcopy(vx,vy,vz,t1,t2,t3)
+
+      time=tmp
+
+      if (nid.eq.0) close(77)
+
+      nsave = icount ! Actual number of files read
+
+      return
+
+  199 continue ! exception handle for file not found
+      ierr = 1
+      if (nid.eq.0) ierr = iglmax(ierr,1)
+      call exitti('load_avg did not find avg.list$',ierr)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine load_avg
 
 c     This routine reads average files specificed in avg.list
@@ -731,6 +811,38 @@ c-----------------------------------------------------------------------
          ii=ii+1
          vr(j)=c(ii,0,0)
 c        write (6,*) j,ii,vr(j),imax,n,nmax,'partialc'
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine csparsity
+
+      include 'SIZE'
+      include 'MOR'
+
+      eps=1.e-16
+
+      tol=vlamax(c0,(nb+1)**3)
+
+      ec=eps*tol
+
+      nc=100
+
+      faci=eps**(1./real(nc))
+
+      do ie=1,nc
+         nnz=0
+         do k=0,nb
+         do j=0,nb
+         do i=1,nb
+            if (abs(c0(i,j,k)).gt.tol) nnz=nnz+1
+         enddo
+         enddo
+         enddo
+         tol=tol*faci
+         pnz=real(nnz)/real(nb*(nb+1)**2)
+         write (6,*) ie,tol,nnz,pnz,'nonzero'
       enddo
 
       return

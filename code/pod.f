@@ -25,11 +25,19 @@ c-----------------------------------------------------------------------
       ns = ls ! REQUIRED: get_saved_fields overwrites ns argument
       call opcopy(u0(1,1),u0(1,2),u0(1,3),ub(1,0),vb(1,0),wb(1,0))
 
+c     do i=1,ns
+c        call outpost(us(1,i),vs(1,i),ws(1,i),pr,t,'sna')
+c     enddo
+
+c     do i=1,ns
+c        call outpost(ust(1,i),vst(1,i),wst(1,i),pr,t,'sn2')
+c     enddo
+
       ! ub, vb, wb, are the modes
-      call dgemm( 'N','N',n,nb,ls,ONE,us,lt,evec,ls,ZERO,ub(1,1),lt)
-      call dgemm( 'N','N',n,nb,ls,ONE,vs,lt,evec,ls,ZERO,vb(1,1),lt)
+      call dgemm( 'N','N',n,nb,ls,ONE,ust,lt,evec,ls,ZERO,ub(1,1),lt)
+      call dgemm( 'N','N',n,nb,ls,ONE,vst,lt,evec,ls,ZERO,vb(1,1),lt)
       if (ldim.eq.3)
-     $call dgemm( 'N','N',n,nb,ls,ONE,ws,lt,evec,ls,ZERO,wb(1,1),lt)
+     $call dgemm( 'N','N',n,nb,ls,ONE,wst,lt,evec,ls,ZERO,wb(1,1),lt)
 
       call scale_bases
 
@@ -269,12 +277,12 @@ c-----------------------------------------------------------------------
       call rzero(h2,n)
 
       do j=1,ns ! Form the Gramian, U=U_K^T A U_K using H^1_0 Norm
-         call axhelm(uw,us(1,j),h1,h2,1,1)
-         call axhelm(vw,vs(1,j),h1,h2,1,1)
-         if (ldim.eq.3) call axhelm(ww,ws(1,j),h1,h2,1,1)
+         call axhelm(uw,ust(1,j),h1,h2,1,1)
+         call axhelm(vw,vst(1,j),h1,h2,1,1)
+         if (ldim.eq.3) call axhelm(ww,wst(1,j),h1,h2,1,1)
          do i=1,ns
-            uu(i,j) = glsc2(us(1,i),uw,n)+glsc2(vs(1,i),vw,n)
-            if (ldim.eq.3) uu(i,j) = uu(i,j)+glsc2(ws(1,i),ww,n)
+            uu(i,j) = glsc2(ust(1,i),uw,n)+glsc2(vst(1,i),vw,n)
+            if (ldim.eq.3) uu(i,j) = uu(i,j)+glsc2(wst(1,i),ww,n)
          enddo
          if (nio.eq.0) write(6,*) j,uu(1,j),' uu'
       enddo
@@ -307,8 +315,8 @@ c-----------------------------------------------------------------------
          if (ifvort) then
             uu(i,j)=glsc3(us(1,i),us(1,j),bwm1,n)
          else
-            uu(i,j) = op_glsc2_wt(us(1,i),vs(1,i),ws(1,i),
-     $                            us(1,j),vs(1,j),ws(1,j),bwm1)
+            uu(i,j) = op_glsc2_wt(ust(1,i),vst(1,i),wst(1,i),
+     $                            ust(1,j),vst(1,j),wst(1,j),bwm1)
          endif
          write (88,*) uu(i,j)
       enddo
@@ -325,6 +333,7 @@ c-----------------------------------------------------------------------
       !!! does not work if ns.lt.ls !!!
 
       include 'SIZE'
+      include 'TSTEP'
       include 'MOR'
 
       parameter (lt=lx1*ly1*lz1*lelt)
@@ -355,7 +364,7 @@ c     eig = eig(ls:1:-1)
       enddo
 
       do i=1,ns
-         if (nio.eq.0) write (6,*) i,gram_eig(ns-i+1),'eval'
+         if (nio.eq.0) write (6,*) istep,i,gram_eig(ns-i+1),'eval'
       enddo
 
 
@@ -444,7 +453,6 @@ c-----------------------------------------------------------------------
          enddo
          close (unit=52)
       endif
-
 
       return
       end

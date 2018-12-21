@@ -92,7 +92,7 @@ c-----------------------------------------------------------------------
       include 'MOR'
 
       call opcopy(ub(1,0),vb(1,0),wb(1,0),vx,vy,vz) ! set zeroth mode
-      call gfldr('../../data/baf/chan20.f00900')    ! set initial state
+      call gfldr('../../data/baf/baf0.f00100')    ! set initial state
 
       call rom_init_params
       call rom_init_fields
@@ -107,7 +107,10 @@ c-----------------------------------------------------------------------
 
       call rom_setup
 
-      ifstep=.false.
+      call dumptens(c0,nb)
+      call dumpmats(a0,b0,nb)
+
+      ifstep=.true.
 
       do ad_step=1,ad_nsteps
          if (ifstep) then

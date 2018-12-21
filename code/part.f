@@ -146,3 +146,79 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine pod_part
+
+      include 'SIZE'
+      include 'MOR'
+
+      npb=nb/npart
+
+      if (npb*npart.ne.nb)
+     $   call exitti('nb not divisible by npart',npart)
+
+      call opcopy(ubt,vbt,wbt,ub,vb,wb)
+
+      do ip=1,npart
+         if (ip.gt.1) nio=-1
+         do i=1,ns
+            call opcopy(ust(1,i),vst(1,i),wst(1,i),
+     $                  us(1,i),vs(1,i),ws(1,i))
+            call opcolv(ust(1,i),vst(1,i),wst(1,i),dmask(1,1,1,1,ip))
+         enddo
+         call gengram
+
+         call genevec
+c        call genbases
+         do i=1,npb
+            k=(ip-1)*npb+i
+            call opcopy(ubt(1,k),vbt(1,k),wbt(1,k),
+     $                  ub(1,k),vb(1,k),wb(1,k))
+         enddo
+         return
+      enddo
+
+      nio=nid
+
+      do i=1,nb
+         call opcopy(ub(1,i),vb(1,i),wb(1,i),ubt(1,i),vbt(1,i),wbt(1,i))
+      enddo
+
+      call genops
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine estudy(m)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'TOTAL'
+
+      do i=1,m
+         npart=2**(i-1)
+         istep=npart
+         call domain_mask_p(dmask,1,npart)
+         call pod_part
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cstudy(m)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'TOTAL'
+
+      do i=1,m
+         npart=2**(i-1)
+         istep=npart
+         do j=1,npart
+            call domain_mask_p(dmask(1,1,1,1,j),j,npart)
+         enddo
+         call pod_part
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------

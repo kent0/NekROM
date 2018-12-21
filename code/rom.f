@@ -94,6 +94,7 @@ c-----------------------------------------------------------------------
       ifvort=.false. ! default to false for now
       ifdump=.true.
       ifrecon=.true.
+      ifpart=.false.
 
       call compute_BDF_coef(ad_alpha,ad_beta)
 
@@ -133,7 +134,13 @@ c-----------------------------------------------------------------------
       endif
 
       ns = ls
-      if (ifrecon) call get_saved_fields(us,vs,ws,ns,u0,ifvort)
+      if (ifrecon) then
+         call get_saved_fields(us,vs,ws,ns,u0,ifvort)
+         do i=1,ns
+            call opcopy(ust(1,i),vst(1,i),wst(1,i),
+     $                  us(1,i),vs(1,i),ws(1,i))
+         enddo
+      endif
 
       if (nid.eq.0) write (6,*) 'exiting rom_init_fields'
 
