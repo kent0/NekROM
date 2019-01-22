@@ -82,6 +82,25 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine dumpcloc(c,nb)
+
+      include 'SIZE'
+
+      real c(nb)
+
+      if (nid.eq.0) then
+         open (unit=50,file='ops/cloc')
+
+         do i=1,nb
+            write (50,*) c(i)
+         enddo
+
+         close (unit=50)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine dumptens(c,nb)
 
       include 'SIZE'
