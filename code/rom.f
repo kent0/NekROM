@@ -322,22 +322,25 @@ c-----------------------------------------------------------------------
 
       l=0
       mid = 0
-      nlocmin = lcloc/np
-      npmin = np-lcloc+(lcloc/np)*np
+      nlocmin = lcglo/np
+      npmin = np-lcglo+(lcglo/np)*np
+
+      write (6,*) lcglo,lcloc,np,nlocmin,npmin
 
       do k=0,nb
          call setcnv_c(ub(1,k),vb(1,k),wb(1,k))
          do j=0,nb
             call setcnv_u(ub(1,j),vb(1,j),wb(1,j))
             call ccu(cux,cuy,cuz)
-            do i=0,nb
+            do i=1,nb
                l=l+1
                cltmp(l) = op_glsc2_wt(ub(1,i),vb(1,i),wb(1,i),
      $                                cux,cuy,cuz,binv)
                icltmp(1,l) = i
                icltmp(2,l) = j
                icltmp(3,l) = k
-               mcloc = nclocmin + mid / npmin
+               mcloc = nlocmin + mid / npmin
+               write (6,*) 'mcloc',mcloc
                if (l.eq.mcloc) then
                   if (nid.eq.mid) then
                      ncloc = mcloc
