@@ -82,21 +82,39 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dumpcloc(c,nb)
+      subroutine dumpc
 
       include 'SIZE'
+      include 'MOR'
+      include 'TOTAL'
 
-      real c(nb)
+      real tmp(1)
 
-      if (nid.eq.0) then
-         open (unit=50,file='ops/cloc')
+      if (nid.eq.0) open (unit=50,file='ops/cloc')
 
-         do i=1,nb
-            write (50,*) c(i)
+      tmp(1)=ncloc
+      ncmax=glmax(tmp,1)
+
+      nlocmin = lcglo/np
+      npmin = np-lcglo+(lcglo/np)*np
+
+      do i=0,np-1
+         mcloc = nlocmin + i / npmin
+         if (nid.eq.i) then
+            call copy(cltmp,clocal,mcloc)
+         else
+            call rzero(cltmp,mcloc)
+         endif
+
+         call gop(cltmp,ctmp,'+  ',mcloc)
+         do j=1,mcloc
+            write (50,*) cltmp(j),i
          enddo
+      enddo
 
-         close (unit=50)
-      endif
+
+
+      if (nid.eq.0) close (unit=50)
 
       return
       end
