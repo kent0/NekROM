@@ -283,6 +283,7 @@ c-----------------------------------------------------------------------
          do i=1,ns
             uu(i,j) = glsc2(ust(1,i),uw,n)+glsc2(vst(1,i),vw,n)
             if (ldim.eq.3) uu(i,j) = uu(i,j)+glsc2(wst(1,i),ww,n)
+            if (nio.eq.0) write (99,*) uu(i,j)
          enddo
          if (nio.eq.0) write(6,*) j,uu(1,j),' uu'
       enddo
@@ -318,7 +319,7 @@ c-----------------------------------------------------------------------
             uu(i,j) = op_glsc2_wt(ust(1,i),vst(1,i),wst(1,i),
      $                            ust(1,j),vst(1,j),wst(1,j),bwm1)
          endif
-         write (88,*) uu(i,j)
+         if (nio.eq.0) write (88,*) uu(i,j)
       enddo
          if (nio.eq.0) write (6,*) 'uu',uu(1,j)
       enddo
