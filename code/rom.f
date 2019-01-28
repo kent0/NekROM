@@ -174,6 +174,8 @@ c-----------------------------------------------------------------------
 c     Matrices and vectors for advance
       real tmp(0:nb),tmat(nb,nb+1),rhs(0:nb)
       real coef(1:nb), e0(0:nb)
+      
+      common /scrk4/ ux(lt),uy(lt),uz(lt)
 
       common /scrk3/ work(lt)
       common /scrk1/ t1(lt),t2(lt),t3(lt)
@@ -258,14 +260,13 @@ c     endif
          if (ifdump) then
             idump=ad_step/ad_iostep
             call dumpcoef(u,nb,idump)
-            call recon(vx,vy,vz,u)
+            call recon(ux,uy,uz,u)
 
             ! compute the vorticity of the ROM reconstructed field
-            call opcopy(t1,t2,t3,vx,vy,vz)
+            call opcopy(t1,t2,t3,ux,uy,uz)
             call comp_vort3(vort,work1,work2,t1,t2,t3)
             ifto = .true. ! turn on temp in fld file
-            call copy(t,vort,n)
-            call outpost (vx,vy,vz,pr,t,'rom')
+            call outpost (ux,uy,uz,pr,vort,'rom')
          endif
       endif
 
