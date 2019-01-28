@@ -185,7 +185,7 @@ c     Variable for vorticity
 
       n  = lx1*ly1*lz1*nelt
 
-      time=time+ad_dt
+c     time=time+ad_dt
 
       count = min0(ad_step,3)
 
