@@ -341,7 +341,7 @@ c-----------------------------------------------------------------------
                icltmp(2,l) = j
                icltmp(3,l) = k
                mcloc = nlocmin + mid / npmin
-               write (6,*) 'mcloc',mcloc
+c              write (6,*) 'mcloc',mcloc
                if (l.eq.mcloc) then
                   if (nid.eq.mid) then
                      ncloc = mcloc
