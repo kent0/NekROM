@@ -1,23 +1,28 @@
-      parameter (lx1=8)
-      parameter (ldim=2)
+      include 'SIZE'
+      include 'MOR'
+
+c     parameter (lx1=8)
+c     parameter (ldim=2)
 
       parameter (lxyz=lx1**ldim)
       parameter (lxyzd=lxd**ldim)
-      parameter (lelp=512)
-      parameter (lsg=100)
+      parameter (lelp=lelt)
 
-      parameter (ls=lsg/lpmin+1)
+      parameter (lsg=ls)
+
+c     parameter (lsg=100)
+c     parameter (ls=lsg/lpmin+1)
 
       real mass
-      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),zeros(lxyz*lelp)
+      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp)
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
-      common /fvars/ u(lxyz*lelp*ldim*ls),z(lxyz*lelp*ldim*ls),
-     $               t(lxyz*lelp*ls)
+      common /fvars/ uu(lxyz*lelp*ldim*ls),zz(lxyz*lelp*ldim*ls),
+     $               tt(lxyz*lelp*ls)
 
       common /work/ wv1(lxyz*lelp*ldim),
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
      $              wtrans(lxyz*lelp*9)
 
-      common /pod/ gram(ls*lsg),evec(ls*lsg)
-      common /ops/ a(ls*lsg),b(ls*lsg),c(ls*lsg*lsg)
+      common /pod/ gram(ls*lsg),eevec(ls*lsg)
+      common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
