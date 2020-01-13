@@ -1,11 +1,13 @@
 c-----------------------------------------------------------------------
-      subroutine drive
+      subroutine drivep
 
       include 'POST'
+      include 'PARALLEL'
 
-      nelp=10
-      nelgv=1000
-      nsnap=1000
+      character*127 flist
+
+      nelp=512
+      nsnap=ns
 
       ! assigned snapshot range
 
@@ -17,20 +19,26 @@ c-----------------------------------------------------------------------
       inel=1
       ieg1=0
 
-      call rzero(gram,ns*nsg)
-      call rzero(a,ns*nsg)
-      call rzero(b,ns*nsg)
-      call rzero(c,ns*nsg*nsg)
+      ns=ls
+      nsg=lsg
 
-      n=lxyz*nelt*ldim
+      call rzero(gram,ns*nsg)
+      call rzero(aa,ns*nsg)
+      call rzero(bb,ns*nsg)
+      call rzero(cc,ns*nsg*nsg)
+
+      n=lxyz*nelt
 
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
-         ieg1=min(inel+nelp-1,nelgv)
-         call reade(u,ieg0,ieg1,'U',flist)
-         call setmass(mass,w,ieg0,ieg1,lxyz)
-         call setg(gram,u,mass,wvf1,wvf2,ns,nsg,n,ndim)
+         write (6,*) 'ieg0,nelgv',ieg0,nelgv
+         ieg1=min(ieg1+inel+nelp-1,nelgv)
+         call reade_dummy(uu,ieg0,ieg1)
+         call setmass(mass,wv1,ieg0,ieg1,lxyz)
+         call setgg(gram,uu,mass,wvf1,wvf2,ns,nsg,n,ndim)
       enddo
+
+      call dump_serial(gram,ns*ns,'ops/gramp ',nid)
 
       ! dssum to ensure gram is symmetric
       ! shift each row in gram
@@ -44,19 +52,19 @@ c-----------------------------------------------------------------------
       do while (ieg1+1.le.nelgv)
          ieg0=ie1+1
          ieg1=min(inel+nelp-1,nelgv)
-         call reade(u,ieg0,ieg1,'U',flist)
+         call reade(uu,ieg0,ieg1,'U',flist)
 
 c        call setvisc(visc,w,ieg0,ieg1,lxyz,nid) ! not required
          call setgeom(gfac,w,ieg0,ieg1,lxyz,3*(ndim-1),nid)
          call setmass(mass,w,ieg0,ieg1,lxyz,nid)
          call setconv(rxd) ! TODO: implement
 
-         call setz(z,u,evec,n,ns)
-         call seta(a,z,visc,gfac,wvf1,wvf2,ns,nsg,n,ndim)
-         call setb(b,z,mass,wvf1,wvf2,ns,nsg,n,ndim)
+         call setzz(zz,uu,evec,n,ns)
+         call setaa(aa,zz,visc,gfac,wvf1,wvf2,ns,nsg,n,ndim)
+         call setbb(bb,zz,mass,wvf1,wvf2,ns,nsg,n,ndim)
 c        call setc(c,z,wvf1,wvf2,ns,nsg,n,ndim,ndim) ! TODO: implement
 
-         call setk(uk,z,mass,wvf1,wvf2,ns,nsg,n,ndim)
+c        call setkk(uk,zz,mass,wvf1,wvf2,ns,nsg,n,ndim)
       enddo
 
       return
@@ -75,13 +83,12 @@ c-----------------------------------------------------------------------
 
       parameter (ll=lx1*ly1*lz1)
 
-      real v(lxyz,ldim,ie,ns)
-      logical ifread(0:4)
+      real v(lxyz,ldim,nelt,ns)
 
       do is=1,ns
       do idim=1,ndim
       do ie=ieg0,ieg1
-         call copy(v(1,idim,ie-ieg0+1,is),us0(1+(ie-1)*ll,idim,1),ll)
+         call copy(v(1,idim,ie-ieg0+1,is),us0(1+(ie-1)*ll,idim,is),ll)
       enddo
       enddo
       enddo
@@ -97,7 +104,7 @@ c-----------------------------------------------------------------------
       character*127 fname
 
       call parse_clist(ifread,clist)
-      call reade_helper(u,ieg0,ieg1,ifread,fname)
+c     call reade_helper(u,ieg0,ieg1,ifread,fname)
 
       return
       end
@@ -113,23 +120,23 @@ c-----------------------------------------------------------------------
          ifread(i)=.false.
       enddo
 
-      if (clist matches 'U') then
+c     if (clist matches 'U') then
          ifread(1)=.true.
-      else
-         call exitti('unsupported clist$',1)
-      endif
+c     else
+c        call exitti('unsupported clist$',1)
+c     endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setz(z,u,evec,w1,w2,n,ns,nsg)
+      subroutine setzz(z,u,evec,w1,w2,n,ns,nsg)
 
       real z(n,ns), u(n,ns)
       real evec(ns,nsg)
       real w1(n),w2(n)
 
       do isg=1,nsg
-         is=ig2ls(isg)
+         is=iglls(isg)
          call mxm(u,n,evec(1,isg),ns,w1,1)
          call gop(w1,w2,'+  ',n)
          if (is.gt.0 .and. is.le.ns) call copy(z(1,is),w1,n)
@@ -152,7 +159,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine seta(a,z,w1,w2,ns,nsg,n,ndim)
+      subroutine setaa(a,z,w1,w2,ns,nsg,n,ndim)
 
       real a(ns,nsg),z(n,ndim,ns),w1(n,ndim,ns),w2(n,ndim,ns)
 
@@ -160,7 +167,7 @@ c-----------------------------------------------------------------------
       call copy(w2,z,n*ndim*ns)
 
       do i=1,ns*ndim
-         call 'axhelm'(w2(1,i,1))
+c        call 'axhelm'(w2(1,i,1))
       enddo
 
       do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
@@ -177,7 +184,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setb(b,z,mass,w1,w2,ns,nsg,n,ndim)
+      subroutine setbb(b,z,mass,w1,w2,ns,nsg,n,ndim)
 
       real b(ns,nsg),z(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
 
@@ -202,7 +209,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setc(c,z,t,w1,w2,w3,w4,ns,nsg,n,mdim,ndim)
+      subroutine setcc(c,z,t,w1,w2,w3,w4,ns,nsg,n,mdim,ndim)
 
       real c(ns,nsg,nsg),z(n,mdim,ns),t(n,ndim,ns),
      $     w1(n,mdim,ns),w2(n,ndim,ns),w3(n,mdim,ns),w4(n,mdim,ns)
@@ -220,7 +227,7 @@ c        call col2(w2(1,i,1),mass,n)
          do iof=0,nsg/ns-1
             do ks=1,ns
             do js=1,ns
-               call conv(w4,w1,w2) ! w4= mass * (w1 * w4)
+c              call conv(w4,w1,w2) ! w4= mass * (w1 * w4)
                do is=1,ns
                   c(is,js+ns*iof,ks+ns*jof)=c(is,js+ns*iof,ks+ns*jof)
      $               +vlsc2(w3(1,1,is),w4(1,1,js),n*ndim)
@@ -236,7 +243,11 @@ c        call col2(w2(1,i,1),mass,n)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setgeom(gfac,w,ieg0,ieg1,lxyz,ng,nid)
+      subroutine setgeom(gfac,w,ieg0,ieg1,lxyz,ng)!,nid)
+
+      include 'SIZE' ! nid
+      include 'GEOM'
+      include 'PARALLEL'
 
       real gfac(lxyz,ieg1-ieg0+1,6),w(lxyz*(ieg1-ieg0+1)*6)
 
@@ -263,7 +274,10 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setvisc(visc,w,ieg0,ieg1,lxyz,nid)
+      subroutine setvisc(visc,w,ieg0,ieg1,lxyz)!,nid)
+
+      include 'SIZE'
+      include 'PARALLEL'
 
       real visc(lxyz,ieg1-ieg0+1), w(lxyz*(ieg1-ieg0+1))
 
@@ -272,7 +286,7 @@ c-----------------------------------------------------------------------
       do ieg=ieg0,ieg1
          if (gllnid(ieg).eq.nid) then
             ie=gllel(ieg)
-            call copy(visc(1,i-ieg0+1),h1(1,1,1,ie),lxyz)
+c           call copy(visc(1,i-ieg0+1),h1(1,1,1,ie),lxyz)
          endif
       enddo
 
@@ -281,7 +295,11 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setmass(mass,w,ieg0,ieg1,lxyz,nid)
+      subroutine setmass(mass,w,ieg0,ieg1,lxyz)!,nid)
+
+      include 'SIZE' ! nid
+      include 'MASS'
+      include 'PARALLEL'
 
       real mass(lxyz,ieg1-ieg0+1), w(lxyz*(ieg1-ieg0+1))
 
@@ -292,7 +310,7 @@ c-----------------------------------------------------------------------
       do ieg=ieg0,ieg1
          if (gllnid(ieg).eq.nid) then
             ie=gllel(ieg)
-            call copy(mass(1,i-ieg0+1),bm1(1,1,1,ie),lxyz)
+            call copy(mass(1,ieg-ieg0+1),bm1(1,1,1,ie),lxyz)
          endif
       enddo
 
@@ -301,15 +319,19 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setconv(rxd,w,ieg0,ieg1,lxyz,nid)
+      subroutine setconv(rxd,w,ieg0,ieg1,lxyz)!,ndim,nid)
 
-      real rxd(lxyz,ieg1-ieg0+1), w1(lxyz,9,(ieg1-ieg0+1))
-           rx(lxyz,ieg1-ieg0+1), w(lxyz*(ieg1-ieg0+1))
+      include 'SIZE' ! ndim & nid
+      include 'GEOM'
+      include 'PARALLEL'
 
-      logical if3d
+      real rxd(lxyz,ndim*ndim,ieg1-ieg0+1), w1(lxyz,9,(ieg1-ieg0+1)),
+     $     w(lxyz*(ieg1-ieg0+1))
+
+c     logical if3d
 
       call rzero(w,lxyz*(ieg1-ieg0+1))
-      if3d=ndim.eq.3
+c     if3d=ndim.eq.3
 
       do ieg=ieg0,ieg1
          if (gllnid(ieg).eq.nid) then
@@ -353,9 +375,11 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setg(gram,u,mass,w1,w2,ns,nsg,n,ndim)
+      subroutine setgg(gram,u,mass,w1,w2,ns,nsg,n,ndim)
 
       real gram(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
+
+      write (6,*) 'ns,nsg,n,ndim',ns,nsg,n,ndim
 
       call copy(w1,u,n*ndim*ns)
       call copy(w2,u,n*ndim*ns)
@@ -365,8 +389,11 @@ c-----------------------------------------------------------------------
       enddo
 
       do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
+         write (6,*) 'ioff',ioff
          do js=1,ns
          do is=1,ns
+            write (6,*) 'is,js',is,js
+            write (6,*) 'w1,w2',w1(1,1,is),w2(1,1,js)
             gram(is,js+ns*ioff)=gram(is,js+ns*ioff)
      $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
          enddo
