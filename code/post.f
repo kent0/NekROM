@@ -2,6 +2,7 @@ c-----------------------------------------------------------------------
       subroutine drivep
 
       include 'POST'
+      include 'MASS'
       include 'PARALLEL'
 
       character*127 flist
@@ -27,15 +28,15 @@ c-----------------------------------------------------------------------
       call rzero(bb,ns*nsg)
       call rzero(cc,ns*nsg*nsg)
 
-      n=lxyz*nelt
-
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
-         write (6,*) 'ieg0,nelgv',ieg0,nelgv
          ieg1=min(ieg1+inel+nelp-1,nelgv)
+         nel=ieg1-ieg0+1
+         n=lxyz*(ieg1-ieg0+1)
+         write (6,*) 'ieg0,ieg1,nelgv',ieg0,ieg1,nelgv
          call reade_dummy(uu,ieg0,ieg1)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call setgg(gram,uu,mass,wvf1,wvf2,ns,nsg,n,ndim)
+         call setgg(gram,uu,mass,wvf1,wvf2,ns,nsg,n,ndim,lxyz,nel)
       enddo
 
       call dump_serial(gram,ns*ns,'ops/gramp ',nid)
@@ -83,12 +84,12 @@ c-----------------------------------------------------------------------
 
       parameter (ll=lx1*ly1*lz1)
 
-      real v(lxyz,ldim,nelt,ns)
+      real v(lxyz,ieg1-ieg0+1,ldim,ns)
 
       do is=1,ns
       do idim=1,ndim
       do ie=ieg0,ieg1
-         call copy(v(1,idim,ie-ieg0+1,is),us0(1+(ie-1)*ll,idim,is),ll)
+         call copy(v(1,ie-ieg0+1,idim,is),us0(1+(ie-1)*ll,idim,is),ll)
       enddo
       enddo
       enddo
@@ -389,11 +390,8 @@ c-----------------------------------------------------------------------
       enddo
 
       do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         write (6,*) 'ioff',ioff
          do js=1,ns
          do is=1,ns
-            write (6,*) 'is,js',is,js
-            write (6,*) 'w1,w2',w1(1,1,is),w2(1,1,js)
             gram(is,js+ns*ioff)=gram(is,js+ns*ioff)
      $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
          enddo
