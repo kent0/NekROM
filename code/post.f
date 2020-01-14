@@ -35,17 +35,18 @@ c-----------------------------------------------------------------------
          ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
-         write (6,*) 'ieg0,ieg1,nelgv',ieg0,ieg1,nelgv
          call reade_dummy(uu,ieg0,ieg1)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call setgg(gram,uu,mass,wvf1,wvf2,ns,nsg,n,ndim,lxyz,nel)
+         call setgg(gram,uu,mass,wvf1,wvf2,ns,nsg,n,ndim)
       enddo
 
       call dump_serial(gram,ns*ns,'ops/gramp ',nid)
 
-      ! dssum to ensure gram is symmetric
-      ! shift each row in gram
       ! eigendecomposition here or external process
+
+      write (6,*) 'ns=',ns
+      mmm=ns*ns
+      call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
 
       inel=1
       ieg1=0
@@ -54,21 +55,62 @@ c-----------------------------------------------------------------------
 
       do while (ieg1+1.le.nelgv)
          ieg0=ie1+1
-         ieg1=min(inel+nelp-1,nelgv)
-         call reade(uu,ieg0,ieg1,'U',flist)
+         ieg1=min(ieg1+inel+nelp-1,nelgv)
+         nel=ieg1-ieg0+1
+         n=lxyz*(ieg1-ieg0+1)
+
+c        call reade(uu,ieg0,ieg1,'U',flist)
+         call reade_dummy(uu,ieg0,ieg1)
 
 c        call setvisc(visc,w,ieg0,ieg1,lxyz,nid) ! not required
-         call setgeom(gfac,w,ieg0,ieg1,lxyz,3*(ndim-1),nid)
-         call setmass(mass,w,ieg0,ieg1,lxyz,nid)
-         call setconv(rxd) ! TODO: implement
+         call setgeom(gfac,w9,ieg0,ieg1,lxyz,3*(ndim-1),nid)
+c        call setconv(rxd) ! TODO: implement
 
-         call setzz(zz,uu,evec,n,ns)
-         call setaa(aa,zz,visc,gfac,wvf1,wvf2,ns,nsg,n,ndim)
+         call setmass(mass,wv1,ieg0,ieg1,lxyz,nid)
+
+         call setzz(zz,uu,evecp,wvf1,wvf2,n*ndim,ns,nsg)
+
+c        do k=1,ns
+c        do i=1,lxyz*nel
+c           write (6,1) i,k,ub(i,k),zz(i+(k-1)*lxyz*nel*ndim),
+c    $                      ub(i,k)/zz(i+(k-1)*lxyz*nel*ndim)
+c        enddo
+c        enddo
+
          call setbb(bb,zz,mass,wvf1,wvf2,ns,nsg,n,ndim)
-c        call setc(c,z,wvf1,wvf2,ns,nsg,n,ndim,ndim) ! TODO: implement
+
+c        call setaa(aa,zz,visc,gfac,wvf1,wvf2,ns,nsg,n,ndim)
+c        call setcc(c,z,wvf1,wvf2,ns,nsg,n,ndim,ndim) ! TODO: implement
 
 c        call setkk(uk,zz,mass,wvf1,wvf2,ns,nsg,n,ndim)
       enddo
+
+      call rzero(zsc,nsg)
+
+      do i=1,ns
+         zsc(i)=sqrt(bb(i+(i-1)*ns))
+      enddo
+
+      call invcol1(zsc,ns)
+
+      call gop(zsc,ug,'+  ',nsg)
+
+      do j=1,nsg
+      do i=1,ns
+         bb(i+(j-1)*ns)=bb(i+(j-1)*ns)*zsc(i)*zsc(j)
+      enddo
+      enddo
+
+      do j=1,10
+      do i=1,10
+         write (6,*) bb(i+(j-1)*10),'bb'
+      enddo
+      enddo
+
+      call dump_serial(bb,mmm,'ops/bup ',nid)
+      call exitt0
+
+    1 format (i8,i8,1p3e16.5,' zz')
 
       return
       end
@@ -134,15 +176,24 @@ c     endif
 c-----------------------------------------------------------------------
       subroutine setzz(z,u,evec,w1,w2,n,ns,nsg)
 
-      real z(n,ns), u(n,ns)
+c     include 'SIZE'
+c     include 'PARALLEL'
+
+      real z(n,ns),u(n,ns)
       real evec(ns,nsg)
       real w1(n),w2(n)
 
-      do isg=1,nsg
-         is=iglls(isg)
-         call mxm(u,n,evec(1,isg),ns,w1,1)
-         call gop(w1,w2,'+  ',n)
-         if (is.gt.0 .and. is.le.ns) call copy(z(1,is),w1,n)
+c     do isg=1,nsg
+c        is=iglls(isg)
+c        is=isg
+c        call mxm(u,n,evec(1,isg),ns,w1,1)
+c        call gop(w1,w2,'+  ',n)
+c        if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
+
+c     enddo
+
+      do i=1,ns
+         call mxm(u,n,evec(1,i),ns,z(1,i),1)
       enddo
 
       return
@@ -170,7 +221,7 @@ c-----------------------------------------------------------------------
       call copy(w2,z,n*ndim*ns)
 
       do i=1,ns*ndim
-c        call 'axhelm'(w2(1,i,1))
+         call ax(w2(1,i,1))
       enddo
 
       do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
@@ -187,12 +238,14 @@ c        call 'axhelm'(w2(1,i,1))
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setbb(b,z,mass,w1,w2,ns,nsg,n,ndim)
+      subroutine setbb(b,u,mass,w1,w2,ns,nsg,n,ndim)
 
-      real b(ns,nsg),z(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
+      real b(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
 
-      call copy(w1,z,n*ndim*ns)
-      call copy(w2,z,n*ndim*ns)
+      write (6,*) 'ns,nsg,n,ndim',ns,nsg,n,ndim
+
+      call copy(w1,u,n*ndim*ns)
+      call copy(w2,u,n*ndim*ns)
 
       do i=1,ns*ndim
          call col2(w2(1,i,1),mass,n)
@@ -252,9 +305,7 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'PARALLEL'
 
-      real gfac(lxyz,ieg1-ieg0+1,6),w(lxyz*(ieg1-ieg0+1)*6)
-
-      ! TODO: set g1..6m1
+      real gfac(lxyz,ieg1-ieg0+1,ng),w(lxyz*(ieg1-ieg0+1)*ng)
 
       call rzero(gfac,lxyz*(ieg1-ieg0+1)*ng)
 
@@ -405,201 +456,248 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine shift(u,n)
+      subroutine shift_setup(iwk1,iwk2,n)
 
-      real u(n)
+      include 'SIZE'
+
+      common /pcomm/ igsh1,igsh2
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer*8 iwk1(n),iwk2(n)
+
+      igsh1=0
+      igsh2=0
+
+      do i=1,n
+         i1=nid/2
+         i2=mod(nid-1+mp,mp)/2
+         irem=mod(nid,2).eq.0
+         iwk1(i)=i+i1*n
+         iwk2(i)=i+i2*n
+      enddo
+
+      do i=1,mp
+         if (nid.eq.(i-1)) then
+            do j=1,n
+               write (6,*) nid,i,j,iwk1(j),iwk2(j)
+            enddo
+         endif
+         call nekgsync
+      enddo
+
+      ntot=(mp*n)/2
+
+      call fgslib_gs_setup(igsh1,iwk1,ntot,nekcomm,mp)
+      call fgslib_gs_setup(igsh2,iwk2,ntot,nekcomm,mp)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine shift(u,w1,w2,n)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      common /pcomm/ igsh1,igsh2
+
+      real u(n),w1(n),w2(n)
+
+      call copy(w1,u,n)
+      call copy(w2,u,n)
+
+      call fgslib_gs_op(igsh1,w1,1,1,0)
+      call fgslib_gs_op(igsh2,w2,1,1,0)
+
+      if (mod(mid,2).eq.0) then
+         call sub2(u,w2,n)
+         call chsign(u,n)
+      else
+         call sub2(u,w1,n)
+         call chsign(u,n)
+      endif
 
       return
       end
 c-----------------------------------------------------------------------
 c     subroutine ax(au,u,helm1,helm2,imesh,isd)
+      subroutine aop(au,u,visc,gfac,imesh,isd,nel)
 C------------------------------------------------------------------
 C
 C     Compute the (Helmholtz) matrix-vector product,
 C     AU = helm1*[A]u + helm2*[B]u, for NEL elements.
 C
 C------------------------------------------------------------------
-c     include 'SIZE'
-c     include 'WZ'
-c     include 'DXYZ'
-c     include 'GEOM'
-c     include 'MASS'
-c     include 'INPUT'
+      include 'SIZE'
+      include 'WZ'
+      include 'DXYZ'
+      include 'GEOM'
+      include 'MASS'
+      include 'INPUT'
 c     include 'PARALLEL'
 c     include 'CTIMER'
 c
-c     COMMON /FASTAX/ WDDX(LX1,LX1),WDDYT(LY1,LY1),WDDZT(LZ1,LZ1)
-c     COMMON /FASTMD/ IFDFRM(LELT), IFFAST(LELT), IFH2, IFSOLV
-c     LOGICAL IFDFRM, IFFAST, IFH2, IFSOLV
+      common /fastax/ wddx(lx1,lx1),wddyt(ly1,ly1),wddzt(lz1,lz1)
+      common /fastmd/ ifdfrm(lelt), iffast(lelt), ifh2, ifsolv
+      logical ifdfrm, iffast, ifh2, ifsolv
 c
-c     REAL           AU    (LX1,LY1,LZ1,1)
-c    $ ,             U     (LX1,LY1,LZ1,1)
-c    $ ,             HELM1 (LX1,LY1,LZ1,1)
-c    $ ,             HELM2 (LX1,LY1,LZ1,1)
-c     COMMON /CTMP1/ DUDR  (LX1,LY1,LZ1)
-c    $ ,             DUDS  (LX1,LY1,LZ1)
-c    $ ,             DUDT  (LX1,LY1,LZ1)
-c    $ ,             TMP1  (LX1,LY1,LZ1)
-c    $ ,             TMP2  (LX1,LY1,LZ1)
-c    $ ,             TMP3  (LX1,LY1,LZ1)
+      real           au    (lx1,ly1,lz1,1)
+     $ ,             u     (lx1,ly1,lz1,1)
+     $ ,             helm1 (lx1,ly1,lz1,1)
+     $ ,             helm2 (lx1,ly1,lz1,1)
+      common /ctmp1/ dudr  (lx1,ly1,lz1)
+     $ ,             duds  (lx1,ly1,lz1)
+     $ ,             dudt  (lx1,ly1,lz1)
+     $ ,             tmp1  (lx1,ly1,lz1)
+     $ ,             tmp2  (lx1,ly1,lz1)
+     $ ,             tmp3  (lx1,ly1,lz1)
 
-c     REAL           TM1   (LX1,LY1,LZ1)
-c     REAL           TM2   (LX1,LY1,LZ1)
-c     REAL           TM3   (LX1,LY1,LZ1)
-c     REAL           DUAX  (LX1)
-c     REAL           YSM1  (LX1)
-c     EQUIVALENCE    (DUDR,TM1),(DUDS,TM2),(DUDT,TM3)
+      real           tm1   (lx1,ly1,lz1)
+      real           tm2   (lx1,ly1,lz1)
+      real           tm3   (lx1,ly1,lz1)
+      real           duax  (lx1)
+      real           ysm1  (lx1)
+      equivalence    (dudr,tm1),(duds,tm2),(dudt,tm3)
 
-c     integer e
+      naxhm = naxhm + 1
+      etime1 = dnekclock()
 
-c     naxhm = naxhm + 1
-c     etime1 = dnekclock()
+      nxy=lx1*ly1
+      nyz=ly1*lz1
+      nxz=lx1*lz1
+      nxyz=lx1*ly1*lz1
+      ntot=nxyz*nel
 
-c     nel=nelt
-c     if (imesh.eq.1) nel=nelv
+      if (.not.ifsolv) call setfast(helm1,helm2,imesh)
+      call rzero (au,ntot)
 
-c     NXY=lx1*ly1
-c     NYZ=ly1*lz1
-c     NXZ=lx1*lz1
-c     NXYZ=lx1*ly1*lz1
-c     NTOT=NXYZ*NEL
+      do ie=1,nel
+ 
+        if (ifaxis) call setaxdy ( ifrzer(ie) )
 
-c     IF (.NOT.IFSOLV) CALL SETFAST(HELM1,HELM2,IMESH)
-c     CALL RZERO (AU,NTOT)
+        if (ldim.eq.2) then
 
-c     do 100 e=1,nel
-c
-c       if (ifaxis) call setaxdy ( ifrzer(e) )
-C
-c       IF (ldim.EQ.2) THEN
-c
 c       2-d case ...............
-c
-c          if (iffast(e)) then
-c
-c          Fast 2-d mode: constant properties and undeformed element
-c
-c          h1 = helm1(1,1,1,e)
-c          call mxm   (wddx,lx1,u(1,1,1,e),lx1,tm1,nyz)
-c          call mxm   (u(1,1,1,e),lx1,wddyt,ly1,tm2,ly1)
-c          call col2  (tm1,g4m1(1,1,1,e),nxyz)
-c          call col2  (tm2,g5m1(1,1,1,e),nxyz)
-c          call add3  (au(1,1,1,e),tm1,tm2,nxyz)
-c          call cmult (au(1,1,1,e),h1,nxyz)
-c
-c          else
-c
-c
-c          call mxm  (dxm1,lx1,u(1,1,1,e),lx1,dudr,nyz)
-c          call mxm  (u(1,1,1,e),lx1,dytm1,ly1,duds,ly1)
-c          call col3 (tmp1,dudr,g1m1(1,1,1,e),nxyz)
-c          call col3 (tmp2,duds,g2m1(1,1,1,e),nxyz)
-c          if (ifdfrm(e)) then
-c             call addcol3 (tmp1,duds,g4m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp2,dudr,g4m1(1,1,1,e),nxyz)
-c          endif
-c          call col2 (tmp1,helm1(1,1,1,e),nxyz)
-c          call col2 (tmp2,helm1(1,1,1,e),nxyz)
-c          call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
-c          call mxm  (tmp2,lx1,dym1,ly1,tm2,ly1)
-c          call add2 (au(1,1,1,e),tm1,nxyz)
-c          call add2 (au(1,1,1,e),tm2,nxyz)
 
-c       endif
-c
-c       else
-c
+           if (iffast(ie)) then
+
+c          Fast 2-d mode: constant properties and undeformed element
+ 
+           h1 = visc(1,1,1,ie)
+           call mxm   (wddx,lx1,u(1,1,1,ie),lx1,tm1,nyz)
+           call mxm   (u(1,1,1,ie),lx1,wddyt,ly1,tm2,ly1)
+           call col2  (tm1,g4m1(1,1,1,ie),nxyz)
+           call col2  (tm2,g5m1(1,1,1,ie),nxyz)
+           call add3  (au(1,1,1,ie),tm1,tm2,nxyz)
+           call cmult (au(1,1,1,ie),h1,nxyz)
+ 
+           else
+ 
+           call mxm  (dxm1,lx1,u(1,1,1,ie),lx1,dudr,nyz)
+           call mxm  (u(1,1,1,ie),lx1,dytm1,ly1,duds,ly1)
+           call col3 (tmp1,dudr,g1m1(1,1,1,ie),nxyz)
+           call col3 (tmp2,duds,g2m1(1,1,1,ie),nxyz)
+           if (ifdfrm(ie)) then
+              call addcol3 (tmp1,duds,g4m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp2,dudr,g4m1(1,1,1,ie),nxyz)
+           endif
+           call col2 (tmp1,helm1(1,1,1,ie),nxyz)
+           call col2 (tmp2,helm1(1,1,1,ie),nxyz)
+           call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
+           call mxm  (tmp2,lx1,dym1,ly1,tm2,ly1)
+           call add2 (au(1,1,1,ie),tm1,nxyz)
+           call add2 (au(1,1,1,ie),tm2,nxyz)
+
+        endif
+
+        else
+
 c       3-d case ...............
-c
-c          if (iffast(e)) then
-c
+ 
+           if (iffast(ie)) then
+ 
 c          Fast 3-d mode: constant properties and undeformed element
-c
-c          h1 = helm1(1,1,1,e)
-c          call mxm   (wddx,lx1,u(1,1,1,e),lx1,tm1,nyz)
-c          do 5 iz=1,lz1
-c          call mxm   (u(1,1,iz,e),lx1,wddyt,ly1,tm2(1,1,iz),ly1)
-c5         continue
-c          call mxm   (u(1,1,1,e),nxy,wddzt,lz1,tm3,lz1)
-c          call col2  (tm1,g4m1(1,1,1,e),nxyz)
-c          call col2  (tm2,g5m1(1,1,1,e),nxyz)
-c          call col2  (tm3,g6m1(1,1,1,e),nxyz)
-c          call add3  (au(1,1,1,e),tm1,tm2,nxyz)
-c          call add2  (au(1,1,1,e),tm3,nxyz)
-c          call cmult (au(1,1,1,e),h1,nxyz)
-c
-c          else
-c
-c
-c          call mxm(dxm1,lx1,u(1,1,1,e),lx1,dudr,nyz)
-c          do 10 iz=1,lz1
-c             call mxm(u(1,1,iz,e),lx1,dytm1,ly1,duds(1,1,iz),ly1)
-c  10      continue
-c          call mxm     (u(1,1,1,e),nxy,dztm1,lz1,dudt,lz1)
-c          call col3    (tmp1,dudr,g1m1(1,1,1,e),nxyz)
-c          call col3    (tmp2,duds,g2m1(1,1,1,e),nxyz)
-c          call col3    (tmp3,dudt,g3m1(1,1,1,e),nxyz)
-c          if (ifdfrm(e)) then
-c             call addcol3 (tmp1,duds,g4m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp1,dudt,g5m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp2,dudr,g4m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp2,dudt,g6m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp3,dudr,g5m1(1,1,1,e),nxyz)
-c             call addcol3 (tmp3,duds,g6m1(1,1,1,e),nxyz)
-c          endif
-c          call col2 (tmp1,helm1(1,1,1,e),nxyz)
-c          call col2 (tmp2,helm1(1,1,1,e),nxyz)
-c          call col2 (tmp3,helm1(1,1,1,e),nxyz)
-c          call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
-c          do 20 iz=1,lz1
-c             call mxm(tmp2(1,1,iz),lx1,dym1,ly1,tm2(1,1,iz),ly1)
-c  20      continue
-c          call mxm  (tmp3,nxy,dzm1,lz1,tm3,lz1)
-c          call add2 (au(1,1,1,e),tm1,nxyz)
-c          call add2 (au(1,1,1,e),tm2,nxyz)
-c          call add2 (au(1,1,1,e),tm3,nxyz)
-c
-c          endif
-c
-c       endif
-c
-c100  continue
-c
-c     if (ifh2) call addcol4 (au,helm2,bm1,u,ntot)
-c
+ 
+           h1 = helm1(1,1,1,ie)
+           call mxm   (wddx,lx1,u(1,1,1,ie),lx1,tm1,nyz)
+           do 5 iz=1,lz1
+           call mxm   (u(1,1,iz,ie),lx1,wddyt,ly1,tm2(1,1,iz),ly1)
+ 5         continue
+           call mxm   (u(1,1,1,ie),nxy,wddzt,lz1,tm3,lz1)
+           call col2  (tm1,g4m1(1,1,1,ie),nxyz)
+           call col2  (tm2,g5m1(1,1,1,ie),nxyz)
+           call col2  (tm3,g6m1(1,1,1,ie),nxyz)
+           call add3  (au(1,1,1,ie),tm1,tm2,nxyz)
+           call add2  (au(1,1,1,ie),tm3,nxyz)
+           call cmult (au(1,1,1,ie),h1,nxyz)
+ 
+           else
+ 
+ 
+           call mxm(dxm1,lx1,u(1,1,1,ie),lx1,dudr,nyz)
+           do 10 iz=1,lz1
+              call mxm(u(1,1,iz,ie),lx1,dytm1,ly1,duds(1,1,iz),ly1)
+   10      continue
+           call mxm     (u(1,1,1,ie),nxy,dztm1,lz1,dudt,lz1)
+           call col3    (tmp1,dudr,g1m1(1,1,1,ie),nxyz)
+           call col3    (tmp2,duds,g2m1(1,1,1,ie),nxyz)
+           call col3    (tmp3,dudt,g3m1(1,1,1,ie),nxyz)
+           if (ifdfrm(ie)) then
+              call addcol3 (tmp1,duds,g4m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp1,dudt,g5m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp2,dudr,g4m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp2,dudt,g6m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp3,dudr,g5m1(1,1,1,ie),nxyz)
+              call addcol3 (tmp3,duds,g6m1(1,1,1,ie),nxyz)
+           endif
+           call col2 (tmp1,helm1(1,1,1,ie),nxyz)
+           call col2 (tmp2,helm1(1,1,1,ie),nxyz)
+           call col2 (tmp3,helm1(1,1,1,ie),nxyz)
+           call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
+           do 20 iz=1,lz1
+              call mxm(tmp2(1,1,iz),lx1,dym1,ly1,tm2(1,1,iz),ly1)
+   20      continue
+           call mxm  (tmp3,nxy,dzm1,lz1,tm3,lz1)
+           call add2 (au(1,1,1,ie),tm1,nxyz)
+           call add2 (au(1,1,1,ie),tm2,nxyz)
+           call add2 (au(1,1,1,ie),tm3,nxyz)
+ 
+           endif
+ 
+        endif
+ 
+      enddo
+ 
 c     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
-c
-c     if (ifaxis.and.(isd.eq.2)) then
-c        do 200 e=1,nel
-c
-c           if (ifrzer(e)) then
-c              call mxm(u  (1,1,1,e),lx1,datm1,ly1,duax,1)
-c              call mxm(ym1(1,1,1,e),lx1,datm1,ly1,ysm1,1)
-c           endif
-c
-c           do 190 j=1,ly1
-c           do 190 i=1,lx1
-c               if (ym1(i,j,1,e).ne.0.) then
-c                 if (ifrzer(e)) then
-c                    term1 = 0.0
-c                    if(j.ne.1) 
-c    $             term1 = bm1(i,j,1,e)*u(i,j,1,e)/ym1(i,j,1,e)**2
-c                    term2 =  wxm1(i)*wam1(1)*dam1(1,j)*duax(i)
-c    $                       *jacm1(i,1,1,e)/ysm1(i)
-c                 else
-c                  term1 = bm1(i,j,1,e)*u(i,j,1,e)/ym1(i,j,1,e)**2
-c                    term2 = 0.
-c                 endif
-c                 au(i,j,1,e) = au(i,j,1,e)
-c    $                          + helm1(i,j,1,e)*(term1+term2)
-c               endif
-c 190       continue
-c 200    continue
-c     endif
-c
-c     taxhm=taxhm+(dnekclock()-etime1)
-c     return
-c     end
+ 
+      if (ifaxis.and.(isd.eq.2)) then
+         do ie=1,nel
+ 
+            if (ifrzer(ie)) then
+               call mxm(u  (1,1,1,ie),lx1,datm1,ly1,duax,1)
+               call mxm(ym1(1,1,1,ie),lx1,datm1,ly1,ysm1,1)
+            endif
+ 
+            do 190 j=1,ly1
+            do 190 i=1,lx1
+                if (ym1(i,j,1,ie).ne.0.) then
+                  if (ifrzer(ie)) then
+                     term1 = 0.0
+                     if(j.ne.1) 
+     $             term1 = bm1(i,j,1,ie)*u(i,j,1,ie)/ym1(i,j,1,ie)**2
+                     term2 =  wxm1(i)*wam1(1)*dam1(1,j)*duax(i)
+     $                       *jacm1(i,1,1,ie)/ysm1(i)
+                  else
+                   term1 = bm1(i,j,1,ie)*u(i,j,1,ie)/ym1(i,j,1,ie)**2
+                     term2 = 0.
+                  endif
+                  au(i,j,1,ie) = au(i,j,1,ie)
+     $                          + helm1(i,j,1,ie)*(term1+term2)
+                endif
+  190       continue
+         enddo
+      endif
+ 
+      return
+      end
 c-----------------------------------------------------------------------
 c     subroutine setk(uk,u,z,mass,w1,w2,ns,nsg,n,ndim)
 c

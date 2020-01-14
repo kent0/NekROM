@@ -22,7 +22,12 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /work/ wv1(lxyz*lelp*ldim),
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
-     $              wtrans(lxyz*lelp*9)
+     $              w9(lxyz*lelp*9)
 
       common /pod/ gram(ls*lsg),eevec(ls*lsg)
       common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
+
+      common /ipparallel/ nps,npb
+      common /pparallel/ nns(lsg),nnb(lb)
+
+      common /scales/ zsc(lsg)
