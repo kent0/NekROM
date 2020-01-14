@@ -460,13 +460,12 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
 
-      common /pcomm/ igsh1,igsh2
+      common /pcomm/ igsh(2)
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       integer*8 iw(n,2)
 
-      igsh1=0
-      igsh2=0
+      call izero(igsh,2)
 
       do i=1,n
          i1=nid/2
@@ -485,8 +484,8 @@ c-----------------------------------------------------------------------
          call nekgsync
       enddo
 
-      call fgslib_gs_setup(igsh1,iw,n,nekcomm,mp)
-      call fgslib_gs_setup(igsh2,iw(1,2),n,nekcomm,mp)
+      call fgslib_gs_setup(igsh,iw,n,nekcomm,mp)
+      call fgslib_gs_setup(igsh(2),iw(1,2),n,nekcomm,mp)
 
       return
       end
@@ -495,7 +494,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      common /pcomm/ igsh1,igsh2
+      common /pcomm/ igsh(2)
 
       real u(n),w(n,2)
 
@@ -507,8 +506,8 @@ c-----------------------------------------------------------------------
          call rzero(w,n)
       endif
 
-      call fgslib_gs_op(igsh1,w,1,1,0)
-      call fgslib_gs_op(igsh2,w(1,2),1,1,0)
+      call fgslib_gs_op(igsh,w,1,1,0)
+      call fgslib_gs_op(igsh(2),w(1,2),1,1,0)
 
       if (mod(mid,2).eq.0) then
          call copy(u,w(1,2),n)
