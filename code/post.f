@@ -465,8 +465,12 @@ c-----------------------------------------------------------------------
 
       integer*8 iw(n,2)
 
-      call izero(igsh,2)
+      if (mp.eq.1) return
 
+      if (mod(mp,2).eq.1)
+     $   call exitti('no support for odd number of mpi-ranks$',mp)
+
+      call izero(igsh,2)
       do i=1,n
          i1=nid/2
          i2=mod(nid-1+mp,mp)/2
@@ -497,6 +501,11 @@ c-----------------------------------------------------------------------
       common /pcomm/ igsh(2)
 
       real u(n),w(n,2)
+
+      if (mp.eq.1) return
+
+      if (mod(mp,2).eq.1)
+     $   call exitti('no support for odd number of mpi-ranks$',mp)
 
       if (mod(mid,2).eq.0) then
          call copy(w,u,n)
