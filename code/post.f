@@ -501,18 +501,21 @@ c-----------------------------------------------------------------------
 
       real u(n),w1(n),w2(n)
 
-      call copy(w1,u,n)
-      call copy(w2,u,n)
+      if (mod(mid,2).eq.0) then
+         call copy(w1,u,n)
+         call rzero(w2,n)
+      else
+         call copy(w2,u,n)
+         call rzero(w1,n)
+      endif
 
       call fgslib_gs_op(igsh1,w1,1,1,0)
       call fgslib_gs_op(igsh2,w2,1,1,0)
 
       if (mod(mid,2).eq.0) then
-         call sub2(u,w2,n)
-         call chsign(u,n)
+         call copy(u,w2,n)
       else
-         call sub2(u,w1,n)
-         call chsign(u,n)
+         call copy(u,w1,n)
       endif
 
       return
