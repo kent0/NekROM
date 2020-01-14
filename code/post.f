@@ -456,14 +456,14 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine shift_setup(iwk1,iwk2,n)
+      subroutine shift_setup(iw,n)
 
       include 'SIZE'
 
       common /pcomm/ igsh1,igsh2
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      integer*8 iwk1(n),iwk2(n)
+      integer*8 iw(n,2)
 
       igsh1=0
       igsh2=0
@@ -472,50 +472,48 @@ c-----------------------------------------------------------------------
          i1=nid/2
          i2=mod(nid-1+mp,mp)/2
          irem=mod(nid,2).eq.0
-         iwk1(i)=i+i1*n
-         iwk2(i)=i+i2*n
+         iw(i,1)=i+i1*n
+         iw(i,2)=i+i2*n
       enddo
 
       do i=1,mp
          if (nid.eq.(i-1)) then
             do j=1,n
-               write (6,*) nid,i,j,iwk1(j),iwk2(j)
+               write (6,*) nid,i,j,iw(j,1),iw(j,2)
             enddo
          endif
          call nekgsync
       enddo
 
-      ntot=(mp*n)/2
-
-      call fgslib_gs_setup(igsh1,iwk1,ntot,nekcomm,mp)
-      call fgslib_gs_setup(igsh2,iwk2,ntot,nekcomm,mp)
+      call fgslib_gs_setup(igsh1,iw,n,nekcomm,mp)
+      call fgslib_gs_setup(igsh2,iw(1,2),n,nekcomm,mp)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine shift(u,w1,w2,n)
+      subroutine shift(u,w,n)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       common /pcomm/ igsh1,igsh2
 
-      real u(n),w1(n),w2(n)
+      real u(n),w(n,2)
 
       if (mod(mid,2).eq.0) then
-         call copy(w1,u,n)
-         call rzero(w2,n)
+         call copy(w,u,n)
+         call rzero(w(1,2),n)
       else
-         call copy(w2,u,n)
-         call rzero(w1,n)
+         call copy(w(1,2),u,n)
+         call rzero(w,n)
       endif
 
-      call fgslib_gs_op(igsh1,w1,1,1,0)
-      call fgslib_gs_op(igsh2,w2,1,1,0)
+      call fgslib_gs_op(igsh1,w,1,1,0)
+      call fgslib_gs_op(igsh2,w(1,2),1,1,0)
 
       if (mod(mid,2).eq.0) then
-         call copy(u,w2,n)
+         call copy(u,w(1,2),n)
       else
-         call copy(u,w1,n)
+         call copy(u,w,n)
       endif
 
       return
