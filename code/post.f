@@ -41,24 +41,22 @@ c     nelp=4
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call setgg(gram,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
+         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
      $      ns,nsg,n,nel,ndim,ng)
+c        call setbb(cc,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
       enddo
 
-      call dump_serial(gram,ns*ns,'ops/graml2 ',nid)
+      call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
       call dump_serial(aa,ns*ns,'ops/gramh10 ',nid)
-
-      call exitt0
 
       ! eigendecomposition here or external process
 
-      write (6,*) 'ns=',ns
       mmm=ns*ns
       call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
       call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
 
-      call mxm(gram,ns,evecp,ns,wevec,ns)
+      call mxm(bb,ns,evecp,ns,wevec,ns)
       call mxm(evecpt,ns,wevec,ns,bb,ns)
 
       call dump_serial(bb,ns*ns,'ops/bup_new ',nid)
@@ -316,7 +314,7 @@ c-----------------------------------------------------------------------
       call copy(w3,t,n*mdim*ns)
 
       do i=1,ns*ndim
-c        call col2(w2(1,i,1),mass,n)
+         call col2(w2(1,i,1),mass,n)
          ! apply grad on w1
       enddo
 
@@ -613,8 +611,6 @@ c     include 'CTIMER'
 
       real gfac(lx1,ly1,lz1,mel,ng)
 
-      write (6,*) 'wp0.2.1'
-
       naxhm = naxhm + 1
       etime1 = dnekclock()
 
@@ -625,10 +621,7 @@ c     include 'CTIMER'
       ntot=nxyz*mel
 
 c     if (.not.ifsolv) call setfast(visc,helm2,imesh)
-      write (6,*) 'wp0.2.2'
       call rzero (au,ntot)
-      write (6,*) 'wp0.2.2.1'
-
 
       do ie=1,mel
  
@@ -658,20 +651,16 @@ c          Fast 2-d mode: constant properties and undeformed element
            call mxm  (u(1,1,1,ie),lx1,dytm1,ly1,duds,ly1)
            call col3 (tmp1,dudr,gfac(1,1,1,ie,1),nxyz)
            call col3 (tmp2,duds,gfac(1,1,1,ie,2),nxyz)
-           write (6,*) 'wp0.2.3'
 c          if (ifdfrm(ie)) then
               call addcol3 (tmp1,duds,gfac(1,1,1,ie,4),nxyz)
               call addcol3 (tmp2,dudr,gfac(1,1,1,ie,4),nxyz)
 c          endif
-           write (6,*) 'wp0.2.4'
            call col2 (tmp1,visc(1,1,1,ie),nxyz)
            call col2 (tmp2,visc(1,1,1,ie),nxyz)
            call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
            call mxm  (tmp2,lx1,dym1,ly1,tm2,ly1)
            call add2 (au(1,1,1,ie),tm1,nxyz)
            call add2 (au(1,1,1,ie),tm2,nxyz)
-           write (6,*) 'wp0.2.5'
-
         endif
 
         else
