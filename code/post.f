@@ -89,8 +89,6 @@ c        endif
       call copy(cc,wevecc,ns*ns*ns)
       call dump_serial(cc,ns*ns*ns,'ops/cup_new ',nid)
 
-      call exitt0
-
       return
       end
 c-----------------------------------------------------------------------
@@ -1106,7 +1104,7 @@ c
       offs = offs0 + iofldsr*stride + ldim*strideB + 
      $   ldim*(ieg0-1)*nxyzr8*wdsizr
       call byte_set_view(offs,ifh_mbyte)
-      call mfi_getv(ux,uy,uz,wk,lwk,.false.)
+      call mfi_getv_p(ux,uy,uz,wk,lwk,.false.)
 
       return
       end
@@ -1125,6 +1123,153 @@ c-----------------------------------------------------------------------
 
       call err_chk(ierr,'Error closing restart file, in mfi.$')
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfi_getv_p(u,v,w,wk,lwk,iskip)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'RESTART'
+
+      real u(lx1*ly1*lz1,1),v(lx1*ly1*lz1,1),w(lx1*ly1*lz1,1)
+      logical iskip
+
+      real*4 wk(lwk) ! message buffer
+      parameter(lrbs=20*lx1*ly1*lz1*lelt)
+      common /vrthov/ w2(lrbs) ! read buffer
+      real*4 w2
+
+      integer e,ei,eg,msg_id(lelt)
+      integer*8 i8tmp
+ 
+      call nekgsync() ! clear outstanding message queues.
+
+      nxyzr  = ldim*nxr*nyr*nzr
+      dnxyzr = nxyzr
+      len    = nxyzr*wdsizr             ! message length in bytes
+      if (wdsizr.eq.8) nxyzr = 2*nxyzr
+
+      ! check message buffer
+      num_recv  = len
+      num_avail = lwk*wdsize
+      call lim_chk(num_recv,num_avail,'     ','     ','mfi_getv a')
+
+      ! setup read buffer
+      if(nid.eq.pid0r) then
+c         dtmp  = dnxyzr*nelr
+c         nread = dtmp/lrbs
+c         if(mod(dtmp,1.0*lrbs).ne.0) nread = nread + 1
+         i8tmp = int(nxyzr,8)*int(nelr,8)
+         nread = i8tmp/int(lrbs,8)
+         if (mod(i8tmp,int(lrbs,8)).ne.0) nread = nread + 1
+         if(ifmpiio) nread = iglmax(nread,1) ! needed because of collective read
+         nelrr = nelr/nread
+      endif
+      call bcast(nelrr,4)
+      call lim_chk(nxyzr*nelrr,lrbs,'     ','     ','mfi_getv b')
+
+      ! pre-post recieves (one mesg per element)
+      ! this assumes we never pre post more messages than supported
+      if (np.gt.1) then
+         l = 1
+         do e=1,nelr
+            msg_id(e) = irecv(e,wk(l),len)
+            l = l+nxyzr
+         enddo
+      endif
+
+      ierr = 0
+      if (nid.eq.pid0r .and. np.gt.1) then ! only i/o nodes
+         k = 0
+         do i = 1,nread
+            if(i.eq.nread) then ! clean-up 
+              nelrr = nelr - (nread-1)*nelrr
+              if(nelrr.lt.0) nelrr = 0
+            endif
+
+            if(ierr.eq.0) then
+              if(ifmpiio) then 
+                call byte_read_mpi(w2,nxyzr*nelrr,-1,ifh_mbyte,ierr)
+              else
+                call byte_read (w2,nxyzr*nelrr,ierr)
+              endif
+            endif
+
+            ! redistribute data based on the current el-proc map
+            l = 1
+            do e = k+1,k+nelrr
+               jnid = gllnid(er(e))                ! where is er(e) now?
+               jeln = gllel(er(e))
+               if(ierr.ne.0) call rzero(w2(l),len)
+               call csend(jeln,w2(l),len,jnid,0)  ! blocking send
+               l = l+nxyzr
+            enddo
+            k  = k + nelrr
+         enddo
+      elseif (np.eq.1) then
+         if(ifmpiio) then 
+           call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
+         else
+           call byte_read(wk,nxyzr*nelr,ierr)
+         endif
+      endif
+
+      if (iskip) then
+         call nekgsync() ! clear outstanding message queues.
+         goto 100     ! don't assign the data we just read
+      endif
+
+      nxyzr = nxr*nyr*nzr
+      nxyzv = ldim*nxr*nyr*nzr
+      nxyzw = nxr*nyr*nzr
+      if (wdsizr.eq.8) nxyzw = 2*nxyzw
+
+      l = 1
+      do e=1,nelr
+         if (np.gt.1) then
+            call msgwait(msg_id(e))
+            ei = e
+         else if(np.eq.1) then
+            ei = er(e) 
+         endif
+         if (if_byte_sw) then
+            if(wdsizr.eq.8) then
+               call byte_reverse8(wk(l),nxyzv*2,ierr)
+            else
+               call byte_reverse(wk(l),nxyzv,ierr)
+            endif
+         endif
+         if (nxr.eq.lx1.and.nyr.eq.ly1.and.nzr.eq.lz1) then
+            if (wdsizr.eq.4) then         ! COPY
+               call copy4r(u(1,ei),wk(l        ),nxyzr)
+               call copy4r(v(1,ei),wk(l+  nxyzw),nxyzr)
+               if (if3d) 
+     $         call copy4r(w(1,ei),wk(l+2*nxyzw),nxyzr)
+            else
+               call copy  (u(1,ei),wk(l        ),nxyzr)
+               call copy  (v(1,ei),wk(l+  nxyzw),nxyzr)
+               if (if3d) 
+     $         call copy  (w(1,ei),wk(l+2*nxyzw),nxyzr)
+            endif
+         else                             ! INTERPOLATE
+            if (wdsizr.eq.4) then
+               call mapab4r(u(1,ei),wk(l        ),nxr,1)
+               call mapab4r(v(1,ei),wk(l+  nxyzw),nxr,1)
+               if (if3d) 
+     $         call mapab4r(w(1,ei),wk(l+2*nxyzw),nxr,1)
+            else
+               call mapab  (u(1,ei),wk(l        ),nxr,1)
+               call mapab  (v(1,ei),wk(l+  nxyzw),nxr,1)
+               if (if3d) 
+     $         call mapab  (w(1,ei),wk(l+2*nxyzw),nxr,1)
+            endif
+         endif
+         l = l+ldim*nxyzw
+      enddo
+
+ 100  call err_chk(ierr,'Error reading restart data, in getv.$')
       return
       end
 c-----------------------------------------------------------------------
