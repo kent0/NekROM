@@ -937,7 +937,7 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_init
+      subroutine mfip_setup
 c----------------------------------------------------------------------
 c
 c     (1) Open restart file(s)
@@ -1021,7 +1021,7 @@ c use new reader (only binary support)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_end
+      subroutine mfip_end
 
       include 'SIZE'
       include 'INPUT'
