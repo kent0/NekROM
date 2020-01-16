@@ -1273,3 +1273,23 @@ c         if(mod(dtmp,1.0*lrbs).ne.0) nread = nread + 1
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setfnames(fnames,ns)
+
+      include 'SIZE'
+
+      if (nid.eq.0) open(2,file='file.list',status='old')
+
+      do i=1,ns
+         call blank(fnames(1+(i-1)*132),132)
+         fnames(1+(i-1)*132)=':'
+         if (nid.eq.0) read(2,1) fnames(1+(i-1)*132)
+         if (indx1(fnames(1+(i-1)*132),':',1).ne.0) goto 3
+         itmp=i
+      enddo
+
+    3 continue
+    1 format(a132)
+
+      return
+      end
+c-----------------------------------------------------------------------

@@ -38,3 +38,5 @@ c     parameter (ls=lsg/lpmin+1)
       common /pparallel/ nns(lsg),nnb(lb)
 
       common /scales/ zsc(lsg)
+
+      common /snapf/ fnames(132*lsg)
