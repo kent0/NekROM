@@ -937,3 +937,194 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
       return
       end
 c-----------------------------------------------------------------------
+      subroutine read_init
+c----------------------------------------------------------------------
+c
+c     (1) Open restart file(s)
+c     (2) Check previous spatial discretization 
+c     (3) Map (K1,N1) => (K2,N2) if necessary
+c
+c     nfiles > 1 has several implications:
+c
+c     i.   For std. run, data is taken from last file in list, unless
+c          explicitly specified in argument list of filename
+c
+c     ii.  For MHD and perturbation cases, 1st file is for U,P,T;
+C          subsequent files are for B-field or perturbation fields
+c
+c
+c----------------------------------------------------------------------
+      INCLUDE 'SIZE'
+      INCLUDE 'TOTAL'
+      INCLUDE 'RESTART'
+
+      common /inelr/ nelrr
+
+      parameter (lxr=lx1+6)
+      parameter (lyr=ly1+6)
+      parameter (lzr=lz1+6)
+      parameter (lxyzr=lxr*lyr*lzr)
+      parameter (lxyzt=lx1*ly1*lz1*lelt)
+      parameter (lpsc9=ldimt+9)
+
+      common /scrcg/ pm1(lx1*ly1*lz1,lelv)
+      COMMON /SCRNS/ SDUMP(LXYZT,7)
+      integer mesg(40)
+
+c     note, this usage of CTMP1 will be less than elsewhere if NELT ~> 9.
+      COMMON /CTMP1/ TDUMP(LXYZR,LPSC9)
+      real*4         tdump
+
+      REAL SDMP2(LXYZT,LDIMT)
+
+c     cdump comes in via PARALLEL (->TOTAL)
+
+      character*30 excoder
+      character*1  excoder1(30)
+      equivalence (excoder,excoder1)
+
+      character*132 fname
+      character*1  fname1(132)
+      equivalence (fname1,fname)
+
+      integer       hnami (30)
+      character*132 hname
+      character*1   hname1(132)
+      equivalence  (hname,hname1)
+      equivalence  (hname,hnami )
+
+      character*132 header
+
+c     Local logical flags to determine whether to copy data or not.
+      logical ifok,iffmat
+      integer iposx,iposz,iposu,iposw,iposp,ipost,ipsps(ldimt1)
+
+      logical ifbytsw, if_byte_swap_test
+      real*4   bytetest
+
+      ifok=.false.
+      ifbytsw = .false.
+
+      nfiles=1
+
+      if (nio.eq.0) write(6,*) 'Reading checkpoint data '
+
+c use new reader (only binary support)
+      p67 = abs(param(67))
+      if (p67.eq.6.0) then
+         ifile=1
+         call sioflag(ndumps,fname,initc(ifile))
+      else
+         call exitti('non-binary reading not supported$',nint(p67))
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine read_end
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'RESTART'
+
+      if (ifmpiio) then
+         if (nid.eq.pid0r) call byte_close_mpi(ifh_mbyte,ierr)
+      else
+         if (nid.eq.pid0r) call byte_close(ierr)
+      endif
+
+      call err_chk(ierr,'Error closing restart file, in mfi.$')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfip_init(fname_in)
+c
+c     (1) Open restart file(s)
+c     (2) Check previous spatial discretization 
+c     (3) Map (K1,N1) => (K2,N2) if necessary
+c
+c     nfiles > 1 has several implications:
+c
+c     i.   For std. run, data is taken from last file in list, unless
+c          explicitly specified in argument list of filename
+c
+c     ii.  For MHD and perturbation cases, 1st file is for U,P,T;
+c          subsequent files are for B-field or perturbation fields
+c
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+
+      character*132  fname_in
+
+      character*132  fname
+      character*1    fnam1(132)
+      equivalence   (fnam1,fname)
+
+      parameter (lwk = 7*lx1*ly1*lz1*lelt)
+      common /scrns/ wk(lwk)
+      common /scrcg/ pm1(lx1*ly1*lz1,lelv)
+
+      ! add path
+      call blank(fname,132)
+      lenp = ltrunc(path,132)
+      lenf = ltrunc(fname_in,132)
+      call chcopy(fnam1(1),path,lenp)
+      call chcopy(fnam1(lenp+1),fname_in,lenf)
+
+      call mfi_prepare(fname)       ! determine reader nodes +
+                                    ! read hdr + element mapping 
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfip_read(ux,uy,uz,ieg0,ieg1)
+c
+c     (1) Open restart file(s)
+c     (2) Check previous spatial discretization 
+c     (3) Map (K1,N1) => (K2,N2) if necessary
+c
+c     nfiles > 1 has several implications:
+c
+c     i.   For std. run, data is taken from last file in list, unless
+c          explicitly specified in argument list of filename
+c
+c     ii.  For MHD and perturbation cases, 1st file is for U,P,T;
+c          subsequent files are for B-field or perturbation fields
+c
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+
+      parameter (lwk = 7*lx1*ly1*lz1*lelt)
+      common /scrns/ wk(lwk)
+      common /scrcg/ pm1(lx1*ly1*lz1,lelv)
+
+      real ux(lx1,ly1,lz1,ieg1-ieg0+1)
+      real uy(lx1,ly1,lz1,ieg1-ieg0+1)
+      real uz(lx1,ly1,lz1,ieg1-ieg0+1)
+
+      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
+
+      offs0   = iHeadersize + 4 + isize*nelgr
+      nxyzr8  = nxr*nyr*nzr
+      strideB = nelBr* nxyzr8*wdsizr
+      stride  = nelgr* nxyzr8*wdsizr
+
+      call rzero(wk,lx1*ly1*lz1*nelt*ldim)
+
+      iofldsr=0
+      if (ifgetxr) iofldsr=ldim
+
+      nelr=ieg1-ieg0+1
+      offs = offs0 + iofldsr*stride + ldim*strideB + 
+     $   ldim*(ieg0-1)*nxyzr8*wdsizr
+      call byte_set_view(offs,ifh_mbyte)
+      call mfi_getv(ux,uy,uz,wk,lwk,.false.)
+
+      return
+      end
+c-----------------------------------------------------------------------
