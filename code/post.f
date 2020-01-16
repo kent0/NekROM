@@ -1021,23 +1021,6 @@ c use new reader (only binary support)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mfip_end
-
-      include 'SIZE'
-      include 'INPUT'
-      include 'RESTART'
-
-      if (ifmpiio) then
-         if (nid.eq.pid0r) call byte_close_mpi(ifh_mbyte,ierr)
-      else
-         if (nid.eq.pid0r) call byte_close(ierr)
-      endif
-
-      call err_chk(ierr,'Error closing restart file, in mfi.$')
-
-      return
-      end
-c-----------------------------------------------------------------------
       subroutine mfip_init(fname_in)
 c
 c     (1) Open restart file(s)
@@ -1124,6 +1107,23 @@ c
      $   ldim*(ieg0-1)*nxyzr8*wdsizr
       call byte_set_view(offs,ifh_mbyte)
       call mfi_getv(ux,uy,uz,wk,lwk,.false.)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfip_end
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'RESTART'
+
+      if (ifmpiio) then
+         if (nid.eq.pid0r) call byte_close_mpi(ifh_mbyte,ierr)
+      else
+         if (nid.eq.pid0r) call byte_close(ierr)
+      endif
+
+      call err_chk(ierr,'Error closing restart file, in mfi.$')
 
       return
       end
