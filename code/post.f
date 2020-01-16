@@ -3,13 +3,14 @@ c-----------------------------------------------------------------------
 
       include 'POST'
       include 'MASS'
+      include 'GEOM'
       include 'PARALLEL'
 
       character*127 flist
 
-      nelp=512
+c     nelp=512
 c     nelp=256
-c     nelp=4
+      nelp=11
       nsnap=ns
 
       ! assigned snapshot range
@@ -38,12 +39,19 @@ c     nelp=4
          ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
+         write (6,*) ieg0,ieg1,nel,n,'info'
          call reade_dummy(uu,ieg0,ieg1)
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
-c        call setrxp(rxp,rxpt,ieg0,ieg1)
+         call dump_serial(rx,lxd*lyd*lzd*4*nelt,'ops/rx ',nid)
+         call setrxp(rxp,rxpt,ieg0,ieg1)
+c        if (ieg0.eq.1) then
+c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp1 ',nid)
+c        else
+c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp2 ',nid)
+c        endif
 
          call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
@@ -262,7 +270,6 @@ c-----------------------------------------------------------------------
       ifield=1
 
       do ks=1,ns
-         write (6,*) 'ks:',ks,ns
          do js=1,ns
             call convect_new(t1,us0(1,1,js),.false.,
      $         us0(1,1,ks),us0(1,2,ks),us0(1,mdim,ks),.false.)
@@ -285,16 +292,18 @@ c-----------------------------------------------------------------------
      $     w1(n,mdim,ns),w2(n,ndim,ns),w3(n,mdim,ns),w4(n,mdim,ns)
 
       do ks=1,ns
-         write (6,*) 'ks:',ks,ns
          do js=1,ns
-            call convect_new(w3,t(1,1,js),.false.,
-     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
-            call convect_new(w3(1,2,1),t(1,2,js),.false.,
-     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
+c           call convect_new(w3,t(1,1,js),.false.,
+c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
+c           call convect_new(w3(1,2,1),t(1,2,js),.false.,
+c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
+            call conv(w3,t(1,1,js),.false.,
+     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.,rxp,nel)
+            call conv(w3(1,2,1),t(1,2,js),.false.,
+     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.,rxp,nel)
             do is=1,ns
                c(is,js,ks)=c(is,js,ks)
      $            +vlsc2(w3,t(1,1,is),n*mdim)
-               write (6,*) w3(1,1,1),'w3'
             enddo
          enddo
       enddo
@@ -851,8 +860,10 @@ c
       save    ilstep
       data    ilstep /-1/
 
-      if (.not.ifgeom.and.ilstep.gt.1) return  ! already computed
-      if (ifgeom.and.ilstep.eq.istep)  return  ! already computed
+      write (6,*) ieg0,ieg1,'rxp'
+
+c     if (.not.ifgeom.and.ilstep.gt.1) return  ! already computed
+c     if (ifgeom.and.ilstep.eq.istep)  return  ! already computed
       ilstep=istep
 
       nxyz1=lx1*ly1*lz1
