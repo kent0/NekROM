@@ -29,6 +29,7 @@ c     nelp=4
       call rzero(aa,ns*nsg)
       call rzero(bb,ns*nsg)
       call rzero(cc,ns*nsg*nsg)
+      call rzero(cc2,ns*nsg*nsg)
 
       ng=(ndim-1)*3
 
@@ -38,17 +39,24 @@ c     nelp=4
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call reade_dummy(uu,ieg0,ieg1)
+
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
+c        call setrxp(rxp,rxpt,ieg0,ieg1)
+
          call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
      $      ns,nsg,n,nel,ndim,ng)
-c        call setbb(cc,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
+         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
+     $      ns,nsg,n,ndim,ndim,nel)
+         call setcc_snap(cc2)
       enddo
 
       call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
       call dump_serial(aa,ns*ns,'ops/gramh10 ',nid)
+      call dump_serial(cc,ns*ns*ns,'ops/gramc ',nid)
+      call dump_serial(cc2,ns*ns*ns,'ops/gramc2 ',nid)
 
       ! eigendecomposition here or external process
 
@@ -58,90 +66,22 @@ c        call setbb(cc,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
 
       call mxm(bb,ns,evecp,ns,wevec,ns)
       call mxm(evecpt,ns,wevec,ns,bb,ns)
-
       call dump_serial(bb,ns*ns,'ops/bup_new ',nid)
 
       call mxm(aa,ns,evecp,ns,wevec,ns)
       call mxm(evecpt,ns,wevec,ns,aa,ns)
-
       call dump_serial(aa,ns*ns,'ops/aup_new ',nid)
 
-      call exitt0
-
-      inel=1
-      ieg1=0
-
-      do while (ieg1+1.le.nelgv)
-         ieg0=ie1+1
-         ieg1=min(ieg1+inel+nelp-1,nelgv)
-         nel=ieg1-ieg0+1
-         n=lxyz*(ieg1-ieg0+1)
-
-c        call reade(uu,ieg0,ieg1,'U',flist)
-         call reade_dummy(uu,ieg0,ieg1)
-
-         call setgeom(gfac,w9,ieg0,ieg1,lxyz,3*(ndim-1),nid)
-c        call setconv(rxd) ! TODO: implement
-
-         call setmass(mass,wv1,ieg0,ieg1,lxyz)
-
-         call setzz(zz,uu,evecp,wvf1,wvf2,n*ndim,ns,nsg)
-
-c        do k=1,ns
-c        do i=1,lxyz*nel
-c           write (6,1) i,k,ub(i,k),zz(i+(k-1)*lxyz*nel*ndim),
-c    $                      ub(i,k)/zz(i+(k-1)*lxyz*nel*ndim)
-c        enddo
-c        enddo
-
-         do k=1,ns
-         do i=1,lxyz*nel
-            write (6,1) i,k,vb(i,k),zz(i+n+(k-1)*lxyz*nel*ndim),
-     $                      vb(i,k)/zz(i+n+(k-1)*lxyz*nel*ndim)
-         enddo
-         enddo
-
-c        call exitt0
-
-c        call setbb(bb,zz,mass,wvf1,wvf2,wvf3,ns,nsg,n,ndim)
-c        call setbb(bb,uu,mass,wvf1,wvf2,wvf3,ns,nsg,n,ndim)
-         call setgg(bb,uu,mass,wvf1,wvf2,wvf3,ns,nsg,n,ndim)
-
-c        call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf3,ns,nsg,n,ndim)
-c        call setcc(c,z,wvf1,wvf2,ns,nsg,n,ndim,ndim) ! TODO: implement
-
-c        call setkk(uk,zz,mass,wvf1,wvf2,ns,nsg,n,ndim)
-      enddo
-
-      call sleep(1)
-
-c     call rzero(zsc,nsg)
-
-c     do i=1,ns
-c        zsc(i)=sqrt(bb(i+(i-1)*ns))
-c     enddo
-
-c     call invcol1(zsc,ns)
-
-c     call gop(zsc,ug,'+  ',nsg)
-
-c     do j=1,nsg
-c     do i=1,ns
-c        bb(i+(j-1)*ns)=bb(i+(j-1)*ns)*zsc(i)*zsc(j)
-c        bb(i+(j-1)*ns)=bb(i+(j-1)*ns)
-c     enddo
-c     enddo
-
-      do j=1,ns
+      call mxm(cc,ns*ns,evecp,ns,wevecc,ns)
       do i=1,ns
-         write (6,*) i,j,bb(i+(j-1)*ns),'bb'
+         call mxm(wevecc(1+(i-1)*ns*ns),ns,evecp,ns,
+     $      cc(1+(i-1)*ns*ns),ns)
       enddo
-      enddo
+      call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
+      call copy(cc,wevecc,ns*ns*ns)
+      call dump_serial(cc,ns*ns*ns,'ops/cup_new ',nid)
 
-      call dump_serial(bb,mmm,'ops/bup ',nid)
       call exitt0
-
-    1 format (i8,i8,1p3e16.5,' zz')
 
       return
       end
@@ -304,35 +244,59 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setcc(c,z,t,w1,w2,w3,w4,ns,nsg,n,mdim,ndim)
+      subroutine setcc_snap(cc)
 
-      real c(ns,nsg,nsg),z(n,mdim,ns),t(n,ndim,ns),
-     $     w1(n,mdim,ns),w2(n,ndim,ns),w3(n,mdim,ns),w4(n,mdim,ns)
+      include 'SIZE'
+      include 'MOR'
+      include 'TSTEP'
 
-      call copy(w1,t,m*mdim*ns)
-      call copy(w2,z,n*ndim*ns)
-      call copy(w3,t,n*mdim*ns)
+      parameter (lt=lx1*ly1*lz1*lelt)
 
-      do i=1,ns*ndim
-         call col2(w2(1,i,1),mass,n)
-         ! apply grad on w1
+      common /scrcc/ t1(lt),t2(lt),t3(lt)
+
+      real cc(ns,ns,ns)
+
+      n=lx1*ly1*lz1*nelv
+
+      call rone(ones,lx1*ly1*lz1*nelv)
+      ifield=1
+
+      do ks=1,ns
+         write (6,*) 'ks:',ks,ns
+         do js=1,ns
+            call convect_new(t1,us0(1,1,js),.false.,
+     $         us0(1,1,ks),us0(1,2,ks),us0(1,mdim,ks),.false.)
+            call convect_new(t2,us0(1,2,js),.false.,
+     $         us0(1,1,ks),us0(1,2,ks),us0(1,mdim,ks),.false.)
+            do is=1,ns
+               cc(is,js,ks)=cc(is,js,ks)
+     $            +vlsc2(t1,us0(1,1,is),n)+vlsc2(t2,us0(1,2,is),n)
+            enddo
+         enddo
       enddo
 
-      do jof=0,nsg/ns-1 ! assume ns is the same across all processors
-         do iof=0,nsg/ns-1
-            do ks=1,ns
-            do js=1,ns
-c              call conv(w4,w1,w2) ! w4= mass * (w1 * w4)
-               do is=1,ns
-                  c(is,js+ns*iof,ks+ns*jof)=c(is,js+ns*iof,ks+ns*jof)
-     $               +vlsc2(w3(1,1,is),w4(1,1,js),n*ndim)
-               enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setcc(c,z,t,rxp,w1,w2,w3,w4,ns,nsg,n,mdim,ndim,nel)
+
+      real rxp(1)
+      real c(ns,nsg,nsg),z(n,ndim,ns),t(n,mdim,ns),
+     $     w1(n,mdim,ns),w2(n,ndim,ns),w3(n,mdim,ns),w4(n,mdim,ns)
+
+      do ks=1,ns
+         write (6,*) 'ks:',ks,ns
+         do js=1,ns
+            call convect_new(w3,t(1,1,js),.false.,
+     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
+            call convect_new(w3(1,2,1),t(1,2,js),.false.,
+     $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
+            do is=1,ns
+               c(is,js,ks)=c(is,js,ks)
+     $            +vlsc2(w3,t(1,1,is),n*mdim)
+               write (6,*) w3(1,1,1),'w3'
             enddo
-            enddo
-            
-c           call shift(w3,n*ndim*ns) ! <- TODO: add tmp array to arg
          enddo
-c        call shift(w2,n*ndim*ns) ! <- TODO: add tmp array to arg
       enddo
 
       return
@@ -778,4 +742,187 @@ c     enddo
 c
 c     return
 c     end
+c-----------------------------------------------------------------------
+      subroutine conv(bdu,u,ifuf,cx,cy,cz,ifcf,rxp,mel)
+
+c     Compute dealiased form:  J^T Bf *JC .grad Ju w/ correct Jacobians
+c
+      include 'SIZE'
+      include 'TOTAL'
+
+      real bdu(1),u(1),cx(1),cy(1),cz(1)
+      real rxp(lxd*lyd*lzd,ldim*ldim,mel)
+      logical ifuf,ifcf            ! u and/or c already on fine mesh?
+
+      parameter (lxy=lx1*ly1*lz1,ltd=lxd*lyd*lzd)
+      common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
+     $             , ur(ltd),us(ltd),ut(ltd)
+     $             , tr(ltd,3),uf(ltd)
+
+      integer e
+
+      nxyz1=lx1*ly1*lz1
+      nxyzd=lxd*lyd*lzd
+
+      nxyzu=nxyz1
+      if (ifuf) nxyzu=nxyzd
+
+      nxyzc = nxyz1
+      if (ifcf) nxyzc=nxyzd
+
+      iu=1 ! pointer to scalar field u
+      ic=1 ! pointer to vector field C
+      ib=1 ! pointer to scalar field Bdu
+
+      do e=1,mel
+         if (ifcf) then
+            call copy(tr(1,1),cx(ic),nxyzd)  ! already in rst form
+            call copy(tr(1,2),cy(ic),nxyzd)
+            if (if3d) call copy(tr(1,3),cz(ic),nxyzd)
+         else  ! map coarse velocity to fine mesh (C-->F)
+            call intp_rstd(fx,cx(ic),lx1,lxd,if3d,0)
+            call intp_rstd(fy,cy(ic),lx1,lxd,if3d,0)
+            if (if3d) call intp_rstd(fz,cz(ic),lx1,lxd,if3d,0)
+
+            if (if3d) then  ! Convert convector F to r-s-t coordinates
+               do i=1,nxyzd
+                  tr(i,1)=rxp(i,1,e)*fx(i)+
+     $                    rxp(i,2,e)*fy(i)+
+     $                    rxp(i,3,e)*fz(i)
+                  tr(i,2)=rxp(i,4,e)*fx(i)+
+     $                    rxp(i,5,e)*fy(i)+
+     $                    rxp(i,6,e)*fz(i)
+                  tr(i,3)=rxp(i,7,e)*fx(i)+
+     $                    rxp(i,8,e)*fy(i)+
+     $                    rxp(i,9,e)*fz(i)
+               enddo
+            else
+               do i=1,nxyzd
+                  tr(i,1)=rxp(i,1,e)*fx(i)+rxp(i,2,e)*fy(i)
+                  tr(i,2)=rxp(i,3,e)*fx(i)+rxp(i,4,e)*fy(i)
+               enddo
+           endif
+         endif
+
+         if (ifuf) then
+            call grad_rst(ur,us,ut,u(iu),lxd,if3d)
+         else
+            call intp_rstd(uf,u(iu),lx1,lxd,if3d,0)
+            call grad_rst(ur,us,ut,uf,lxd,if3d)
+         endif
+
+         if (if3d) then
+            do i=1,nxyzd ! mass matrix included, per DFM (4.8.5)
+               uf(i)=tr(i,1)*ur(i)+tr(i,2)*us(i)+tr(i,3)*ut(i)
+            enddo
+         else
+            do i=1,nxyzd ! mass matrix included, per DFM (4.8.5)
+               uf(i)=tr(i,1)*ur(i)+tr(i,2)*us(i)
+            enddo
+         endif
+
+         call intp_rstd(bdu(ib),uf,lx1,lxd,if3d,1)
+
+         ic=ic+nxyzc
+         iu=iu+nxyzu
+         ib=ib+nxyz1
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setrxp(rxp,tmp,ieg0,ieg1)
+c
+c     Eulerian scheme, add convection term to forcing function
+c     at current time step.
+c
+      include 'SIZE'
+      include 'INPUT'
+      include 'GEOM'
+      include 'TSTEP' ! for istep
+      include 'PARALLEL'
+
+      common /dealias1/ zd(lxd),wd(lxd)
+      real rxp(lxd*lyd*lzd,ldim*ldim,ieg1-ieg0+1)
+      real tmp(lxd*lyd*lzd,ldim*ldim,ieg1-ieg0+1)
+      integer e
+
+      integer ilstep
+      save    ilstep
+      data    ilstep /-1/
+
+      if (.not.ifgeom.and.ilstep.gt.1) return  ! already computed
+      if (ifgeom.and.ilstep.eq.istep)  return  ! already computed
+      ilstep=istep
+
+      nxyz1=lx1*ly1*lz1
+      nxyzd=lxd*lyd*lzd
+
+      call zwgl(zd,wd,lxd)  ! zwgl -- NOT zwgll!
+      call rzero(rxp,lxd*lyd*lzd*ldim*ldim*(ieg1-ieg0+1))
+
+      if (if3d) then
+         do ieg=ieg0,ieg1
+            ie=ieg-ieg0+1
+            if (gllnid(ieg).eq.nid) then
+               e=gllel(ieg)
+
+c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
+
+               call intp_rstd(rxp(1,1,ie),rxm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,2,ie),rym1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,3,ie),rzm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,4,ie),sxm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,5,ie),sym1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,6,ie),szm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,7,ie),txm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,8,ie),tym1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,9,ie),tzm1(1,1,1,e),lx1,lxd,if3d,0)
+
+               l=0
+               do k=1,lzd
+               do j=1,lyd
+               do i=1,lxd
+                  l=l+1
+                  w=wd(i)*wd(j)*wd(k)
+                  do ii=1,9
+                     rxp(l,ii,ie)=w*rxp(l,ii,ie)
+                  enddo
+               enddo
+               enddo
+               enddo
+            endif
+         enddo
+
+      else ! 2D
+         do ieg=ieg0,ieg1
+            ie=ieg-ieg0+1
+            if (gllnid(ieg).eq.nid) then
+               e=gllel(ieg)
+
+c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
+
+               call intp_rstd(rxp(1,1,ie),rxm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,2,ie),rym1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,3,ie),sxm1(1,1,1,e),lx1,lxd,if3d,0)
+               call intp_rstd(rxp(1,4,ie),sym1(1,1,1,e),lx1,lxd,if3d,0)
+
+               l=0
+               do j=1,lyd
+               do i=1,lxd
+                  l=l+1
+                  w=wd(i)*wd(j)
+                  do ii=1,4
+                     rxp(l,ii,ie)=w*rxp(l,ii,ie)
+                  enddo
+               enddo
+               enddo
+            endif
+         enddo
+      endif
+
+      call gop(rxp,tmp,'+  ',lxd*lyd*lzd*ldim*ldim*(ieg1-ieg0+1))
+
+      return
+      end
 c-----------------------------------------------------------------------

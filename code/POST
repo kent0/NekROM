@@ -14,7 +14,9 @@ c     parameter (lsg=100)
 c     parameter (ls=lsg/lpmin+1)
 
       real mass
-      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp)
+      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
+     $                rxp(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp)
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
       common /fvars/ uu(lxyz*lelp*ldim*ls),zz(lxyz*lelp*ldim*ls),
@@ -24,11 +26,13 @@ c     parameter (ls=lsg/lpmin+1)
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
      $              wvf12(lxyz*lelp*ldim*ls*2),
      $              w9(lxyz*lelp*9),
-     $              wevec(ls*lsg)
+     $              wevec(ls*lsg),
+     $              wevecc(ls*lsg*lsg)
 
       common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*lsg),
      $             evecpt(ls*lsg)
       common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
+      common /ops2/ cc2(ls*lsg*lsg)
 
       common /ipparallel/ nps,npb
       common /pparallel/ nns(lsg),nnb(lb)

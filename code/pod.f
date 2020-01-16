@@ -38,7 +38,7 @@ c-----------------------------------------------------------------------
            enddo
            enddo
 
-           call vnorm(ub,vb,wb)
+c          call vnorm(ub,vb,wb)
          else
             call opcopy(ub,vb,wb,uic,vic,wic)
          endif

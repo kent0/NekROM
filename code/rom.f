@@ -340,6 +340,7 @@ c-----------------------------------------------------------------------
          call seta(au,au0,'ops/au ')
          call setb(bu,bu0,'ops/bu ')
          call setc(cul,'ops/cu ')
+c        call setc_snap(cul,'ops/guc ')
       endif
       if (ifrom(2)) then
          ifield=2
@@ -1049,6 +1050,55 @@ c        enddo
       if (nio.eq.0) write (6,*) 'ncloc=',ncloc
 
       if (nio.eq.0) write (6,*) 'exiting setc'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setc_snap(cl,fname)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real cux(lt),cuy(lt),cuz(lt)
+
+      common /scrcwk/ wk(lcloc),wk2(0:lub)
+
+      real cl(lcloc)
+
+      character*128 fname
+      character*128 fnlint
+
+      if (nio.eq.0) write (6,*) 'inside setc_snap'
+
+      if (iffastc) call exitti('fastc not supported in setc_new$',nb)
+
+      n=lx1*ly1*lz1*nelv
+
+      call lints(fnlint,fname,128)
+      if (nid.eq.0) open (unit=100,file=fnlint)
+      if (nio.eq.0) write (6,*) 'setc file:',fnlint
+
+      do k=1,ns
+         if (nio.eq.0) write (6,*) 'setc_snap: ',k,'/',nb
+         do j=1,ns
+            call convect_new(cux,us0(1,1,j),.false.,
+     $         us0(1,1,k),us0(1,2,k),us0(1,ldim,k),.false.)
+            call convect_new(cuy,us0(1,2,j),.false.,
+     $         us0(1,1,k),us0(1,2,k),us0(1,ldim,k),.false.)
+            call rzero(cuz,nelv*lxd*lyd*lzd)
+            do i=1,ns
+               cel=op_glsc2_wt(
+     $            us0(1,1,i),us0(1,2,i),us0(1,ldim,i),
+     $            cux,cuy,cuz,ones)
+               if (nid.eq.0) write (100,*) cel
+            enddo
+         enddo
+      enddo
+
+      if (nid.eq.0) close (unit=100)
 
       return
       end
