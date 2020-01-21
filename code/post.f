@@ -24,7 +24,7 @@ c     nelp=34
       isg0=1
       isg1=nsg
 
-      call reade_init(fnames,ns)
+      call rflist(fnames,ns)
 
       inel=1
       ieg1=0
@@ -46,10 +46,7 @@ c     ieg1=33
          ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
-c        write (6,*) ieg0,ieg1,nel,n,'info'
-c        call reade_dummy(uu,ieg0,ieg1)
-c        call reade2(uu,ieg0,ieg1)
-         call reade(uu,ieg0,ieg1)
+         call rsnapsm(uu,ieg0,ieg1)
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
