@@ -8,9 +8,15 @@ c-----------------------------------------------------------------------
 
       character*127 flist
 
-c     nelp=512
-c     nelp=256
-      nelp=11
+      nelp=512
+c     nelp=511
+c     nelp=11
+c     nelp=16
+c     nelp=8
+c     nelp=4
+c     nelp=2
+      nelp=1
+c     nelp=34
       nsnap=ns
 
       ! assigned snapshot range
@@ -18,10 +24,11 @@ c     nelp=256
       isg0=1
       isg1=nsg
 
-      call reade_init(flist,ns)
+      call reade_init(fnames,ns)
 
       inel=1
       ieg1=0
+c     ieg1=33
 
       ns=ls
       nsg=lsg
@@ -40,7 +47,8 @@ c     nelp=256
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          write (6,*) ieg0,ieg1,nel,n,'info'
-         call reade_dummy(uu,ieg0,ieg1)
+c        call reade_dummy(uu,ieg0,ieg1)
+         call reade(uu,ieg0,ieg1)
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
@@ -82,7 +90,7 @@ c        endif
 
       call mxm(cc,ns*ns,evecp,ns,wevecc,ns)
       do i=1,ns
-         call mxm(wevecc(1+(i-1)*ns*ns),ns,evecp,ns,
+         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
      $      cc(1+(i-1)*ns*ns),ns)
       enddo
       call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
@@ -92,9 +100,46 @@ c        endif
       return
       end
 c-----------------------------------------------------------------------
-      subroutine reade_init(flist,ns)
+      subroutine reade(v,ieg0,ieg1)
 
-      character*127 flist
+      include 'POST'
+      include 'MASS'
+      include 'GEOM'
+
+      common /screrr/ err(lxyz,lelt,ldim)
+
+      real v(lxyz,ieg1-ieg0+1,ldim,ns)
+
+      n=lxyz*(ieg1-ieg0+1)
+
+      call mfip_setup
+      is=1
+      call mfip_init(fnames(1+(is-1)*132))
+
+      do is=1,1
+         call mfip_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
+     $      ieg0,ieg1)
+      enddo
+
+      do ieg=ieg0,ieg1
+         ie=ieg-ieg0+1
+         u1l2=vlsc2(v(1,ie,1,1),v(1,ie,1,1),lxyz)
+         u2l2=vlsc2(us0(1+(ieg-1)*lxyz,1,1),
+     $              us0(1+(ieg-1)*lxyz,1,1),lxyz)
+         call sub3(err,v(1,ie,1,1),us0(1+(ieg-1)*lxyz,1,1),lxyz)
+         uel2=vlsc2(err,err,lxyz)
+
+         v1l2=vlsc2(v(1,ie,2,1),v(1,ie,2,1),lxyz)
+         v2l2=vlsc2(us0(1+(ieg-1)*lxyz,2,1),
+     $              us0(1+(ieg-1)*lxyz,2,1),lxyz)
+         call sub3(err,v(1,ie,2,1),us0(1+(ieg-1)*lxyz,2,1),lxyz)
+         vel2=vlsc2(err,err,lxyz)
+
+         write (6,*) ieg,u1l2,u2l2,uel2,'uerr'
+         write (6,*) ieg,v1l2,v2l2,vel2,'verr'
+      enddo
+
+      call mfip_end
 
       return
       end
@@ -114,19 +159,6 @@ c-----------------------------------------------------------------------
       enddo
       enddo
       enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine reade(u,ieg0,ieg1,clist,flist)
-
-      real u(1)
-      logical ifread(0:4)
-      character*127 clist
-      character*127 fname
-
-      call parse_clist(ifread,clist)
-c     call reade_helper(u,ieg0,ieg1,ifread,fname)
 
       return
       end
@@ -1095,7 +1127,7 @@ c
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      call rzero(wk,lx1*ly1*lz1*nelt*ldim)
+      call rzero(wk,7*lx1*ly1*lz1*nelt*ldim)
 
       iofldsr=0
       if (ifgetxr) iofldsr=ldim
@@ -1105,6 +1137,7 @@ c
      $   ldim*(ieg0-1)*nxyzr8*wdsizr
       call byte_set_view(offs,ifh_mbyte)
       call mfi_getv_p(ux,uy,uz,wk,lwk,.false.)
+c     call mfi_getv(ux,uy,uz,wk,lwk,.false.)
 
       return
       end
@@ -1137,13 +1170,72 @@ c-----------------------------------------------------------------------
       logical iskip
 
       real*4 wk(lwk) ! message buffer
+      parameter(lrbs=50*lx1*ly1*lz1*lelt)
+      common /vrthov/ w2(lrbs) ! read buffer
+      real*4 w2
+
+      integer e,ei,eg,msg_id(lelt)
+      integer*8 i8tmp
+
+      call nekgsync() ! clear outstanding message queues.
+
+      nxyzr  = ldim*nxr*nyr*nzr
+c     dnxyzr = nxyzr
+c     len    = nxyzr*wdsizr             ! message length in bytes
+      if (wdsizr.eq.8) nxyzr = 2*nxyzr
+
+      ! check message buffer
+c     num_recv  = len
+c     num_avail = lwk*wdsize
+c     call lim_chk(num_recv,num_avail,'     ','     ','mfi_getv a')
+
+c     ! setup read buffer
+c     i8tmp = int(nxyzr,8)*int(nelr,8)
+c     nread = i8tmp/int(lrbs,8)
+c     if (mod(i8tmp,int(lrbs,8)).ne.0) nread = nread + 1
+c     if(ifmpiio) nread = iglmax(nread,1) ! needed because of collective read
+c     nelrr = nelr/nread
+c     call bcast(nelrr,4)
+c     call lim_chk(nxyzr*nelrr,lrbs,'     ','     ','mfi_getv b')
+
+      ierr = 0
+
+      call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
+
+      nxyzr = nxr*nyr*nzr
+      nxyzw = nxr*nyr*nzr
+      if (wdsizr.eq.8) nxyzw = 2*nxyzw
+
+      l = 1
+      do e=1,nelr
+c        ei = er(e) 
+         call copy  (u(1,e),wk(l        ),nxyzr)
+         call copy  (v(1,e),wk(l+  nxyzw),nxyzr)
+         l = l+ldim*nxyzw
+      enddo
+
+ 100  call err_chk(ierr,'Error reading restart data, in getv.$')
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfi_getv_p2(u,v,w,wk,lwk,iskip)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'RESTART'
+
+      real u(lx1*ly1*lz1,1),v(lx1*ly1*lz1,1),w(lx1*ly1*lz1,1)
+      logical iskip
+
+      real*4 wk(lwk) ! message buffer
       parameter(lrbs=20*lx1*ly1*lz1*lelt)
       common /vrthov/ w2(lrbs) ! read buffer
       real*4 w2
 
       integer e,ei,eg,msg_id(lelt)
       integer*8 i8tmp
- 
+
       call nekgsync() ! clear outstanding message queues.
 
       nxyzr  = ldim*nxr*nyr*nzr
@@ -1174,7 +1266,7 @@ c         if(mod(dtmp,1.0*lrbs).ne.0) nread = nread + 1
       ! this assumes we never pre post more messages than supported
       if (np.gt.1) then
          l = 1
-         do e=1,nelr
+         do e=1,nelt
             msg_id(e) = irecv(e,wk(l),len)
             l = l+nxyzr
          enddo
@@ -1273,22 +1365,229 @@ c         if(mod(dtmp,1.0*lrbs).ne.0) nread = nread + 1
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setfnames(fnames,ns)
+      subroutine reade_init(fnames,ns)
 
       include 'SIZE'
 
-      if (nid.eq.0) open(2,file='file.list',status='old')
+      character*1 fnames(132*ns)
+      character*132 fname
+
+      open (unit=2,file='file.list')
 
       do i=1,ns
          call blank(fnames(1+(i-1)*132),132)
-         fnames(1+(i-1)*132)=':'
-         if (nid.eq.0) read(2,1) fnames(1+(i-1)*132)
-         if (indx1(fnames(1+(i-1)*132),':',1).ne.0) goto 3
+         call blank(fname,132)
+         fname=':'
+         read (2,1) fname
+         if (indx1(fname,':',1).ne.0) goto 3
+         call chcopy(fnames(1+(i-1)*132),fname,132)
          itmp=i
       enddo
 
+      close (unit=2)
+
     3 continue
     1 format(a132)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine reader_test
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      character*132 fname
+
+      call blank(fname,132)
+      fname='r0.f00001'
+
+      ! init communicator
+      call mpi_comm_split(nekcomm,mid,mid,mycomm,ierr)
+      if (ierr.ne.0) call exitti('error splitting comm$',ierr)
+
+      ! open
+      call my_byte_open_mpi(mycomm,fname,mpi_fh,.true.,ierr)
+
+      ! read header
+      call byte_read_mpi(buf,icount,iorank,mpi_fh,ierr)
+
+      ! read elements sequentially
+
+      do i=1,nel
+         call byte_set_view(ioff_in,mpi_fh)
+         call byte_read_mpi(buf,icount,iorank,mpi_fh,ierr)
+      enddo
+
+      ! close
+      call byte_close_mpi(mpi_fh,ierr)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine my_byte_open_mpi(nekcomm,fnamei,mpi_fh,ifro,ierr)
+
+      include 'mpif.h'
+
+      character fnamei*(*)
+      logical ifro
+
+      character*132 fname
+      character*1   fname1(132)
+      equivalence  (fname1,fname)
+
+      l = ltrunc(fnamei,len(fnamei))
+      if(l+1.gt.len(fname))
+     $ call exitti('invalid string length$',l)
+
+      call chcopy(fname1     ,fnamei ,l)
+      call chcopy(fname1(l+1),char(0),1)
+
+      imode = MPI_MODE_WRONLY+MPI_MODE_CREATE
+      if(ifro) then
+        imode = MPI_MODE_RDONLY
+      endif
+
+#ifndef NOMPIIO
+      call MPI_file_open(nekcomm,fname,imode,
+     &                   MPI_INFO_NULL,mpi_fh,ierr)
+#else
+      call exitti('MPI_file_open unsupported!$',0)
+#endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine bopen(sourcefld)
+c
+c     generic field file reader
+c     reads sourcefld and interpolates all avaiable fields
+c     onto current mesh
+c
+c     memory requirement:
+c     nelgs*nxs**ldim < np*(4*lelt*lx1**ldim)
+c
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+      include 'GFLDR'
+
+      character sourcefld*(*)
+
+      common /scrcg/  pm1(lx1*ly1*lz1,lelv)
+      common /nekmpi/ nidd,npp,nekcomm,nekgroup,nekreal
+
+      character*1   hdr(iHeaderSize)
+
+      integer*8 dtmp8
+
+      logical if_byte_swap_test
+      real*4 bytetest
+
+      etime_t = dnekclock_sync()
+      if(nio.eq.0) write(6,*) 'call gfldr ',trim(sourcefld)
+
+      ! open source field file
+      ierr = 0
+      if(nid.eq.0) then
+        open (90,file=sourcefld,status='old',err=100)
+        close(90)
+        goto 101
+ 100    ierr = 1
+ 101  endif
+      call err_chk(ierr,' Cannot open source fld file!$')
+      call byte_open_mpi(sourcefld,fldh_gfldr,.true.,ierr)
+
+      ! read and parse header
+      call byte_read_mpi(hdr,iHeaderSize/4,0,fldh_gfldr,ierr)
+      call byte_read_mpi(bytetest,1,0,fldh_gfldr,ierr)
+
+      call mfi_parse_hdr(hdr,ierr)
+      call err_chk(ierr,' Invalid endian tag!$')
+
+      return
+      end
+
+c-----------------------------------------------------------------------
+      subroutine bread
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+      include 'GFLDR'
+
+      nelgs   = nelgr
+      nxs     = nxr
+      nys     = nyr
+      nzs     = nzr
+      if(nzs.gt.1) then
+        ldims = 3
+      else
+        ldims = 2
+      endif
+      if (ifgtim) time = timer
+
+      ! distribute elements across all ranks
+      nels = nelgs/np
+      do i = 0,mod(nelgs,np)-1
+         if(i.eq.nid) nels = nels + 1
+      enddo
+      nxyzs      = nxs*nys*nzs
+      dtmp8      = nels
+      ntots_b    = dtmp8*nxyzs*wdsizr
+      rankoff_b  = igl_running_sum(nels) - dtmp8
+      rankoff_b  = rankoff_b*nxyzs*wdsizr
+      dtmp8      = nelgs
+      nSizeFld_b = dtmp8*nxyzs*wdsizr
+      noff0_b    = iHeaderSize + iSize + iSize*dtmp8
+
+      ! do some checks
+      if(ldims.ne.ldim)
+     $ call exitti('ldim of source does not match target!$',0)
+      if(ntots_b/wdsize .gt. ltots) then
+        dtmp8 = nelgs
+        lelt_req = dtmp8*nxs*nys*nzs / (np*ltots/lelt)
+        lelt_req = lelt_req + 1
+        if(nio.eq.0) write(6,*)
+     $   'ABORT: buffer too small, increase lelt > ', lelt_req
+        call exitt
+      endif
+
+      ifldpos = 0
+      if(ifgetxr) then
+        ! read source mesh coordinates
+        call gfldr_getxyz(xm1s,ym1s,zm1s)
+        ifldpos = ldim
+      else
+        call exitti('source does not contain a mesh!$',0)
+      endif
+
+      if(if_full_pres) then
+        call exitti('no support for if_full_pres!$',0)
+      endif
+
+      ! initialize interpolation tool using source mesh
+      nxf   = 2*nxs
+      nyf   = 2*nys
+      nzf   = 2*nzs
+      nhash = nels*nxs*nys*nzs
+      nmax  = 128
+
+      ! read source fields and interpolate
+c     if(ifgetur) then
+c       if(nid.eq.0 .and. loglevel.gt.2) write(6,*) 'reading vel'
+c       ntot = nx1*ny1*nz1*nelv
+c       call gfldr_getfld(vx,vy,vz,ntot,ldim,ifldpos+1)
+c       ifldpos = ifldpos + ldim
+c     endif
+
+      call byte_close_mpi(fldh_gfldr,ierr)
+      etime_t = dnekclock_sync() - etime_t
+      call fgslib_findpts_free(inth_gfldr)
+      if(nio.eq.0) write(6,'(A,1(1g9.2),A)')
+     &                   ' done :: gfldr  ', etime_t, ' sec'
 
       return
       end

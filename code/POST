@@ -39,4 +39,5 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /scales/ zsc(lsg)
 
+      character*1 fnames
       common /snapf/ fnames(132*lsg)
