@@ -46,27 +46,28 @@ c     ieg1=33
          ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
-         write (6,*) ieg0,ieg1,nel,n,'info'
+c        write (6,*) ieg0,ieg1,nel,n,'info'
 c        call reade_dummy(uu,ieg0,ieg1)
+c        call reade2(uu,ieg0,ieg1)
          call reade(uu,ieg0,ieg1)
 
-         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
-         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
-         call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call dump_serial(rx,lxd*lyd*lzd*4*nelt,'ops/rx ',nid)
-         call setrxp(rxp,rxpt,ieg0,ieg1)
+c        call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
+c        call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
+c        call setmass(mass,wv1,ieg0,ieg1,lxyz)
+c        call dump_serial(rx,lxd*lyd*lzd*4*nelt,'ops/rx ',nid)
+c        call setrxp(rxp,rxpt,ieg0,ieg1)
 c        if (ieg0.eq.1) then
 c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp1 ',nid)
 c        else
 c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp2 ',nid)
 c        endif
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
-         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
-     $      ns,nsg,n,nel,ndim,ng)
-         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
-     $      ns,nsg,n,ndim,ndim,nel)
-         call setcc_snap(cc2)
+c        call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
+c        call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
+c    $      ns,nsg,n,nel,ndim,ng)
+c        call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
+c    $      ns,nsg,n,ndim,ndim,nel)
+c        call setcc_snap(cc2)
       enddo
 
       call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
@@ -140,6 +141,56 @@ c-----------------------------------------------------------------------
       enddo
 
       call mfip_end
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine reade2(v,ieg0,ieg1)
+
+      include 'POST'
+      include 'MASS'
+      include 'GEOM'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /screrr/ err(lxyz,lelt,ldim)
+
+      real v(lxyz,ieg1-ieg0+1,ldim,ns)
+
+      n=lxyz*(ieg1-ieg0+1)
+
+c     call mfip_setup
+      is=1
+      call cread_head(fnames(1+(is-1)*132))
+      call byte_open(fnames(1+(is-1)*132),ierr)
+c     call byte_open('cyl0.f01000',ierr)
+
+      do is=1,1
+         call cread(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
+     $      ieg0,ieg1)
+      enddo
+c     call exitt0
+
+      do ieg=ieg0,ieg1
+         ie=ieg-ieg0+1
+         u1l2=vlsc2(v(1,ie,1,1),v(1,ie,1,1),lxyz)
+         u2l2=vlsc2(us0(1+(ieg-1)*lxyz,1,1),
+     $              us0(1+(ieg-1)*lxyz,1,1),lxyz)
+         call sub3(err,v(1,ie,1,1),us0(1+(ieg-1)*lxyz,1,1),lxyz)
+         uel2=vlsc2(err,err,lxyz)
+
+         v1l2=vlsc2(v(1,ie,2,1),v(1,ie,2,1),lxyz)
+         v2l2=vlsc2(us0(1+(ieg-1)*lxyz,2,1),
+     $              us0(1+(ieg-1)*lxyz,2,1),lxyz)
+         call sub3(err,v(1,ie,2,1),us0(1+(ieg-1)*lxyz,2,1),lxyz)
+         vel2=vlsc2(err,err,lxyz)
+
+         write (6,*) ieg,u1l2,u2l2,uel2,'uerr'
+         write (6,*) ieg,v1l2,v2l2,vel2,'verr'
+      enddo
+
+      call byte_close(ierr)
+
+c     call cread_end
 
       return
       end
@@ -1093,6 +1144,35 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine cread_head(fname_in)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+
+      character*132  fname_in
+
+      character*132  fname
+      character*1    fnam1(132)
+      equivalence   (fnam1,fname)
+
+      parameter (lwk = 7*lx1*ly1*lz1*lelt)
+      common /scrns/ wk(lwk)
+      common /scrcg/ pm1(lx1*ly1*lz1,lelv)
+
+      ! add path
+      call blank(fname,132)
+      lenp = ltrunc(path,132)
+      lenf = ltrunc(fname_in,132)
+      call chcopy(fnam1(1),path,lenp)
+      call chcopy(fnam1(lenp+1),fname_in,lenf)
+
+      call mfi_prepare(fname)       ! determine reader nodes +
+                                    ! read hdr + element mapping 
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine mfip_read(ux,uy,uz,ieg0,ieg1)
 c
 c     (1) Open restart file(s)
@@ -1115,6 +1195,7 @@ c
       parameter (lwk = 7*lx1*ly1*lz1*lelt)
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
+      common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
 
       real ux(lx1,ly1,lz1,ieg1-ieg0+1)
       real uy(lx1,ly1,lz1,ieg1-ieg0+1)
@@ -1133,11 +1214,106 @@ c
       if (ifgetxr) iofldsr=ldim
 
       nelr=ieg1-ieg0+1
+
+      icount=1
+      ie=1
+
+      do while (icount.le.nelr)
+         if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
+            i1(icount)=ie
+            icount=icount+1
+         endif
+         ie=ie+1
+      enddo
+
+      call isort(i1,i2,nelr)
+
+      ngroup=1
+
+      ic=1
+      ng=1
+      i3(1)=i1(1)
+
+      call ione(i4,nelr)
+
+      do ie=2,nelr
+         if (i1(ie)-i1(ie-1).gt.1) then ! if jump
+            ng=ng+1
+            i3(ng)=i1(ie)
+         else
+            i4(ng)=i4(ng)+1
+         endif
+      enddo
+
+      neltmp=nelr
+
+      iloc=1
+
+      do ig=1,ng
+         ieg=i3(ig)
+         nelr=i4(ig)
+         nwk=nelr*ldim*nxyzr8
+         offs = offs0 + iofldsr*stride + ldim*strideB + 
+     $      ldim*(ieg-1)*nxyzr8*wdsizr
+
+         write (6,*) ieg,nelr,nwk,'info'
+         call byte_set_view(offs,ifh_mbyte)
+         call mfi_getw(wk(iloc),nwk,.false.)
+         iloc=iloc+nwk
+      enddo
+
+      nelr=neltmp
+
+      lxyz=lx1*ly1*lz1
+      do ie=1,nelr
+         write (6,*) ieg0+(ie-1),i1(ie),i2(ie),'info1'
+         call copy(ux(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
+         call copy(uy(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
+         if (ldim.eq.3) call
+     $      copy(uz(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cread(ux,uy,uz,ieg0,ieg1)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'RESTART'
+
+      parameter (lwk = 7*lx1*ly1*lz1*lelt)
+      parameter (lxyz=lx1*ly1*lz1)
+
+      common /scrns/ wk(lwk)
+
+      real ux(lxyz*lelt,ieg1-ieg0+1)
+      real uy(lxyz*lelt,ieg1-ieg0+1)
+      real uz(lxyz*lelt,ieg1-ieg0+1)
+
+      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
+
+      offs0   = iHeadersize + 4 + isize*nelgr
+      nxyzr8  = nxr*nyr*nzr
+      strideB = nelBr* nxyzr8*wdsizr
+      stride  = nelgr* nxyzr8*wdsizr
+
+      iofldsr=0
+      if (ifgetxr) iofldsr=ldim
+
+      nelr=ieg1-ieg0+1
       offs = offs0 + iofldsr*stride + ldim*strideB + 
      $   ldim*(ieg0-1)*nxyzr8*wdsizr
-      call byte_set_view(offs,ifh_mbyte)
-      call mfi_getv_p(ux,uy,uz,wk,lwk,.false.)
-c     call mfi_getv(ux,uy,uz,wk,lwk,.false.)
+
+      call byte_seek(offs/4,ierr)
+      call byte_read(wk,nelr*ldim*nxyzr8*wdsizr/4,ierr)
+
+      do ie=1,nelr
+         call copy(ux(1,ie),wk(1+(ie-1)*lxyz*ldim),lxyz)
+         call copy(uy(1,ie),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
+         if (ldim.eq.3)
+     $      call copy(uz(1,ie),wk(1+(ie-1)*lxyz+2*lxyz),lxyz)
+      enddo
 
       return
       end
@@ -1213,6 +1389,52 @@ c        ei = er(e)
          call copy  (v(1,e),wk(l+  nxyzw),nxyzr)
          l = l+ldim*nxyzw
       enddo
+
+ 100  call err_chk(ierr,'Error reading restart data, in getv.$')
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfi_getw(wk,lwk,iskip)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'PARALLEL'
+      include 'RESTART'
+
+      logical iskip
+
+      real*4 wk(lwk) ! message buffer
+      parameter(lrbs=50*lx1*ly1*lz1*lelt)
+      common /vrthov/ w2(lrbs) ! read buffer
+      real*4 w2
+
+      integer e,ei,eg,msg_id(lelt)
+      integer*8 i8tmp
+
+      call nekgsync() ! clear outstanding message queues.
+
+      nxyzr  = ldim*nxr*nyr*nzr
+c     dnxyzr = nxyzr
+c     len    = nxyzr*wdsizr             ! message length in bytes
+      if (wdsizr.eq.8) nxyzr = 2*nxyzr
+
+      ! check message buffer
+c     num_recv  = len
+c     num_avail = lwk*wdsize
+c     call lim_chk(num_recv,num_avail,'     ','     ','mfi_getv a')
+
+c     ! setup read buffer
+c     i8tmp = int(nxyzr,8)*int(nelr,8)
+c     nread = i8tmp/int(lrbs,8)
+c     if (mod(i8tmp,int(lrbs,8)).ne.0) nread = nread + 1
+c     if(ifmpiio) nread = iglmax(nread,1) ! needed because of collective read
+c     nelrr = nelr/nread
+c     call bcast(nelrr,4)
+c     call lim_chk(nxyzr*nelrr,lrbs,'     ','     ','mfi_getv b')
+
+      ierr = 0
+
+      call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
 
  100  call err_chk(ierr,'Error reading restart data, in getv.$')
       return
