@@ -51,23 +51,17 @@ c        call reade_dummy(uu,ieg0,ieg1)
 c        call reade2(uu,ieg0,ieg1)
          call reade(uu,ieg0,ieg1)
 
-c        call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
-c        call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
-c        call setmass(mass,wv1,ieg0,ieg1,lxyz)
-c        call dump_serial(rx,lxd*lyd*lzd*4*nelt,'ops/rx ',nid)
-c        call setrxp(rxp,rxpt,ieg0,ieg1)
-c        if (ieg0.eq.1) then
-c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp1 ',nid)
-c        else
-c           call dump_serial(rxp,lxd*lyd*lzd*4*nelp,'ops/rxp2 ',nid)
-c        endif
+         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
+         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
+         call setmass(mass,wv1,ieg0,ieg1,lxyz)
+         call setrxp(rxp,rxpt,ieg0,ieg1)
 
-c        call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
-c        call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
-c    $      ns,nsg,n,nel,ndim,ng)
-c        call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
-c    $      ns,nsg,n,ndim,ndim,nel)
-c        call setcc_snap(cc2)
+         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
+         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
+     $      ns,nsg,n,nel,ndim,ng)
+         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
+     $      ns,nsg,n,ndim,ndim,nel)
+         call setcc_snap(cc2)
       enddo
 
       call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
@@ -115,32 +109,32 @@ c-----------------------------------------------------------------------
 
       call mfip_setup
       is=1
-      call mfip_init(fnames(1+(is-1)*132))
 
-      do is=1,1
+      do is=1,ns
+         call mfip_init(fnames(1+(is-1)*132))
          call mfip_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
      $      ieg0,ieg1)
+         call mfip_end
       enddo
 
-      do ieg=ieg0,ieg1
-         ie=ieg-ieg0+1
-         u1l2=vlsc2(v(1,ie,1,1),v(1,ie,1,1),lxyz)
-         u2l2=vlsc2(us0(1+(ieg-1)*lxyz,1,1),
-     $              us0(1+(ieg-1)*lxyz,1,1),lxyz)
-         call sub3(err,v(1,ie,1,1),us0(1+(ieg-1)*lxyz,1,1),lxyz)
-         uel2=vlsc2(err,err,lxyz)
+c     do ieg=ieg0,ieg1
+c        ie=ieg-ieg0+1
+c        u1l2=vlsc2(v(1,ie,1,1),v(1,ie,1,1),lxyz)
+c        u2l2=vlsc2(us0(1+(ieg-1)*lxyz,1,1),
+c    $              us0(1+(ieg-1)*lxyz,1,1),lxyz)
+c        call sub3(err,v(1,ie,1,1),us0(1+(ieg-1)*lxyz,1,1),lxyz)
+c        uel2=vlsc2(err,err,lxyz)
 
-         v1l2=vlsc2(v(1,ie,2,1),v(1,ie,2,1),lxyz)
-         v2l2=vlsc2(us0(1+(ieg-1)*lxyz,2,1),
-     $              us0(1+(ieg-1)*lxyz,2,1),lxyz)
-         call sub3(err,v(1,ie,2,1),us0(1+(ieg-1)*lxyz,2,1),lxyz)
-         vel2=vlsc2(err,err,lxyz)
+c        v1l2=vlsc2(v(1,ie,2,1),v(1,ie,2,1),lxyz)
+c        v2l2=vlsc2(us0(1+(ieg-1)*lxyz,2,1),
+c    $              us0(1+(ieg-1)*lxyz,2,1),lxyz)
+c        call sub3(err,v(1,ie,2,1),us0(1+(ieg-1)*lxyz,2,1),lxyz)
+c        vel2=vlsc2(err,err,lxyz)
 
-         write (6,*) ieg,u1l2,u2l2,uel2,'uerr'
-         write (6,*) ieg,v1l2,v2l2,vel2,'verr'
-      enddo
+c        write (6,*) ieg,u1l2,u2l2,uel2,'uerr'
+c        write (6,*) ieg,v1l2,v2l2,vel2,'verr'
+c     enddo
 
-      call mfip_end
 
       return
       end
