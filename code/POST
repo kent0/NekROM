@@ -4,8 +4,8 @@
 c     parameter (lx1=8)
 c     parameter (ldim=2)
 
-      parameter (lxyz=lx1**ldim)
-      parameter (lxyzd=lxd**ldim)
+      parameter (lxyz=lx1*ly1*lz1)
+      parameter (lxyzd=lxd*lyd*lzd)
       parameter (lelp=lelt)
 
       parameter (lsg=ls)
