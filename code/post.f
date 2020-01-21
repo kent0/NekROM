@@ -168,8 +168,6 @@ c-----------------------------------------------------------------------
       real b(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
       real w3(n,ndim,ns,3)
 
-      write (6,*) 'ns,nsg,n,ndim',ns,nsg,n,ndim
-
       call copy(w1,u,n*ndim*ns)
       call copy(w2,u,n*ndim*ns)
 
@@ -725,8 +723,6 @@ c
       integer ilstep
       save    ilstep
       data    ilstep /-1/
-
-      write (6,*) ieg0,ieg1,'rxp'
 
 c     if (.not.ifgeom.and.ilstep.gt.1) return  ! already computed
 c     if (ifgeom.and.ilstep.eq.istep)  return  ! already computed

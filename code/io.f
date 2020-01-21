@@ -7,7 +7,7 @@ c-----------------------------------------------------------------------
 
       n=lxyz*(ieg1-ieg0+1)
 
-      call rfldm_setup
+c     call rfldm_setup
 
       do is=1,ns
          call rfldm_open(fnames(1+(is-1)*132))
@@ -103,8 +103,6 @@ c-----------------------------------------------------------------------
       common /pcomm/ igsh(2)
 
       real u(n),w(n,2)
-
-      write (6,*) 'mp=',mp
 
       if (mp.eq.1) return
 
@@ -223,8 +221,10 @@ c-----------------------------------------------------------------------
       call chcopy(fnam1(1),path,lenp)
       call chcopy(fnam1(lenp+1),fname_in,lenf)
 
+      nio=-1
       call mfi_prepare(fname)       ! determine reader nodes +
                                     ! read hdr + element mapping 
+      nio=nid
 
       return
       end
@@ -298,8 +298,6 @@ c-----------------------------------------------------------------------
          nwk=nelr*ldim*nxyzr8
          offs = offs0 + iofldsr*stride + ldim*strideB + 
      $      ldim*(ieg-1)*nxyzr8*wdsizr
-
-         write (6,*) ieg,nelr,nwk,'info'
          call byte_set_view(offs,ifh_mbyte)
          call mfi_getw(wk(iloc),nwk,.false.)
          iloc=iloc+nwk
@@ -309,7 +307,6 @@ c-----------------------------------------------------------------------
 
       lxyz=lx1*ly1*lz1
       do ie=1,nelr
-         write (6,*) ieg0+(ie-1),i1(ie),i2(ie),'info1'
          call copy(ux(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
          call copy(uy(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
          if (ldim.eq.3) call
