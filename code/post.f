@@ -9,14 +9,7 @@ c-----------------------------------------------------------------------
       character*127 flist
 
       nelp=512
-c     nelp=511
-c     nelp=11
-c     nelp=16
-c     nelp=8
-c     nelp=4
-c     nelp=2
-      nelp=1
-c     nelp=34
+c     nelp=32
       nsnap=ns
 
       ! assigned snapshot range
