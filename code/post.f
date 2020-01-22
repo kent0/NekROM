@@ -24,11 +24,11 @@ c     nelp=34
       isg0=1
       isg1=nsg
 
+      ns=ls
       call rflist(fnames,ns)
 
       inel=1
       ieg1=0
-c     ieg1=33
 
       ns=ls
       nsg=lsg
@@ -117,9 +117,21 @@ c     enddo
       return
       end
 c-----------------------------------------------------------------------
-      function ilgls(is)
+      subroutine ilgls_setup(ilgls,ms,msg,np,nid)
 
-      ilgls=0
+      integer ilgls(1),ms(1)
+
+      n=0
+      msmin=msg/np
+
+      do id=0,np-1
+         ms(id+1)=msmin+max(min(msg-msmin*np-id,1),0)
+         if (id.le.nid-1) n=n+ms(id+1)
+      enddo
+
+      do is=1,msmin+max(min(msg-msmin*np-nid,1),0)
+         ilgls(is)=is+n
+      enddo
 
       return
       end
