@@ -44,6 +44,7 @@ c     nelp=34
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+inel+nelp-1,nelgv)
+         if (nid.eq.0) write (6,*) 'working on elements ',ieg0,ieg1
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,ieg0,ieg1)

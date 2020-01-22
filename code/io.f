@@ -214,6 +214,7 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
 
+      write (6,*) fname_in,' fname_in'
       ! add path
       call blank(fname,132)
       lenp = ltrunc(path,132)
@@ -221,10 +222,11 @@ c-----------------------------------------------------------------------
       call chcopy(fnam1(1),path,lenp)
       call chcopy(fnam1(lenp+1),fname_in,lenf)
 
-      nio=-1
+c     nio=-1
+      write (6,*) fname,' fname'
       call mfi_prepare(fname)       ! determine reader nodes +
                                     ! read hdr + element mapping 
-      nio=nid
+c     nio=nid
 
       return
       end
