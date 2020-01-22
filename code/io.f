@@ -3,14 +3,17 @@ c-----------------------------------------------------------------------
 
       include 'POST'
 
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
       real v(lxyz,ieg1-ieg0+1,ldim,ns)
 
       n=lxyz*(ieg1-ieg0+1)
 
 c     call rfldm_setup
 
-      do is=1,ns
-         call rfldm_open(fnames(1+(is-1)*132))
+      do is=1,ms(mid+1)
+         js=ilgls(is)
+         call rfldm_open(fnames(1+(js-1)*132))
          call rfldm_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
      $      ieg0,ieg1)
          call rfldm_close

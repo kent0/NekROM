@@ -8,15 +8,15 @@ c-----------------------------------------------------------------------
 
       character*127 flist
 
-      nelp=512
-c     nelp=511
+c     nelp=512
+c     nelp=256
 c     nelp=11
 c     nelp=16
 c     nelp=8
 c     nelp=4
 c     nelp=2
+c     nelp=1
       nelp=1
-c     nelp=34
       nsnap=ns
 
       ! assigned snapshot range
@@ -26,6 +26,22 @@ c     nelp=34
 
       ns=ls
       call rflist(fnames,ns)
+
+      call ilgls_setup(ilgls,ms,ns,np,nid)
+
+      do id=0,np-1
+         if (id.eq.nid) then
+            do is=1,ms(id+1)
+               write (6,*) id,is,ilgls(is),'ilgls'
+            enddo
+            do ip=1,np
+               write (6,*) id,ip,ms(ip),'mip'
+            enddo
+         endif
+         call nekgsync()
+      enddo
+
+c     call exitt0
 
       inel=1
       ieg1=0
