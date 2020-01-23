@@ -9,13 +9,15 @@ c-----------------------------------------------------------------------
 
       n=lxyz*(ieg1-ieg0+1)
 
+      melt=(lelt-3)*lxyz
+
 c     call rfldm_setup
 c     ifcread=.false.
       ifcread=.true.
 
       do is=1,ms(mid+1)
          js=ilgls(is)
-         call rfldm_open(fnames(1+(js-1)*132),ifcread)
+         call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
          call rfldm_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
      $      ieg0,ieg1,ifcread)
          call rfldm_close(ifcread)
@@ -203,7 +205,7 @@ c use new reader (only binary support)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rfldm_open(fname_in,ifcread)
+      subroutine rfldm_open(fname_in,ieg0,ieg1,ifcread)
 
       include 'SIZE'
       include 'TOTAL'
@@ -230,8 +232,8 @@ c-----------------------------------------------------------------------
 
       nio=-1
 c     write (6,*) fname,' fname'
-      call my_mfi_prepare(fname,ifcread)       ! determine reader nodes +
-                                       ! read hdr + element mapping 
+      call my_mfi_prepare(fname,ieg0,ieg1,ifcread) ! determine reader nodes +
+                                                   ! read hdr + element mapping 
       nio=nid
 
       return
@@ -269,15 +271,6 @@ c-----------------------------------------------------------------------
       nelr=ieg1-ieg0+1
 
       icount=1
-      ie=1
-
-      do while (icount.le.nelr)
-         if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
-            i1(er(ie)-ieg0+1)=ie
-            icount=icount+1
-         endif
-         ie=ie+1
-      enddo
 
       call isort(i1,i2,nelr)
 
@@ -710,13 +703,16 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine my_mfi_prepare(hname,ifcread)  ! determine which nodes are readers
+      subroutine my_mfi_prepare(hname,ieg0,ieg1,ifcread)  ! determine which nodes are readers
       character*132 hname
 
       include 'SIZE'
       include 'PARALLEL'
       include 'RESTART'
       include 'INPUT'
+
+      common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
+      common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
 
       integer stride
       character*132 hdr, hname_
@@ -772,7 +768,7 @@ c-----------------------------------------------------------------------
            write(6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
            call exitt
         endif
- 
+
         if (mod(nid,stride).eq.0) then ! i/o clients
            pid0r = nid
            pid1r = nid + stride
@@ -789,7 +785,24 @@ c-----------------------------------------------------------------------
            call byte_read (bytetest,1,ierr) 
            if(ierr.ne.0) goto 102
            call mfi_parse_hdr (hdr,ierr)    ! replace hdr with correct one 
-           call byte_read (er,nelr,ierr)    ! get element mapping
+
+           ic=1
+           ie=1
+
+           do while (ic.le.nelgv)
+              mel=min(melt,nelgv)
+              call byte_read(er,mel,ierr)! get element mapping
+              jc=1
+              do while (ie.le.mel)
+                 if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
+                    i1(er(ie)-ieg0+1)=ie
+                    jc=jc+1
+                 endif
+                 ie=ie+1
+              enddo
+              ic=ic+mel
+           enddo
+
            if(if_byte_sw) call byte_reverse(er,nelr,ierr)
         else
            pid0r = 0
