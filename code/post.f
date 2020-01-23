@@ -16,6 +16,8 @@ c     nelp=1
       call rflist(fnames,ns)
 
       call ilgls_setup(ilgls,ms,ns,np,nid)
+      nsmax=ivlmax(ms,np)
+      call shift_setup(itmp,nsmax*nelp*lxyz*ldim)
 
       do id=0,np-1
          if (id.eq.nid) then
@@ -72,9 +74,6 @@ c     nelp=1
      $      ns,nsg,n,ndim,ndim,nel)
          call setcc_snap(cc2)
       enddo
-
-c     write (6,*) nid,ms(nid+1),ns,'ns'
-c     call exitt0
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/graml2 ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh10 ',nid)
@@ -219,9 +218,10 @@ c-----------------------------------------------------------------------
          do k=1,ns(mod(mid+id,mp)+1)
             if (mid.eq.0) write (6,*) 'k=',k
             do i=1,ns(mid+1)
-               b(i+(j-1)*ns(mid+1))=b(i+(j-1)*ns(mid+1))+
+c              b(i+(j-1)*ns(mid+1))=b(i+(j-1)*ns(mid+1))+
+c    $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
+               b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
      $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
-               if (mid.eq.1) write (6,*) i,j,b(i+(j-1)*ns(mid+1)),'bbb'
             enddo
             j=mod(j,nsg)+1
          enddo

@@ -33,8 +33,8 @@ c     parameter (ls=lsg/lpmin+1)
      $             evecpt(ls*lsg)
       common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
       common /ops2/ cc2(ls*lsg*lsg)
+      common /opst/ aat(ls*lsg),bbt(ls*lsg),cct(ls*lsg*lsg)
 
-      integer eperm
       common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg)
 

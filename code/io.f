@@ -11,12 +11,13 @@ c-----------------------------------------------------------------------
 
       melt=(lelt-3)*lxyz
 
-c     call rfldm_setup
-c     ifcread=.false.
       ifcread=.true.
+
+      write (6,*) mid,'wp 0',ms(mid+1)
 
       do is=1,ms(mid+1)
          js=ilgls(is)
+         write (6,*) mid,is,'reading snapshot'
          call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
          call rfldm_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
      $      ieg0,ieg1,ifcread)
@@ -86,15 +87,6 @@ c-----------------------------------------------------------------------
          irem=mod(nid,2).eq.0
          iw(i,1)=i+i1*n
          iw(i,2)=i+i2*n
-      enddo
-
-      do i=1,mp
-         if (nid.eq.(i-1)) then
-            do j=1,n
-               write (6,*) nid,i,j,iw(j,1),iw(j,2)
-            enddo
-         endif
-         call nekgsync
       enddo
 
       call fgslib_gs_setup(igsh,iw,n,nekcomm,mp)
@@ -222,7 +214,7 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
 
-      write (6,*) fname_in,' fname_in'
+      write (6,*) nid,fname_in,' fname_in'
       ! add path
       call blank(fname,132)
       lenp = ltrunc(path,132)
@@ -257,6 +249,8 @@ c-----------------------------------------------------------------------
       real uz(lx1,ly1,lz1,ieg1-ieg0+1)
 
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
+
+      write (6,*) nid,'wp 2.1'
 
       offs0   = iHeadersize + 4 + isize*nelgr
       nxyzr8  = nxr*nyr*nzr
