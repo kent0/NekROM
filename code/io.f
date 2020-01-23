@@ -225,11 +225,11 @@ c-----------------------------------------------------------------------
       call chcopy(fnam1(1),path,lenp)
       call chcopy(fnam1(lenp+1),fname_in,lenf)
 
-c     nio=-1
-      write (6,*) fname,' fname'
-      call mfi_prepare(fname)       ! determine reader nodes +
-                                    ! read hdr + element mapping 
-c     nio=nid
+      nio=-1
+c     write (6,*) fname,' fname'
+      call my_mfi_prepare(fname)       ! determine reader nodes +
+                                       ! read hdr + element mapping 
+      nio=nid
 
       return
       end
@@ -304,7 +304,7 @@ c-----------------------------------------------------------------------
          offs = offs0 + iofldsr*stride + ldim*strideB + 
      $      ldim*(ieg-1)*nxyzr8*wdsizr
          call byte_set_view(offs,ifh_mbyte)
-         call mfi_getw(wk(iloc),nwk,.false.)
+         call mfi_getw(wk(iloc),nwk)
          iloc=iloc+nwk
       enddo
 
@@ -397,49 +397,23 @@ c        ei = er(e)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mfi_getw(wk,lwk,iskip)
+      subroutine mfi_getw(wk,lwk)
 
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
       include 'RESTART'
 
-      logical iskip
-
-      real*4 wk(lwk) ! message buffer
-      parameter(lrbs=50*lx1*ly1*lz1*lelt)
-      common /vrthov/ w2(lrbs) ! read buffer
-      real*4 w2
-
-      integer e,ei,eg,msg_id(lelt)
-      integer*8 i8tmp
-
-      call nekgsync() ! clear outstanding message queues.
+      real*4 wk(lwk)
 
       nxyzr  = ldim*nxr*nyr*nzr
-c     dnxyzr = nxyzr
-c     len    = nxyzr*wdsizr             ! message length in bytes
       if (wdsizr.eq.8) nxyzr = 2*nxyzr
 
-      ! check message buffer
-c     num_recv  = len
-c     num_avail = lwk*wdsize
-c     call lim_chk(num_recv,num_avail,'     ','     ','mfi_getv a')
-
-c     ! setup read buffer
-c     i8tmp = int(nxyzr,8)*int(nelr,8)
-c     nread = i8tmp/int(lrbs,8)
-c     if (mod(i8tmp,int(lrbs,8)).ne.0) nread = nread + 1
-c     if(ifmpiio) nread = iglmax(nread,1) ! needed because of collective read
-c     nelrr = nelr/nread
-c     call bcast(nelrr,4)
-c     call lim_chk(nxyzr*nelrr,lrbs,'     ','     ','mfi_getv b')
-
       ierr = 0
-
       call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
 
  100  call err_chk(ierr,'Error reading restart data, in getv.$')
+
       return
       end
 c-----------------------------------------------------------------------
@@ -681,6 +655,165 @@ c-----------------------------------------------------------------------
 #else
       call exitti('MPI_file_open unsupported!$',0)
 #endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setup_mycomm
+
+      include 'SIZE'
+      include 'TOTAL'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      character*132 fname
+
+      call blank(fname,132)
+      fname='r0.f00001'
+
+      ! init communicator
+      call mpi_comm_split(nekcomm,mid,mid,mycomm,ierr)
+      if (ierr.ne.0) call exitti('error splitting comm$',ierr)
+
+      ! open
+      call my_byte_open_mpi(mycomm,fname,mpi_fh,.true.,ierr)
+
+      ! read header
+      call byte_read_mpi(buf,icount,iorank,mpi_fh,ierr)
+
+      ! read elements sequentially
+
+      do i=1,nel
+         call byte_set_view(ioff_in,mpi_fh)
+         call byte_read_mpi(buf,icount,iorank,mpi_fh,ierr)
+      enddo
+
+      ! close
+      call byte_close_mpi(mpi_fh,ierr)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine my_mfi_prepare(hname)  ! determine which nodes are readers
+      character*132 hname
+
+      include 'SIZE'
+      include 'PARALLEL'
+      include 'RESTART'
+      include 'INPUT'
+
+      integer stride
+      character*132 hdr, hname_
+      logical if_byte_swap_test
+      real*4 bytetest
+
+      integer*8 offs0,offs
+
+      ierr = 0
+      ! rank0 (i/o master) will do a pre-read to get some infos 
+      ! we need to have in advance
+      if (nid.eq.0) then
+         call chcopy(hname_,hname,132)
+         call addfid(hname_,0)
+         call byte_open(hname_,ierr)
+
+         if(ierr.ne.0) goto 101
+         call blank     (hdr,iHeaderSize)
+         call byte_read (hdr,iHeaderSize/4,ierr)
+         if(ierr.ne.0) goto 101
+         call byte_read (bytetest,1,ierr)
+         if(ierr.ne.0) goto 101
+         if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
+         if(ierr.ne.0) goto 101
+         call byte_close(ierr)
+      endif
+
+ 101  continue
+      call err_chk(ierr,'Error reading restart header in mfi_prepare$')
+
+      call bcast(if_byte_sw,lsize) 
+      call bcast(hdr,iHeaderSize)  
+      call mfi_parse_hdr(hdr,ierr)
+
+      ifmpiio = .false.
+      if (nfiler.eq.1 .and. abs(param(67)).eq.6) ifmpiio = .true.
+#ifdef NOMPIIO
+      ifmpiio = .false.
+#endif
+
+      if (ifmpiio) then
+         if (nelt.gt.lelr) then
+            write(6,*) 'ERROR: increase lelr in SIZE!', lelr, nelt
+            call exitt
+         endif
+      else
+         if (nelr.gt.lelr) then
+            write(6,*) 'ERROR: increase lelr in SIZE!', lelr, nelr
+            call exitt
+         endif
+      endif
+
+      if(.not.ifmpiio) then
+
+        stride = np / nfiler
+        if (stride.lt.1) then
+           write(6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
+           call exitt
+        endif
+ 
+        if (mod(nid,stride).eq.0) then ! i/o clients
+           pid0r = nid
+           pid1r = nid + stride
+           fid0r = nid / stride
+           call blank(hdr,iHeaderSize)
+
+           call addfid(hname,fid0r)
+           if(nid.eq.pid0r) write(6,*) '      FILE:',hname
+           call byte_open(hname,ierr)
+
+           if(ierr.ne.0) goto 102
+           call byte_read (hdr, iHeaderSize/4,ierr)  
+           if(ierr.ne.0) goto 102
+           call byte_read (bytetest,1,ierr) 
+           if(ierr.ne.0) goto 102
+           call mfi_parse_hdr (hdr,ierr)    ! replace hdr with correct one 
+           call byte_read (er,nelr,ierr)    ! get element mapping
+           if(if_byte_sw) call byte_reverse(er,nelr,ierr)
+        else
+           pid0r = 0
+           pid1r = 0
+           fid0r = 0
+        endif
+
+      else
+
+        pid0r  = nid
+        pid1r  = nid
+        offs0  = iHeaderSize + 4
+        nfiler = np
+ 
+        ! number of elements to read 
+        nelr = nelgr/np
+        do i = 0,mod(nelgr,np)-1
+           if(i.eq.nid) nelr = nelr + 1
+        enddo
+        nelBr = igl_running_sum(nelr) - nelr 
+        offs = offs0 + nelBr*isize
+
+        call addfid(hname,fid0r)
+        if(nio.eq.0) write(6,*) '      FILE:',hname
+        call byte_open_mpi(hname,ifh_mbyte,.true.,ierr)
+
+        if(ierr.ne.0) goto 102
+        call byte_set_view(offs,ifh_mbyte)
+        call byte_read_mpi(er,nelr,-1,ifh_mbyte,ierr)
+        if(ierr.ne.0) goto 102
+        if(if_byte_sw) call byte_reverse(er,nelr,ierr)
+
+      endif
+
+ 102  continue
+      call err_chk(ierr,'Error reading header/element map.$')
 
       return
       end
