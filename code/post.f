@@ -8,21 +8,9 @@ c-----------------------------------------------------------------------
 
       character*127 flist
 
-c     nelp=512
-c     nelp=256
-c     nelp=11
-c     nelp=16
-c     nelp=8
-c     nelp=4
-c     nelp=2
+      nelp=512
 c     nelp=1
-      nelp=1
       nsnap=ns
-
-      ! assigned snapshot range
-
-      isg0=1
-      isg1=nsg
 
       ns=ls
       call rflist(fnames,ns)
@@ -34,6 +22,12 @@ c     nelp=1
             do is=1,ms(id+1)
                write (6,*) id,is,ilgls(is),'ilgls'
             enddo
+         endif
+         call nekgsync()
+      enddo
+
+      do id=0,np-1
+         if (id.eq.nid) then
             do ip=1,np
                write (6,*) id,ip,ms(ip),'mip'
             enddo
@@ -41,7 +35,7 @@ c     nelp=1
          call nekgsync()
       enddo
 
-c     call exitt0
+      call sleep(1)
 
       inel=1
       ieg1=0
@@ -60,17 +54,18 @@ c     call exitt0
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+inel+nelp-1,nelgv)
-         if (nid.eq.0) write (6,*) 'working on elements ',ieg0,ieg1
+         write (6,*) nid,'working on elements ',ieg0,ieg1
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,ieg0,ieg1)
+         write (6,*) nid,'post rsnapsm'
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
+         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,ns,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
      $      ns,nsg,n,nel,ndim,ng)
          call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
@@ -78,10 +73,15 @@ c     call exitt0
          call setcc_snap(cc2)
       enddo
 
-      call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
-      call dump_serial(aa,ns*ns,'ops/gramh10 ',nid)
-      call dump_serial(cc,ns*ns*ns,'ops/gramc ',nid)
-      call dump_serial(cc2,ns*ns*ns,'ops/gramc2 ',nid)
+c     write (6,*) nid,ms(nid+1),ns,'ns'
+c     call exitt0
+
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/graml2 ',nid)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh10 ',nid)
+      call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/gramc ',nid)
+      call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
+
+      call exitt0
 
       ! eigendecomposition here or external process
 
@@ -192,27 +192,40 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setbb(b,u,mass,w1,w2,w3,ns,nsg,n,ndim)
+      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,nsg,n,ndim)
 
-      real b(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
-      real w3(n,ndim,ns,3)
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      
+      integer ns(1)
 
-      call copy(w1,u,n*ndim*ns)
-      call copy(w2,u,n*ndim*ns)
+      real b(1),u(n,ndim,1),mass(n),
+     $     w1(n,ndim,1),w2(n,ndim,1)
 
-      do i=1,ns*ndim
-         call col2(w2(1,i,1),mass,n)
+      real w3(n,ndim,1,3)
+
+      call copy(w1,u,n*ndim*ns(mid+1))
+      call copy(w2,u,n*ndim*ns(mid+1))
+
+      do i=1,ns(mid+1)*ndim
+         call col2(w1(1,i,1),mass,n)
       enddo
 
-      do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         do js=1,ns
-         do is=1,ns
-            b(is,js+ns*ioff)=b(is,js+ns*ioff)
-     $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
+      j=igs
+
+      nsmax=ivlmax(ns,mp)
+
+      do id=0,mp-1
+         if (mid.eq.0) write (6,*) 'id=',id
+         do k=1,ns(mod(mid+id,mp)+1)
+            if (mid.eq.0) write (6,*) 'k=',k
+            do i=1,ns(mid+1)
+               b(i+(j-1)*ns(mid+1))=b(i+(j-1)*ns(mid+1))+
+     $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
+               if (mid.eq.1) write (6,*) i,j,b(i+(j-1)*ns(mid+1)),'bbb'
+            enddo
+            j=mod(j,nsg)+1
          enddo
-         enddo
-         
-         call shift(w1,w3,n*ndim*ns)
+         call shift(w2,w3,n*ndim*nsmax)
       enddo
 
       return

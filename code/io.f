@@ -299,7 +299,7 @@ c-----------------------------------------------------------------------
          ieg=i3(ig)
          nelr=i4(ig)
          nwk=nelr*ldim*nxyzr8
-         offs = offs0 + iofldsr*stride + ldim*strideB + 
+         offs = offs0 + iofldsr*stride + !ldim*strideB +
      $      ldim*(ieg-1)*nxyzr8*wdsizr
          if (ifcread) then
             call byte_seek(offs/4,ierr)
@@ -336,8 +336,6 @@ c-----------------------------------------------------------------------
       else
          if (nid.eq.pid0r) call byte_close(ierr)
       endif
-
-      call err_chk(ierr,'Error closing restart file, in mfi.$')
 
       return
       end
@@ -417,11 +415,10 @@ c-----------------------------------------------------------------------
       ierr = 0
       if (ifcread) then
          call byte_read(wk,nxyzr*nelr,ierr)
+         ierr=ierr*10*(nid+1)
       else
          call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
       endif
-
- 100  call err_chk(ierr,'Error reading restart data, in getv.$')
 
       return
       end
@@ -722,29 +719,27 @@ c-----------------------------------------------------------------------
       integer*8 offs0,offs
 
       ierr = 0
-      ! rank0 (i/o master) will do a pre-read to get some infos 
-      ! we need to have in advance
-      if (nid.eq.0) then
-         call chcopy(hname_,hname,132)
-         call addfid(hname_,0)
-         call byte_open(hname_,ierr)
 
-         if(ierr.ne.0) goto 101
-         call blank     (hdr,iHeaderSize)
-         call byte_read (hdr,iHeaderSize/4,ierr)
-         if(ierr.ne.0) goto 101
-         call byte_read (bytetest,1,ierr)
-         if(ierr.ne.0) goto 101
-         if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
-         if(ierr.ne.0) goto 101
-         call byte_close(ierr)
-      endif
+      call chcopy(hname_,hname,132)
+      call addfid(hname_,0)
+      call byte_open(hname_,ierr)
+      if(ierr.ne.0) goto 101
+
+      call blank     (hdr,iHeaderSize)
+      call byte_read (hdr,iHeaderSize/4,ierr)
+      if(ierr.ne.0) goto 101
+
+      call byte_read (bytetest,1,ierr)
+      if(ierr.ne.0) goto 101
+
+      if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
+      if(ierr.ne.0) goto 101
+
+      call byte_close(ierr)
+      if(ierr.ne.0) goto 101
 
  101  continue
-      call err_chk(ierr,'Error reading restart header in mfi_prepare$')
 
-      call bcast(if_byte_sw,lsize) 
-      call bcast(hdr,iHeaderSize)  
       call mfi_parse_hdr(hdr,ierr)
 
       ifmpiio=.not.ifcread
@@ -761,7 +756,7 @@ c-----------------------------------------------------------------------
          endif
       endif
 
-      if(.not.ifmpiio) then
+      if (.not.ifmpiio) then
 
         stride = np / nfiler
         if (stride.lt.1) then
@@ -769,47 +764,43 @@ c-----------------------------------------------------------------------
            call exitt
         endif
 
-        if (mod(nid,stride).eq.0) then ! i/o clients
-           pid0r = nid
-           pid1r = nid + stride
-           fid0r = nid / stride
-           call blank(hdr,iHeaderSize)
+         if (nid.eq.0) write (6,*) nid,'wp 1.5'
 
-           call addfid(hname,fid0r)
-           if(nid.eq.pid0r) write(6,*) '      FILE:',hname
-           call byte_open(hname,ierr)
+        pid0r = nid
+        pid1r = nid + stride
+        fid0r = nid / stride
+        call blank(hdr,iHeaderSize)
 
-           if(ierr.ne.0) goto 102
-           call byte_read (hdr, iHeaderSize/4,ierr)  
-           if(ierr.ne.0) goto 102
-           call byte_read (bytetest,1,ierr) 
-           if(ierr.ne.0) goto 102
-           call mfi_parse_hdr (hdr,ierr)    ! replace hdr with correct one 
+        call addfid(hname,fid0r)
+        call byte_open(hname,ierr)
+        if(ierr.ne.0) goto 102
 
-           ic=1
-           ie=1
+        call byte_read(hdr,iHeaderSize/4,ierr)  
+        if(ierr.ne.0) goto 102
 
-           do while (ic.le.nelgv)
-              mel=min(melt,nelgv)
-              call byte_read(er,mel,ierr)! get element mapping
-              jc=1
-              do while (ie.le.mel)
-                 if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
-                    i1(er(ie)-ieg0+1)=ie
-                    jc=jc+1
-                 endif
-                 ie=ie+1
-              enddo
-              ic=ic+mel
+        call byte_read(bytetest,1,ierr) 
+        if(ierr.ne.0) goto 102
+
+        call mfi_parse_hdr(hdr,ierr) ! replace hdr with correct one 
+
+        ic=1
+        ie=1
+
+        do while (ic.le.nelgv)
+           mel=min(melt,nelgv)
+           call byte_read(er,mel,ierr)! get element mapping
+           jc=1
+           do while (ie.le.mel)
+              if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
+                 i1(er(ie)-ieg0+1)=ie
+                 jc=jc+1
+              endif
+              ie=ie+1
            enddo
+           ic=ic+mel
+        enddo
 
-           if(if_byte_sw) call byte_reverse(er,nelr,ierr)
-        else
-           pid0r = 0
-           pid1r = 0
-           fid0r = 0
-        endif
-
+        if(if_byte_sw) call byte_reverse(er,nelr,ierr)
       else
 
         pid0r  = nid
@@ -838,13 +829,57 @@ c-----------------------------------------------------------------------
       endif
 
  102  continue
-      call err_chk(ierr,'Error reading header/element map.$')
+c     call err_chk(ierr,'Error reading header/element map.$')
 
       ifmpiio = .false.
       if (nfiler.eq.1 .and. abs(param(67)).eq.6) ifmpiio = .true.
 #ifdef NOMPIIO
       ifmpiio = .false.
 #endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_parallel(a,n,fname,nid)
+
+      real a(n)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      character*128 fname
+      character*128 fntrunc
+
+      call blank(fntrunc,128)
+
+      len=ltruncr(fname,128)
+      call chcopy(fntrunc,fname,len)
+
+      do id=0,mp-1
+         if (id.eq.nid) call dump_parallel_helper(a,n,fntrunc,id.eq.0)
+         call nekgsync
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_parallel_helper(a,n,fname,if0)
+
+      real a(n)
+      character*128 fname
+      logical if0
+
+      if (if0) then
+         open (unit=12,file=fname)
+      else
+         open (unit=12,file=fname,access='append',status='old')
+      endif
+
+      do i=1,n
+         write (12,1) a(i)
+      enddo
+
+      close (unit=12)
+    1 format(1pe24.16)
 
       return
       end
