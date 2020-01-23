@@ -67,7 +67,7 @@ c     nelp=1
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,ns,n,ndim)
+         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
      $      ns,nsg,n,nel,ndim,ng)
          call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
@@ -191,7 +191,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,nsg,n,ndim)
+      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       
@@ -201,6 +201,8 @@ c-----------------------------------------------------------------------
      $     w1(n,ndim,1),w2(n,ndim,1)
 
       real w3(n,ndim,1,3)
+
+      nsg=ivlsum(ns,mp)
 
       call copy(w1,u,n*ndim*ns(mid+1))
       call copy(w2,u,n*ndim*ns(mid+1))
