@@ -268,7 +268,7 @@ c-----------------------------------------------------------------------
 
       do while (icount.le.nelr)
          if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
-            i1(icount)=ie
+            i1(er(ie)-ieg0+1)=ie
             icount=icount+1
          endif
          ie=ie+1
