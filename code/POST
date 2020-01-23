@@ -41,3 +41,6 @@ c     parameter (ls=lsg/lpmin+1)
 
       character*1 fnames
       common /snapf/ fnames(132*lsg)
+
+      logical ifcread
+      common /ifpar/ ifcread

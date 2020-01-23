@@ -10,13 +10,15 @@ c-----------------------------------------------------------------------
       n=lxyz*(ieg1-ieg0+1)
 
 c     call rfldm_setup
+c     ifcread=.false.
+      ifcread=.true.
 
       do is=1,ms(mid+1)
          js=ilgls(is)
-         call rfldm_open(fnames(1+(js-1)*132))
+         call rfldm_open(fnames(1+(js-1)*132),ifcread)
          call rfldm_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
-     $      ieg0,ieg1)
-         call rfldm_close
+     $      ieg0,ieg1,ifcread)
+         call rfldm_close(ifcread)
       enddo
 
       return
@@ -201,13 +203,14 @@ c use new reader (only binary support)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rfldm_open(fname_in)
+      subroutine rfldm_open(fname_in,ifcread)
 
       include 'SIZE'
       include 'TOTAL'
       include 'RESTART'
 
       character*132  fname_in
+      logical ifcread
 
       character*132  fname
       character*1    fnam1(132)
@@ -227,14 +230,14 @@ c-----------------------------------------------------------------------
 
       nio=-1
 c     write (6,*) fname,' fname'
-      call my_mfi_prepare(fname)       ! determine reader nodes +
+      call my_mfi_prepare(fname,ifcread)       ! determine reader nodes +
                                        ! read hdr + element mapping 
       nio=nid
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rfldm_read(ux,uy,uz,ieg0,ieg1)
+      subroutine rfldm_read(ux,uy,uz,ieg0,ieg1,ifcread)
 
       include 'SIZE'
       include 'TOTAL'
@@ -244,6 +247,8 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
       common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
+
+      logical ifcread
 
       real ux(lx1,ly1,lz1,ieg1-ieg0+1)
       real uy(lx1,ly1,lz1,ieg1-ieg0+1)
@@ -303,8 +308,12 @@ c-----------------------------------------------------------------------
          nwk=nelr*ldim*nxyzr8
          offs = offs0 + iofldsr*stride + ldim*strideB + 
      $      ldim*(ieg-1)*nxyzr8*wdsizr
-         call byte_set_view(offs,ifh_mbyte)
-         call mfi_getw(wk(iloc),nwk)
+         if (ifcread) then
+            call byte_seek(offs/4,ierr)
+         else
+            call byte_set_view(offs,ifh_mbyte)
+         endif
+         call mfi_getw(wk(iloc),nwk,ifcread)
          iloc=iloc+nwk
       enddo
 
@@ -321,13 +330,15 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rfldm_close
+      subroutine rfldm_close(ifcread)
 
       include 'SIZE'
       include 'INPUT'
       include 'RESTART'
 
-      if (ifmpiio) then
+      logical ifcread
+
+      if (.not.ifcread) then
          if (nid.eq.pid0r) call byte_close_mpi(ifh_mbyte,ierr)
       else
          if (nid.eq.pid0r) call byte_close(ierr)
@@ -397,7 +408,7 @@ c        ei = er(e)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mfi_getw(wk,lwk)
+      subroutine mfi_getw(wk,lwk,ifcread)
 
       include 'SIZE'
       include 'INPUT'
@@ -405,12 +416,17 @@ c-----------------------------------------------------------------------
       include 'RESTART'
 
       real*4 wk(lwk)
+      logical ifcread
 
       nxyzr  = ldim*nxr*nyr*nzr
       if (wdsizr.eq.8) nxyzr = 2*nxyzr
 
       ierr = 0
-      call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
+      if (ifcread) then
+         call byte_read(wk,nxyzr*nelr,ierr)
+      else
+         call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
+      endif
 
  100  call err_chk(ierr,'Error reading restart data, in getv.$')
 
@@ -694,7 +710,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine my_mfi_prepare(hname)  ! determine which nodes are readers
+      subroutine my_mfi_prepare(hname,ifcread)  ! determine which nodes are readers
       character*132 hname
 
       include 'SIZE'
@@ -704,7 +720,7 @@ c-----------------------------------------------------------------------
 
       integer stride
       character*132 hdr, hname_
-      logical if_byte_swap_test
+      logical if_byte_swap_test,ifcread
       real*4 bytetest
 
       integer*8 offs0,offs
@@ -735,11 +751,7 @@ c-----------------------------------------------------------------------
       call bcast(hdr,iHeaderSize)  
       call mfi_parse_hdr(hdr,ierr)
 
-      ifmpiio = .false.
-      if (nfiler.eq.1 .and. abs(param(67)).eq.6) ifmpiio = .true.
-#ifdef NOMPIIO
-      ifmpiio = .false.
-#endif
+      ifmpiio=.not.ifcread
 
       if (ifmpiio) then
          if (nelt.gt.lelr) then
@@ -814,6 +826,12 @@ c-----------------------------------------------------------------------
 
  102  continue
       call err_chk(ierr,'Error reading header/element map.$')
+
+      ifmpiio = .false.
+      if (nfiler.eq.1 .and. abs(param(67)).eq.6) ifmpiio = .true.
+#ifdef NOMPIIO
+      ifmpiio = .false.
+#endif
 
       return
       end
