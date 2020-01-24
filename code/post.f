@@ -68,8 +68,6 @@ c     nelp=1
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
          call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim)
-c        call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
-c    $      ns,nsg,n,nel,ndim,ng)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng)
          call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
