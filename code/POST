@@ -24,6 +24,7 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /work/ wv1(lxyz*lelp*ldim),
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
+     $              wvf3(lxyz*lelp*ldim*ls),wvf4(lxyz*lelp*ldim*ls),
      $              wvf12(lxyz*lelp*ldim*ls*2),
      $              w9(lxyz*lelp*9),
      $              wevec(ls*lsg),

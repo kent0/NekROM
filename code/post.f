@@ -70,15 +70,19 @@ c     nelp=1
          call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
      $      ns,nsg,n,nel,ndim,ng)
-         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
-     $      ns,nsg,n,ndim,ndim,nel)
-         call setcc_snap(cc2)
+         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel)
+c        call setcc_lgc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
+c    $      ns,nsg,n,ndim,ndim,nel)
       enddo
+
+      call setcc_snap(cc2)
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/graml2 ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh10 ',nid)
       call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/gramc ',nid)
-      call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
+      if (np.eq.1)
+     $   call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
 
       call exitt0
 
@@ -220,8 +224,6 @@ c-----------------------------------------------------------------------
          do k=1,ns(mod(mid+id,mp)+1)
             if (mid.eq.0) write (6,*) 'k=',k
             do i=1,ns(mid+1)
-c              b(i+(j-1)*ns(mid+1))=b(i+(j-1)*ns(mid+1))+
-c    $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
                b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
      $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
             enddo
@@ -266,7 +268,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setcc(c,z,t,rxp,w1,w2,w3,w4,ns,nsg,n,mdim,ndim,nel)
+      subroutine setcc_lgc(c,z,t,rxp,w1,w2,w3,w4,ns,nsg,n,mdim,ndim,nel)
 
       real rxp(1)
       real c(ns,nsg,nsg),z(n,ndim,ns),t(n,mdim,ns),
@@ -287,6 +289,54 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
      $            +vlsc2(w3,t(1,1,is),n*mdim)
             enddo
          enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setcc(c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,mdim,ndim,nel)
+c        call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,ilgls(1),
+c    $      ms,n,ndim,ndim,nel)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ns(1)
+
+      real rxp(1)
+      real c(1),z(n,ndim,1),t(n,mdim,1),
+     $     w1(n,mdim,1),w2(n,ndim,1),w3(n,mdim,1),w4(n,mdim,1)
+
+      nsg=ivlsum(ns,mp)
+      nsmax=ivlmax(ns,mp)
+
+      call copy(w1,z,n*ndim*ns(mid+1))
+      call copy(w2,z,n*ndim*ns(mid+1))
+      call copy(w3,z,n*ndim*ns(mid+1))
+
+      ms=ns(1)
+
+      j=igs
+      k=igs
+
+      do kid=0,mp-1
+      do ks=1,ns(mod(kid+mid,mp)+1)
+         do jid=0,mp-1
+         do js=1,ns(mod(jid+mid,mp)+1)
+            call conv(w4,w2(1,1,js),.false.,
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,mdim,ks),.false.,rxp,nel)
+            call conv(w4(1,2,1),w2(1,2,js),.false.,
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,mdim,ks),.false.,rxp,nel)
+            do is=1,ms
+              c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+     $            +vlsc2(w4,w1(1,1,is),n*mdim)
+            enddo
+            call shift(w2,w4,n*ndim*nsmax)
+            j=mod(j,nsg)+1
+         enddo
+         enddo
+         call shift(w3,w4,n*ndim*nsmax)
+         k=mod(k,nsg)+1
+      enddo
       enddo
 
       return
