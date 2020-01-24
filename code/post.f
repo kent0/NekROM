@@ -68,8 +68,10 @@ c     nelp=1
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
          call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim)
-         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
-     $      ns,nsg,n,nel,ndim,ng)
+c        call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
+c    $      ns,nsg,n,nel,ndim,ng)
+         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng)
          call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,n,ndim,ndim,nel)
 c        call setcc_lgc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
@@ -163,11 +165,17 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setaa(a,z,visc,gfac,w1,w2,w3,ns,nsg,n,nel,ndim,ng)
+      subroutine setaa(a,z,visc,gfac,w1,w2,w3,igs,ns,n,nel,ndim,ng)
 
-      real a(ns,nsg),z(n,ndim,ns),w1(n,ndim,ns),w2(n,ndim,ns)
-      real w3(n,ndim,ns,2)
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      real a(1),z(n,ndim,1),w1(n,ndim,1),w2(n,ndim,1)
+      real w3(n,ndim,1,2)
       real visc(n),gfac(n,ng)
+
+      integer ns(1)
+
+      nsg=ivlsum(ns,mp)
 
       call copy(w1,z,n*ndim*ns)
       call copy(w2,z,n*ndim*ns)
@@ -175,21 +183,25 @@ c-----------------------------------------------------------------------
       imesh=1
       isd=1
 
-      call rzero(w3,n)
-
-      do i=1,ns*ndim
-         call aop(w2(1,i,1),z(1,i,1),visc,gfac,imesh,isd,nel)
+      do i=1,ns(mid+1)*ndim
+         call aop(w1(1,i,1),z(1,i,1),visc,gfac,imesh,isd,nel)
       enddo
 
-      do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         do js=1,ns
-         do is=1,ns
-            a(is,js+ns*ioff)=a(is,js+ns*ioff)
-     $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
+      j=igs
+
+      nsmax=ivlmax(ns,mp)
+
+      do id=0,mp-1
+         if (mid.eq.0) write (6,*) 'id=',id
+         do k=1,ns(mod(mid+id,mp)+1)
+            if (mid.eq.0) write (6,*) 'k=',k
+            do i=1,ns(mid+1)
+               a(j+(i-1)*nsg)=a(j+(i-1)*nsg)+
+     $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
+            enddo
+            j=mod(j,nsg)+1
          enddo
-         enddo
-         
-         call shift(w1,w3,n*ndim*ns)
+         call shift(w2,w3,n*ndim*nsmax)
       enddo
 
       return
