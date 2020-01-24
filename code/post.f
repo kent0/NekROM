@@ -86,6 +86,28 @@ c    $      ns,nsg,n,ndim,ndim,nel)
       if (np.eq.1)
      $   call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
 
+      call rzero(gram0,nsg)
+      do i=1,ms(nid+1)
+         call add2(gram0,bb(1+(i-1)*nsg),nsg)
+      enddo
+
+      call gop(gram0,gram,'+  ',nsg)
+      s=1./real(nsg)
+
+      call cmult(gram0,s,nsg)
+      gram00=s*vlsum(gram0,nsg)
+
+      do i=1,ms(nid+1)
+         call sub2(bb(1+(i-1)*nsg),gram0,nsg)
+      enddo
+
+      call cadd(gram0,-gram00,nsg)
+      do i=1,ms(nid+1)
+         call cadd(bb(1+(i-1)*nsg),-gram0(i),nsg)
+      enddo
+
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/graml20 ',nid)
+
       call exitt0
 
       ! eigendecomposition here or external process
