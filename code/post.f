@@ -81,6 +81,9 @@ c     nelp=1
       call gsub0(bb,bbt,aat,ns,nsg)
       call dump_parallel(bb,ms(nid+1)*ns,'ops/graml20 ',nid)
 
+      call gsub0(aa,bbt,aat,ns,nsg)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh100 ',nid)
+
       ! eigendecomposition here or external process
 
       mmm=ns*ns
