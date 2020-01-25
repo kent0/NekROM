@@ -6,6 +6,8 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'PARALLEL'
 
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
       character*127 flist
 
       nelp=512
@@ -16,17 +18,10 @@ c     nelp=1
       call rflist(fnames,ns)
 
       call ilgls_setup(ilgls,ms,ns,np,nid)
-      nsmax=ivlmax(ms,np)
-      call shift_setup(itmp,nsmax*nelp*lxyz*ldim)
+      call iglls_setup(iglls,itmp,ms,ns,np,nid)
 
-      do id=0,np-1
-         if (id.eq.nid) then
-            do is=1,ms(id+1)
-               write (6,*) id,is,ilgls(is),'ilgls'
-            enddo
-         endif
-         call nekgsync()
-      enddo
+      nsmax=ivlmax(ms,np)
+      call shift_setup(igsh,nekcomm,itmp,nsmax*nelp*lxyz*ldim,np)
 
       do id=0,np-1
          if (id.eq.nid) then
@@ -67,13 +62,11 @@ c     nelp=1
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim)
+         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $      ms,n,nel,ndim,ng)
+     $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel)
-c        call setcc_lgc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
-c    $      ns,nsg,n,ndim,ndim,nel)
+     $      ms,n,ndim,ndim,nel,igsh)
       enddo
 
       call setcc_snap(cc2)
@@ -131,30 +124,37 @@ c    $      ns,nsg,n,ndim,ndim,nel)
       call copy(cc,wevecc,ns*ns*ns)
       call dump_serial(cc,ns*ns*ns,'ops/cup_new ',nid)
 
+      do while (ieg1+1.le.nelgv)
+         call setzz(zz,uu,evecp,w1,w2,ilgls,iglls,n,ms(nid+1),nsg)
+         call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+      enddo
+
+      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0 ',nid)
+
+      call exitt0
+
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setzz(z,u,evec,w1,w2,n,ns,nsg)
+      subroutine setzz(z,u,evec,w1,w2,ilgls,iglls,n,ns,nsg)
 
-c     include 'SIZE'
-c     include 'PARALLEL'
+      integer ilgls(1),iglls(1)
 
-      real z(n,ns),u(n,ns)
-      real evec(ns,nsg)
+      real z(n,1),u(n,1)
+      real evec(nsg,nsg)
       real w1(n),w2(n)
 
-c     do isg=1,nsg
-c        is=iglls(isg)
-c        is=isg
-c        call mxm(u,n,evec(1,isg),ns,w1,1)
-c        call gop(w1,w2,'+  ',n)
-c        if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
-
-c     enddo
-
-      do i=1,ns
-         call mxm(u,n,evec(1,i),ns,z(1,i),1)
+      do isg=1,nsg
+         is=iglls(isg)
+         i=ilgls(1)
+         call mxm(u,n,evec(i,isg),ns,w1,1)
+         call gop(w1,w2,'+  ',n)
+         if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
       enddo
+
+c     do i=1,ns
+c        call mxm(u,n,evec(1,i),ns,z(1,i),1)
+c     enddo
 
       return
       end
@@ -178,17 +178,33 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      function iglls(isg)
+      subroutine iglls_setup(iglls,itmp,ms,nsg,np,nid)
 
-      iglls=0
+      integer iglls(nsg)
+      integer ms(1)
+
+      call izero(iglls,nsg)
+
+      ic=1
+      do id=0,np-1
+         jc=1
+         do is=1,ms(id+1)
+            if (id.eq.nid) then
+               iglls(ic)=jc
+            endif
+            ic=ic+1
+            jc=jc+1
+         enddo
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setaa(a,z,visc,gfac,w1,w2,w3,igs,ns,n,nel,ndim,ng)
+      subroutine setaa(a,z,visc,gfac,w1,w2,w3,igs,ns,n,nel,ndim,ng,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
+      integer igsh(2)
       real a(1),z(n,ndim,1),w1(n,ndim,1),w2(n,ndim,1)
       real w3(n,ndim,1,2)
       real visc(n),gfac(n,ng)
@@ -221,17 +237,17 @@ c-----------------------------------------------------------------------
             enddo
             j=mod(j,nsg)+1
          enddo
-         call shift(w2,w3,n*ndim*nsmax)
+         call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim)
+      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       
-      integer ns(1)
+      integer ns(1),igsh(2)
 
       real b(1),u(n,ndim,1),mass(n),
      $     w1(n,ndim,1),w2(n,ndim,1)
@@ -261,7 +277,7 @@ c-----------------------------------------------------------------------
             enddo
             j=mod(j,nsg)+1
          enddo
-         call shift(w2,w3,n*ndim*nsmax)
+         call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
       return
@@ -326,13 +342,12 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setcc(c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,mdim,ndim,nel)
-c        call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,ilgls(1),
-c    $      ms,n,ndim,ndim,nel)
+      subroutine setcc(
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,mdim,ndim,nel,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      integer ns(1)
+      integer ns(1),igsh(2)
 
       real rxp(1)
       real c(1),z(n,ndim,1),t(n,mdim,1),
@@ -362,11 +377,11 @@ c    $      ms,n,ndim,ndim,nel)
               c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
      $            +vlsc2(w4,w1(1,1,is),n*mdim)
             enddo
-            call shift(w2,w4,n*ndim*nsmax)
+            call shift(igsh,w2,w4,n*ndim*nsmax)
             j=mod(j,nsg)+1
          enddo
          enddo
-         call shift(w3,w4,n*ndim*nsmax)
+         call shift(igsh,w3,w4,n*ndim*nsmax)
          k=mod(k,nsg)+1
       enddo
       enddo

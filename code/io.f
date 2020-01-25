@@ -66,41 +66,41 @@ c     endif
       return
       end
 c-----------------------------------------------------------------------
-      subroutine shift_setup(iw,n)
+      subroutine shift_setup(igsh,ncomm,iw,n,ns)
 
       include 'SIZE'
 
-      common /pcomm/ igsh(2)
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       integer*8 iw(n,2)
+      integer igsh(2)
 
-      if (mp.eq.1) return
+      if (ns.eq.1) return
 
-      if (mod(mp,2).eq.1)
-     $   call exitti('no support for odd number of mpi-ranks$',mp)
+      if (mod(ns,2).eq.1)
+     $   call exitti('no support for odd number of mpi-ranks$',ns)
 
-      call izero(igsh,2)
-      do i=1,n
-         i1=nid/2
-         i2=mod(nid-1+mp,mp)/2
-         irem=mod(nid,2).eq.0
-         iw(i,1)=i+i1*n
-         iw(i,2)=i+i2*n
-      enddo
-
-      call fgslib_gs_setup(igsh,iw,n,nekcomm,mp)
-      call fgslib_gs_setup(igsh(2),iw(1,2),n,nekcomm,mp)
+      if (mid.le.(ns-1)) then
+         call izero(igsh,2)
+         do i=1,n
+            i1=nid/2
+            i2=mod(nid-1+ns,ns)/2
+            irem=mod(nid,2).eq.0
+            iw(i,1)=i+i1*n
+            iw(i,2)=i+i2*n
+         enddo
+         call fgslib_gs_setup(igsh,iw,n,ncomm,mp)
+         call fgslib_gs_setup(igsh(2),iw(1,2),n,ncomm,mp)
+      endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine shift(u,w,n)
+      subroutine shift(igsh,u,w,n)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      common /pcomm/ igsh(2)
-
+      integer igsh(2)
       real u(n),w(n,2)
 
       if (mp.eq.1) return

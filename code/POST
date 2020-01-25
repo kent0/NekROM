@@ -37,7 +37,7 @@ c     parameter (ls=lsg/lpmin+1)
       common /opst/ aat(ls*lsg),bbt(ls*lsg),cct(ls*lsg*lsg)
 
       common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
-      common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg)
+      common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
 
       common /scales/ zsc(lsg)
 
@@ -46,3 +46,5 @@ c     parameter (ls=lsg/lpmin+1)
 
       logical ifcread
       common /ifpar/ ifcread
+
+      common /pcomm/ igsh(2)
