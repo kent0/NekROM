@@ -77,29 +77,9 @@ c     nelp=1
       if (np.eq.1)
      $   call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
 
-      call rzero(gram0,nsg)
-      do i=1,ms(nid+1)
-         call add2(gram0,bb(1+(i-1)*nsg),nsg)
-      enddo
-
-      call gop(gram0,gram,'+  ',nsg)
-      s=1./real(nsg)
-
-      call cmult(gram0,s,nsg)
-      gram00=s*vlsum(gram0,nsg)
-
-      do i=1,ms(nid+1)
-         call sub2(bb(1+(i-1)*nsg),gram0,nsg)
-      enddo
-
-      call cadd(gram0,-gram00,nsg)
-      do i=1,ms(nid+1)
-         call cadd(bb(1+(i-1)*nsg),-gram0(i),nsg)
-      enddo
-
+      call copy(bb0,bb,ns*nsg)
+      call gsub0(bb,bbt,aat,ns,nsg)
       call dump_parallel(bb,ms(nid+1)*ns,'ops/graml20 ',nid)
-
-      call exitt0
 
       ! eigendecomposition here or external process
 
@@ -132,6 +112,35 @@ c     nelp=1
       call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0 ',nid)
 
       call exitt0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gsub0(gram,gram0,wk,ns,nsg)
+
+      real gram(1),gram0(1),wk(1)
+
+      call rzero(gram0,nsg)
+
+      do i=1,ns
+         call add2(gram0,gram(1+(i-1)*nsg),nsg)
+      enddo
+
+      call gop(gram0,wk,'+  ',nsg)
+      s=1./real(nsg)
+
+      call cmult(gram0,s,nsg)
+      gram00=s*vlsum(gram0,nsg)
+
+      do i=1,ns
+         call sub2(gram(1+(i-1)*nsg),gram0,nsg)
+      enddo
+
+      call cadd(gram0,-gram00,nsg)
+
+      do i=1,ns
+         call cadd(gram(1+(i-1)*nsg),-gram0(i),nsg)
+      enddo
 
       return
       end
