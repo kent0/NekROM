@@ -20,6 +20,8 @@ c     nelp=1
       call ilgls_setup(ilgls,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
 
+      call ilgls_setup(ilglsp,msp,nb+1,min(np,nb+1),nid)
+
       nsmax=ivlmax(ms,np)
       call shift_setup(igsh,nekcomm,itmp,nsmax*nelp*lxyz*ldim,np)
 
