@@ -406,7 +406,7 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       end
 c-----------------------------------------------------------------------
       subroutine setcc(
-     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,mdim,ndim,nel,igsh)
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,ndim,mdim,nel,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
@@ -419,8 +419,8 @@ c-----------------------------------------------------------------------
       nsg=ivlsum(ns,mp)
       nsmax=ivlmax(ns,mp)
 
-      call copy(w1,z,n*ndim*ns(mid+1))
-      call copy(w2,z,n*ndim*ns(mid+1))
+      call copy(w1,t,n*mdim*ns(mid+1))
+      call copy(w2,t,n*mdim*ns(mid+1))
       call copy(w3,z,n*ndim*ns(mid+1))
 
       ms=ns(1)
@@ -433,14 +433,14 @@ c-----------------------------------------------------------------------
          do jid=0,mp-1
          do js=1,ns(mod(jid+mid,mp)+1)
             call conv(w4,w2(1,1,js),.false.,
-     $         w3(1,1,ks),w3(1,2,ks),w3(1,mdim,ks),.false.,rxp,nel)
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
             call conv(w4(1,2,1),w2(1,2,js),.false.,
-     $         w3(1,1,ks),w3(1,2,ks),w3(1,mdim,ks),.false.,rxp,nel)
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
             do is=1,ms
               c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
      $            +vlsc2(w4,w1(1,1,is),n*mdim)
             enddo
-            call shift(igsh,w2,w4,n*ndim*nsmax)
+            call shift(igsh,w2,w4,n*mdim*nsmax)
             j=mod(j,nsg)+1
          enddo
          enddo
