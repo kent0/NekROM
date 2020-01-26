@@ -1037,11 +1037,13 @@ c        enddo
                      cel=glsc2(tb(1,i),cux,n)
                   endif
                   call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
-                  if (nid.eq.0) write (100,*) cel
+                  if (nid.eq.0) write (100,1) cel
                enddo
             enddo
          enddo
       endif
+
+    1 format(1pe24.16)
 
       if (nid.eq.0) close (unit=100)
 
