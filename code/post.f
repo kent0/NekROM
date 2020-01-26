@@ -42,11 +42,7 @@ c     nelp=1
       ns=ls
       nsg=lsg
 
-      call rzero(gram,ns*nsg)
-      call rzero(aa,ns*nsg)
-      call rzero(bb,ns*nsg)
-      call rzero(cc,ns*nsg*nsg)
-      call rzero(cc2,ns*nsg*nsg)
+      call rzero_ops
 
       ng=(ndim-1)*3
 
@@ -64,59 +60,82 @@ c     nelp=1
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+         call setbb(gb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
-         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+         call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,n,ndim,ndim,nel,igsh)
       enddo
 
-      call setcc_snap(cc2)
+      call setcc_snap(gc2)
 
-      call dump_parallel(bb,ms(nid+1)*ns,'ops/graml2 ',nid)
-      call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh10 ',nid)
-      call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/gramc ',nid)
+      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb ',nid)
+      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga ',nid)
+      call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
       if (np.eq.1)
-     $   call dump_parallel(cc2,ms(nid+1)*ns*ns,'ops/gramc2 ',nid)
-
-      call copy(bb0,bb,ns*nsg)
-      call gsub0(bb,bbt,aat,ns,nsg)
-      call dump_parallel(bb,ms(nid+1)*ns,'ops/graml20 ',nid)
-
-      call gsub0(aa,bbt,aat,ns,nsg)
-      call dump_parallel(aa,ms(nid+1)*ns,'ops/gramh100 ',nid)
-
+     $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
       ! eigendecomposition here or external process
 
       mmm=ns*ns
+
       call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
       call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
 
-      call mxm(bb,ns,evecp,ns,wevec,ns)
+      call mxm(gb,ns,evecp,ns,wevec,ns)
       call mxm(evecpt,ns,wevec,ns,bb,ns)
-      call dump_serial(bb,ns*ns,'ops/bup_new ',nid)
+      call dump_serial(bb,ns*ns,'ops/bb ',nid)
 
-      call mxm(aa,ns,evecp,ns,wevec,ns)
+      call mxm(ga,ns,evecp,ns,wevec,ns)
       call mxm(evecpt,ns,wevec,ns,aa,ns)
-      call dump_serial(aa,ns*ns,'ops/aup_new ',nid)
+      call dump_serial(aa,ns*ns,'ops/aa ',nid)
 
-      call mxm(cc,ns*ns,evecp,ns,wevecc,ns)
+      call mxm(gc,ns*ns,evecp,ns,wevecc,ns)
       do i=1,ns
          call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
      $      cc(1+(i-1)*ns*ns),ns)
       enddo
       call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
       call copy(cc,wevecc,ns*ns*ns)
-      call dump_serial(cc,ns*ns*ns,'ops/cup_new ',nid)
+      call dump_serial(cc,ns*ns*ns,'ops/cc ',nid)
+
+      call gsub0(gb,bbt,aat,ns,nsg)
+      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb0 ',nid)
+
+      call gsub0(ga,bbt,aat,ns,nsg)
+      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga0 ',nid)
+
+      call rzero_ops
+
+      inel=1
+      ieg1=0
 
       do while (ieg1+1.le.nelgv)
-         call setzz(zz,uu,evecp,w1,w2,ilgls,iglls,n,ms(nid+1),nsg)
-         call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         ieg0=ieg1+1
+         ieg1=min(ieg1+inel+nelp-1,nelgv)
+         nel=ieg1-ieg0+1
+         n=lxyz*(ieg1-ieg0+1)
+         call rsnapsm(uu,ieg0,ieg1)
+
+         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
+         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
+         call setmass(mass,wv1,ieg0,ieg1,lxyz)
+         call setrxp(rxp,rxpt,ieg0,ieg1)
+
+         m=n*ndim
+         call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+         call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel,igsh)
       enddo
 
-      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0 ',nid)
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
+      call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/cc_z ',nid)
 
       call exitt0
+    1 format(i8,i8,1p2e15.6,' zcomp')
 
       return
       end
@@ -152,6 +171,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine setzz(z,u,evec,w1,w2,ilgls,iglls,n,ns,nsg)
 
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
       integer ilgls(1),iglls(1)
 
       real z(n,1),u(n,1)
@@ -166,9 +187,7 @@ c-----------------------------------------------------------------------
          if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
       enddo
 
-c     do i=1,ns
-c        call mxm(u,n,evec(1,i),ns,z(1,i),1)
-c     enddo
+c     call mxm(u,n,evec,nsg,z,nsg)
 
       return
       end
@@ -950,6 +969,25 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
       endif
 
       call gop(rxp,tmp,'+  ',lxd*lyd*lzd*ldim*ldim*(ieg1-ieg0+1))
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine rzero_ops
+
+      include 'POST'
+
+      call rzero(gram,ms(nid+1)*ns)
+      call rzero(ga,ms(nid+1)*ns)
+      call rzero(gb,ms(nid+1)*ns)
+      call rzero(gc,ms(nid+1)*ns*ns)
+      call rzero(gc2,ms(nid+1)*ns*ns)
+
+      call rzero(aa,ms(nid+1)*ns)
+      call rzero(bb,ms(nid+1)*ns)
+      call rzero(bb0,ms(nid+1)*ns)
+      call rzero(cc,ms(nid+1)*ns*ns)
+      call rzero(cc2,ms(nid+1)*ns*ns)
 
       return
       end
