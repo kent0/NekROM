@@ -11,7 +11,6 @@ c-----------------------------------------------------------------------
       character*127 flist
 
       nelp=512
-c     nelp=1
       nsnap=ns
 
       ns=ls
@@ -104,6 +103,26 @@ c     nelp=1
       call gsub0(ga,bbt,aat,ns,nsg)
       call dump_parallel(ga,ms(nid+1)*ns,'ops/ga0 ',nid)
 
+      call read_serial(evecp0,mmm,'ops/evecp0 ',ug,nid)
+      call read_serial(evecpt0,mmm,'ops/evecpt0 ',ug,nid)
+
+      call mxm(gb,ns,evecp0,ns,wevec,ns)
+      call mxm(evecpt0,ns,wevec,ns,bb0,ns)
+      call dump_serial(bb0,ns*ns,'ops/bb0 ',nid)
+
+      call mxm(ga,ns,evecp0,ns,wevec,ns)
+      call mxm(evecpt0,ns,wevec,ns,aa0,ns)
+      call dump_serial(aa0,ns*ns,'ops/aa0 ',nid)
+
+      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns)
+      do i=1,ns
+         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp0,ns,
+     $      cc0(1+(i-1)*ns*ns),ns)
+      enddo
+      call mxm(evecpt0,ns,cc0,ns,wevecc,ns*ns)
+      call copy(cc0,wevecc,ns*ns*ns)
+      call dump_serial(cc0,ns*ns*ns,'ops/cc0 ',nid)
+
       call rzero_ops
 
       inel=1
@@ -128,11 +147,22 @@ c     nelp=1
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,n,ndim,ndim,nel,igsh)
+
+         call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+         call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel,igsh)
       enddo
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
       call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/cc_z ',nid)
+
+      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0_z ',nid)
+      call dump_parallel(aa0,ms(nid+1)*ns,'ops/aa0_z ',nid)
+      call dump_parallel(cc0,ms(nid+1)*ns*ns,'ops/cc0_z ',nid)
 
       call exitt0
     1 format(i8,i8,1p2e15.6,' zcomp')
@@ -985,9 +1015,12 @@ c-----------------------------------------------------------------------
 
       call rzero(aa,ms(nid+1)*ns)
       call rzero(bb,ms(nid+1)*ns)
-      call rzero(bb0,ms(nid+1)*ns)
       call rzero(cc,ms(nid+1)*ns*ns)
       call rzero(cc2,ms(nid+1)*ns*ns)
+
+      call rzero(aa0,ms(nid+1)*ns)
+      call rzero(bb0,ms(nid+1)*ns)
+      call rzero(cc0,ms(nid+1)*ns)
 
       return
       end

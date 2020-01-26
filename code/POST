@@ -32,10 +32,13 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*lsg),
      $             evecpt(ls*lsg),gram0(lsg),
+     $             evecp0(ls*lsg),evecpt0(ls*lsg),
      $             gb(ls*lsg),ga(ls*lsg),gc(ls*lsg*lsg),
      $             gc2(ls*lsg*lsg)
 
-      common /ops/ aa(ls*lsg),bb(ls*lsg),bb0(ls*lsg),cc(ls*lsg*lsg)
+      common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
+      common /ops0/ aa0(ls*lsg),bb0(ls*lsg),cc0(ls*lsg*lsg)
+
       common /ops2/ cc2(ls*lsg*lsg)
       common /opst/ aat(ls*lsg),bbt(ls*lsg),cct(ls*lsg*lsg)
 
