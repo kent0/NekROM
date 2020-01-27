@@ -69,6 +69,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /myshift/ m
 
       integer*8 iw(n,2)
       integer igsh(2)
@@ -77,6 +78,8 @@ c-----------------------------------------------------------------------
 
       if (mod(ns,2).eq.1)
      $   call exitti('no support for odd number of mpi-ranks$',ns)
+
+      m=n
 
       if (mid.le.(ns-1)) then
          call izero(igsh,2)
@@ -97,9 +100,10 @@ c-----------------------------------------------------------------------
       subroutine shift(igsh,u,w,n)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /myshift/ m
 
       integer igsh(2)
-      real u(n),w(n,2)
+      real u(n),w(m,2)
 
       if (mp.eq.1) return
 
