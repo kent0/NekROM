@@ -24,20 +24,39 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /work/ wv1(lxyz*lelp*ldim),
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
+     $              wvf3(lxyz*lelp*ldim*ls),wvf4(lxyz*lelp*ldim*ls),
      $              wvf12(lxyz*lelp*ldim*ls*2),
      $              w9(lxyz*lelp*9),
      $              wevec(ls*lsg),
      $              wevecc(ls*lsg*lsg)
 
-      common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*lsg),
-     $             evecpt(ls*lsg)
-      common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
-      common /ops2/ cc2(ls*lsg*lsg)
+      common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*(lsg+1)),
+     $             evecpt(ls*(lsg+1)),gram0(lsg),
+     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1)),
+     $             gb(ls*lsg),ga(ls*lsg),gc(ls*lsg*lsg),
+     $             gc2(ls*lsg*lsg)
 
-      common /ipparallel/ nps,npb,ms(lsg)
-      common /pparallel/ nns(lsg),nnb(lb),ilgls(lsg)
+      common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
+     $             cc((ls+1)*(lsg+1)**2)
+
+      common /ops0/ aa0((ls+1)*(lsg+1)),
+     $              bb0((ls+1)*(lsg+1)),
+     $              cc0((ls+1)*(lsg+1)**2)
+
+      common /opst/ aat((ls+1)*(lsg+1)),
+     $              bbt((ls+1)*(lsg+1)),
+     $              cct((ls+1)*(lsg+1)**2)
+
+      common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
+      common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
+      common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg)
 
       common /scales/ zsc(lsg)
 
       character*1 fnames
       common /snapf/ fnames(132*lsg)
+
+      logical ifcread
+      common /ifpar/ ifcread
+
+      common /pcomm/ igsh(2),igshp(2)

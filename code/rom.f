@@ -339,8 +339,8 @@ c-----------------------------------------------------------------------
          ifield=1
          call seta(au,au0,'ops/au ')
          call setb(bu,bu0,'ops/bu ')
-         call setc(cul,'ops/cu ')
-c        call setc_snap(cul,'ops/guc ')
+c        call setc(cul,1,'ops/cu ')
+         call setc(cul,0,'ops/cu0 ')
       endif
       if (ifrom(2)) then
          ifield=2
@@ -911,7 +911,7 @@ c           if (idc_t.gt.0) call rzero(tb,n)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setc(cl,fname)
+      subroutine setc(cl,ii0,fname)
 
       include 'SIZE'
       include 'TOTAL'
@@ -947,9 +947,9 @@ c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
       if (rmode.eq.'ON '.or.rmode.eq.'ONB') then
          do k=0,nb
          do j=0,mb
-         do i=1,mb
+         do i=ii0,mb
             cel=0.
-            if (nid.eq.0) read(100,*) cel
+            if (nid.eq.0) read (100,*) cel
             cel=glsum(cel,1)
             call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
          enddo
@@ -1029,7 +1029,7 @@ c        enddo
                else
                   call cct(cux,k,j)
                endif
-               do i=1,nb
+               do i=ii0,nb
                   if (ifield.eq.1) then
                      cel=op_glsc2_wt(
      $                  ub(1,i),vb(1,i),wb(1,i),cux,cuy,cuz,ones)
@@ -1037,11 +1037,13 @@ c        enddo
                      cel=glsc2(tb(1,i),cux,n)
                   endif
                   call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
-                  if (nid.eq.0) write (100,*) cel
+                  if (nid.eq.0) write (100,1) cel
                enddo
             enddo
          enddo
       endif
+
+    1 format(1pe24.16)
 
       if (nid.eq.0) close (unit=100)
 

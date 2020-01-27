@@ -85,10 +85,12 @@ c-----------------------------------------------------------------------
 
          if (nid.eq.0) then
             do i=1,iwk(1)
-               write (12,*) wk1(i)
+               write (12,1) wk1(i)
             enddo
          endif
       enddo
+
+    1 format(1pe24.16)
 
       if (nid.eq.0) close (unit=12)
 

@@ -6,19 +6,35 @@ c-----------------------------------------------------------------------
       include 'GEOM'
       include 'PARALLEL'
 
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
       character*127 flist
 
       nelp=512
 c     nelp=32
       nsnap=ns
 
-      ! assigned snapshot range
-
-      isg0=1
-      isg1=nsg
-
       ns=ls
       call rflist(fnames,ns)
+
+      call ilgls_setup(ilgls,ms,ns,np,nid)
+      call iglls_setup(iglls,itmp,ms,ns,np,nid)
+
+      call ilgls_setup(ilglsp,msp,nb+1,min(np,nb+1),nid)
+
+      nsmax=ivlmax(ms,np)
+      call shift_setup(igsh,nekcomm,itmp,nsmax*nelp*lxyz*ldim,np)
+
+      do id=0,np-1
+         if (id.eq.nid) then
+            do ip=1,np
+               write (6,*) id,ip,ms(ip),'mip'
+            enddo
+         endif
+         call nekgsync()
+      enddo
+
+      call sleep(1)
 
       inel=1
       ieg1=0
@@ -26,18 +42,97 @@ c     nelp=32
       ns=ls
       nsg=lsg
 
-      call rzero(gram,ns*nsg)
-      call rzero(aa,ns*nsg)
-      call rzero(bb,ns*nsg)
-      call rzero(cc,ns*nsg*nsg)
-      call rzero(cc2,ns*nsg*nsg)
+      call rzero_ops
 
       ng=(ndim-1)*3
 
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+inel+nelp-1,nelgv)
-         if (nid.eq.0) write (6,*) 'working on elements ',ieg0,ieg1
+         write (6,*) nid,'working on elements ',ieg0,ieg1
+         nel=ieg1-ieg0+1
+         n=lxyz*(ieg1-ieg0+1)
+         call rsnapsm(uu,ieg0,ieg1)
+         write (6,*) nid,'post rsnapsm'
+
+         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
+         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
+         call setmass(mass,wv1,ieg0,ieg1,lxyz)
+         call setrxp(rxp,rxpt,ieg0,ieg1)
+
+         call setbb(gb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+         call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel,igsh)
+      enddo
+
+      call setcc_snap(gc2)
+
+      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb ',nid)
+      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga ',nid)
+      call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
+      if (np.eq.1)
+     $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
+      ! eigendecomposition here or external process
+
+      mmm=(ns+1)*ns
+
+      call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
+      call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
+
+      call mxm(gb,ns,evecp,ns,wevec,ns+1)
+      call mxm(evecpt,ns+1,wevec,ns,bb,ns+1)
+      call dump_serial(bb,(ns+1)**2,'ops/bb ',nid)
+
+      call mxm(ga,ns,evecp,ns,wevec,ns+1)
+      call mxm(evecpt,ns+1,wevec,ns,aa,ns+1)
+      call dump_serial(aa,(ns+1)**2,'ops/aa ',nid)
+
+      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns+1)
+      do i=1,ns
+         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
+     $      cc(1+(i-1)*ns*ns),ns)
+      enddo
+
+      call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
+      call copy(cc,wevecc,(ns+1)*3)
+      call dump_serial(cc,ns*ns*ns,'ops/cc ',nid)
+
+      call gsub0(gb,bbt,aat,ns,nsg)
+      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb0 ',nid)
+
+      call gsub0(ga,bbt,aat,ns,nsg)
+      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga0 ',nid)
+
+      call read_serial(evecp0,mmm,'ops/evecp0 ',ug,nid)
+      call read_serial(evecpt0,mmm,'ops/evecpt0 ',ug,nid)
+
+      call mxm(gb,ns,evecp0,ns,wevec,ns)
+      call mxm(evecpt0,ns,wevec,ns,bb0,ns)
+      call dump_serial(bb0,ns*ns,'ops/bb0 ',nid)
+
+      call mxm(ga,ns,evecp0,ns,wevec,ns)
+      call mxm(evecpt0,ns,wevec,ns,aa0,ns)
+      call dump_serial(aa0,ns*ns,'ops/aa0 ',nid)
+
+      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns)
+      do i=1,ns
+         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp0,ns,
+     $      cc0(1+(i-1)*ns*ns),ns)
+      enddo
+      call mxm(evecpt0,ns,cc0,ns,wevecc,ns*ns)
+      call copy(cc0,wevecc,ns*ns*ns)
+      call dump_serial(cc0,ns*ns*ns,'ops/cc0 ',nid)
+
+      call rzero_ops
+
+      inel=1
+      ieg1=0
+
+      do while (ieg1+1.le.nelgv)
+         ieg0=ieg1+1
+         ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,ieg0,ieg1)
@@ -47,66 +142,84 @@ c     nelp=32
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(bb,uu,mass,wvf1,wvf2,wvf12,ns,nsg,n,ndim)
-         call setaa(aa,uu,visc,gfac,wvf1,wvf2,wvf12,
-     $      ns,nsg,n,nel,ndim,ng)
-         call setcc(cc,uu,uu,rxp,wvf1,wvf2,wvf12,wvf12,
-     $      ns,nsg,n,ndim,ndim,nel)
-         call setcc_snap(cc2)
+         m=n*ndim
+         call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+         call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel,igsh)
+
+         call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+         call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,n,ndim,ndim,nel,igsh)
       enddo
 
-      call dump_serial(bb,ns*ns,'ops/graml2 ',nid)
-      call dump_serial(aa,ns*ns,'ops/gramh10 ',nid)
-      call dump_serial(cc,ns*ns*ns,'ops/gramc ',nid)
-      call dump_serial(cc2,ns*ns*ns,'ops/gramc2 ',nid)
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
+      call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/cc_z ',nid)
 
-      ! eigendecomposition here or external process
+      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0_z ',nid)
+      call dump_parallel(aa0,ms(nid+1)*ns,'ops/aa0_z ',nid)
+      call dump_parallel(cc0,ms(nid+1)*ns*ns,'ops/cc0_z ',nid)
 
-      mmm=ns*ns
-      call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
-      call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
-
-      call mxm(bb,ns,evecp,ns,wevec,ns)
-      call mxm(evecpt,ns,wevec,ns,bb,ns)
-      call dump_serial(bb,ns*ns,'ops/bup_new ',nid)
-
-      call mxm(aa,ns,evecp,ns,wevec,ns)
-      call mxm(evecpt,ns,wevec,ns,aa,ns)
-      call dump_serial(aa,ns*ns,'ops/aup_new ',nid)
-
-      call mxm(cc,ns*ns,evecp,ns,wevecc,ns)
-      do i=1,ns
-         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
-     $      cc(1+(i-1)*ns*ns),ns)
-      enddo
-      call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
-      call copy(cc,wevecc,ns*ns*ns)
-      call dump_serial(cc,ns*ns*ns,'ops/cup_new ',nid)
+      call exitt0
+    1 format(i8,i8,1p2e15.6,' zcomp')
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setzz(z,u,evec,w1,w2,n,ns,nsg)
+      subroutine gsub0(gram,gram0,wk,ns,nsg)
 
-c     include 'SIZE'
-c     include 'PARALLEL'
+      real gram(1),gram0(1),wk(1)
 
-      real z(n,ns),u(n,ns)
-      real evec(ns,nsg)
-      real w1(n),w2(n)
-
-c     do isg=1,nsg
-c        is=iglls(isg)
-c        is=isg
-c        call mxm(u,n,evec(1,isg),ns,w1,1)
-c        call gop(w1,w2,'+  ',n)
-c        if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
-
-c     enddo
+      call rzero(gram0,nsg)
 
       do i=1,ns
-         call mxm(u,n,evec(1,i),ns,z(1,i),1)
+         call add2(gram0,gram(1+(i-1)*nsg),nsg)
       enddo
+
+      call gop(gram0,wk,'+  ',nsg)
+      s=1./real(nsg)
+
+      call cmult(gram0,s,nsg)
+      gram00=s*vlsum(gram0,nsg)
+
+      do i=1,ns
+         call sub2(gram(1+(i-1)*nsg),gram0,nsg)
+      enddo
+
+      call cadd(gram0,-gram00,nsg)
+
+      do i=1,ns
+         call cadd(gram(1+(i-1)*nsg),-gram0(i),nsg)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setzz(z,u,evec,w1,w2,ilgls,iglls,n,ns,nsg)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ilgls(1),iglls(1)
+
+      real z(n,1),u(n,1)
+      real evec(nsg,nsg)
+      real w1(n),w2(n)
+
+      do isg=1,nsg
+         is=iglls(isg)
+         i=ilgls(1)
+         call mxm(u,n,evec(i,isg),ns,w1,1)
+         call gop(w1,w2,'+  ',n)
+         if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
+      enddo
+
+c     call mxm(u,n,evec,nsg,z,nsg)
 
       return
       end
@@ -130,66 +243,106 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      function iglls(isg)
+      subroutine iglls_setup(iglls,itmp,ms,nsg,np,nid)
 
-      iglls=0
+      integer iglls(nsg)
+      integer ms(1)
+
+      call izero(iglls,nsg)
+
+      ic=1
+      do id=0,np-1
+         jc=1
+         do is=1,ms(id+1)
+            if (id.eq.nid) then
+               iglls(ic)=jc
+            endif
+            ic=ic+1
+            jc=jc+1
+         enddo
+      enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setaa(a,z,visc,gfac,w1,w2,w3,ns,nsg,n,nel,ndim,ng)
+      subroutine setaa(a,z,visc,gfac,w1,w2,w3,igs,ns,n,nel,ndim,ng,igsh)
 
-      real a(ns,nsg),z(n,ndim,ns),w1(n,ndim,ns),w2(n,ndim,ns)
-      real w3(n,ndim,ns,2)
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer igsh(2)
+      real a(1),z(n,ndim,1),w1(n,ndim,1),w2(n,ndim,1)
+      real w3(n,ndim,1,2)
       real visc(n),gfac(n,ng)
 
-      call copy(w1,z,n*ndim*ns)
-      call copy(w2,z,n*ndim*ns)
+      integer ns(1)
+
+      nsg=ivlsum(ns,mp)
+
+      call copy(w1,z,n*ndim*ns(mid+1))
+      call copy(w2,z,n*ndim*ns(mid+1))
 
       imesh=1
       isd=1
 
-      call rzero(w3,n)
-
-      do i=1,ns*ndim
-         call aop(w2(1,i,1),z(1,i,1),visc,gfac,imesh,isd,nel)
+      do i=1,ns(mid+1)*ndim
+         call aop(w1(1,i,1),z(1,i,1),visc,gfac,imesh,isd,nel)
       enddo
 
-      do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         do js=1,ns
-         do is=1,ns
-            a(is,js+ns*ioff)=a(is,js+ns*ioff)
-     $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
+      j=igs
+
+      nsmax=ivlmax(ns,mp)
+
+      do id=0,mp-1
+         if (mid.eq.0) write (6,*) 'id=',id
+         do k=1,ns(mod(mid+id,mp)+1)
+            if (mid.eq.0) write (6,*) 'k=',k
+            do i=1,ns(mid+1)
+               a(j+(i-1)*nsg)=a(j+(i-1)*nsg)+
+     $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
+            enddo
+            j=mod(j,nsg)+1
          enddo
-         enddo
-         
-         call shift(w1,w3,n*ndim*ns)
+         call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setbb(b,u,mass,w1,w2,w3,ns,nsg,n,ndim)
+      subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
 
-      real b(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
-      real w3(n,ndim,ns,3)
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      
+      integer ns(1),igsh(2)
 
-      call copy(w1,u,n*ndim*ns)
-      call copy(w2,u,n*ndim*ns)
+      real b(1),u(n,ndim,1),mass(n),
+     $     w1(n,ndim,1),w2(n,ndim,1)
 
-      do i=1,ns*ndim
-         call col2(w2(1,i,1),mass,n)
+      real w3(n,ndim,1,3)
+
+      nsg=ivlsum(ns,mp)
+
+      call copy(w1,u,n*ndim*ns(mid+1))
+      call copy(w2,u,n*ndim*ns(mid+1))
+
+      do i=1,ns(mid+1)*ndim
+         call col2(w1(1,i,1),mass,n)
       enddo
 
-      do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         do js=1,ns
-         do is=1,ns
-            b(is,js+ns*ioff)=b(is,js+ns*ioff)
-     $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
+      j=igs
+
+      nsmax=ivlmax(ns,mp)
+
+      do id=0,mp-1
+         if (mid.eq.0) write (6,*) 'id=',id
+         do k=1,ns(mod(mid+id,mp)+1)
+            if (mid.eq.0) write (6,*) 'k=',k
+            do i=1,ns(mid+1)
+               b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
+     $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
+            enddo
+            j=mod(j,nsg)+1
          enddo
-         enddo
-         
-         call shift(w1,w3,n*ndim*ns)
+         call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
       return
@@ -228,7 +381,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setcc(c,z,t,rxp,w1,w2,w3,w4,ns,nsg,n,mdim,ndim,nel)
+      subroutine setcc_lgc(c,z,t,rxp,w1,w2,w3,w4,ns,nsg,n,mdim,ndim,nel)
 
       real rxp(1)
       real c(ns,nsg,nsg),z(n,ndim,ns),t(n,mdim,ns),
@@ -254,6 +407,53 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setcc(
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,ndim,mdim,nel,igsh)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ns(1),igsh(2)
+
+      real rxp(1)
+      real c(1),z(n,ndim,1),t(n,mdim,1),
+     $     w1(n,mdim,1),w2(n,ndim,1),w3(n,mdim,1),w4(n,mdim,1)
+
+      nsg=ivlsum(ns,mp)
+      nsmax=ivlmax(ns,mp)
+
+      call copy(w1,t,n*mdim*ns(mid+1))
+      call copy(w2,t,n*mdim*ns(mid+1))
+      call copy(w3,z,n*ndim*ns(mid+1))
+
+      ms=ns(1)
+
+      j=igs
+      k=igs
+
+      do kid=0,mp-1
+      do ks=1,ns(mod(kid+mid,mp)+1)
+         do jid=0,mp-1
+         do js=1,ns(mod(jid+mid,mp)+1)
+            call conv(w4,w2(1,1,js),.false.,
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+            call conv(w4(1,2,1),w2(1,2,js),.false.,
+     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+            do is=1,ms
+              c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+     $            +vlsc2(w4,w1(1,1,is),n*mdim)
+            enddo
+            call shift(igsh,w2,w4,n*mdim*nsmax)
+            j=mod(j,nsg)+1
+         enddo
+         enddo
+         call shift(igsh,w3,w4,n*ndim*nsmax)
+         k=mod(k,nsg)+1
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine setgeom(gfac,w,ieg0,ieg1,lxyz,ng)!,nid)
 
       include 'SIZE' ! nid
@@ -262,7 +462,7 @@ c-----------------------------------------------------------------------
 
       real gfac(lxyz,ieg1-ieg0+1,ng),w(lxyz*(ieg1-ieg0+1)*ng)
 
-      call rzero(gfac,lxyz*(ieg1-ieg0+1)*ng)
+      call rzero(gfac,lxyz*(ieg1-ieg0+1)*max(ng,4))
 
       do ieg=ieg0,ieg1
          if (gllnid(ieg).eq.nid) then
@@ -278,7 +478,7 @@ c-----------------------------------------------------------------------
          endif
       enddo
 
-      call gop(gfac,w,'+  ',lxyz*(ieg1-ieg0+1)*ng)
+      call gop(gfac,w,'+  ',lxyz*(ieg1-ieg0+1)*max(ng,4))
 
       return
       end
@@ -494,10 +694,8 @@ c          Fast 2-d mode: constant properties and undeformed element
            call mxm  (u(1,1,1,ie),lx1,dytm1,ly1,duds,ly1)
            call col3 (tmp1,dudr,gfac(1,1,1,ie,1),nxyz)
            call col3 (tmp2,duds,gfac(1,1,1,ie,2),nxyz)
-c          if (ifdfrm(ie)) then
-              call addcol3 (tmp1,duds,gfac(1,1,1,ie,4),nxyz)
-              call addcol3 (tmp2,dudr,gfac(1,1,1,ie,4),nxyz)
-c          endif
+           call addcol3 (tmp1,duds,gfac(1,1,1,ie,4),nxyz)
+           call addcol3 (tmp2,dudr,gfac(1,1,1,ie,4),nxyz)
            call col2 (tmp1,visc(1,1,1,ie),nxyz)
            call col2 (tmp2,visc(1,1,1,ie),nxyz)
            call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
@@ -801,6 +999,27 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
       endif
 
       call gop(rxp,tmp,'+  ',lxd*lyd*lzd*ldim*ldim*(ieg1-ieg0+1))
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine rzero_ops
+
+      include 'POST'
+
+      call rzero(gram,ms(nid+1)*ns)
+      call rzero(ga,ms(nid+1)*ns)
+      call rzero(gb,ms(nid+1)*ns)
+      call rzero(gc,ms(nid+1)*ns*ns)
+      call rzero(gc2,ms(nid+1)*ns*ns)
+
+      call rzero(aa,ms(nid+1)*ns)
+      call rzero(bb,ms(nid+1)*ns)
+      call rzero(cc,ms(nid+1)*ns*ns)
+
+      call rzero(aa0,ms(nid+1)*ns)
+      call rzero(bb0,ms(nid+1)*ns)
+      call rzero(cc0,ms(nid+1)*ns)
 
       return
       end
