@@ -13,8 +13,6 @@ c-----------------------------------------------------------------------
 
       ifcread=.true.
 
-      write (6,*) mid,'wp 0',ms(mid+1)
-
       do is=1,ms(mid+1)
          js=ilgls(is)
          write (6,*) mid,is,'reading snapshot'
@@ -249,8 +247,6 @@ c-----------------------------------------------------------------------
       real uz(lx1,ly1,lz1,ieg1-ieg0+1)
 
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
-
-      write (6,*) nid,'wp 2.1'
 
       offs0   = iHeadersize + 4 + isize*nelgr
       nxyzr8  = nxr*nyr*nzr
@@ -757,8 +753,6 @@ c-----------------------------------------------------------------------
            write(6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
            call exitt
         endif
-
-         if (nid.eq.0) write (6,*) nid,'wp 1.5'
 
         pid0r = nid
         pid1r = nid + stride

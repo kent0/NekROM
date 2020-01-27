@@ -75,26 +75,27 @@ c-----------------------------------------------------------------------
      $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
       ! eigendecomposition here or external process
 
-      mmm=ns*ns
+      mmm=(ns+1)*ns
 
       call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
       call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
 
-      call mxm(gb,ns,evecp,ns,wevec,ns)
-      call mxm(evecpt,ns,wevec,ns,bb,ns)
-      call dump_serial(bb,ns*ns,'ops/bb ',nid)
+      call mxm(gb,ns,evecp,ns,wevec,ns+1)
+      call mxm(evecpt,ns+1,wevec,ns,bb,ns+1)
+      call dump_serial(bb,(ns+1)**2,'ops/bb ',nid)
 
-      call mxm(ga,ns,evecp,ns,wevec,ns)
-      call mxm(evecpt,ns,wevec,ns,aa,ns)
-      call dump_serial(aa,ns*ns,'ops/aa ',nid)
+      call mxm(ga,ns,evecp,ns,wevec,ns+1)
+      call mxm(evecpt,ns+1,wevec,ns,aa,ns+1)
+      call dump_serial(aa,(ns+1)**2,'ops/aa ',nid)
 
-      call mxm(gc,ns*ns,evecp,ns,wevecc,ns)
+      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns+1)
       do i=1,ns
          call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
      $      cc(1+(i-1)*ns*ns),ns)
       enddo
+
       call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
-      call copy(cc,wevecc,ns*ns*ns)
+      call copy(cc,wevecc,(ns+1)*3)
       call dump_serial(cc,ns*ns*ns,'ops/cc ',nid)
 
       call gsub0(gb,bbt,aat,ns,nsg)
@@ -1016,7 +1017,6 @@ c-----------------------------------------------------------------------
       call rzero(aa,ms(nid+1)*ns)
       call rzero(bb,ms(nid+1)*ns)
       call rzero(cc,ms(nid+1)*ns*ns)
-      call rzero(cc2,ms(nid+1)*ns*ns)
 
       call rzero(aa0,ms(nid+1)*ns)
       call rzero(bb0,ms(nid+1)*ns)

@@ -30,21 +30,26 @@ c     parameter (ls=lsg/lpmin+1)
      $              wevec(ls*lsg),
      $              wevecc(ls*lsg*lsg)
 
-      common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*lsg),
-     $             evecpt(ls*lsg),gram0(lsg),
-     $             evecp0(ls*lsg),evecpt0(ls*lsg),
+      common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*(lsg+1)),
+     $             evecpt(ls*(lsg+1)),gram0(lsg),
+     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1)),
      $             gb(ls*lsg),ga(ls*lsg),gc(ls*lsg*lsg),
      $             gc2(ls*lsg*lsg)
 
-      common /ops/ aa(ls*lsg),bb(ls*lsg),cc(ls*lsg*lsg)
-      common /ops0/ aa0(ls*lsg),bb0(ls*lsg),cc0(ls*lsg*lsg)
+      common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
+     $             cc((ls+1)*(lsg+1)**2)
 
-      common /ops2/ cc2(ls*lsg*lsg)
-      common /opst/ aat(ls*lsg),bbt(ls*lsg),cct(ls*lsg*lsg)
+      common /ops0/ aa0((ls+1)*(lsg+1)),
+     $              bb0((ls+1)*(lsg+1)),
+     $              cc0((ls+1)*(lsg+1)**2)
+
+      common /opst/ aat((ls+1)*(lsg+1)),
+     $              bbt((ls+1)*(lsg+1)),
+     $              cct((ls+1)*(lsg+1)**2)
 
       common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
-      common /pparallelp/ msp(lsg),ilglsp(lsg)
+      common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg)
 
       common /scales/ zsc(lsg)
 
