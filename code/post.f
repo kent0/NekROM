@@ -277,8 +277,8 @@ c-----------------------------------------------------------------------
 
       nsg=ivlsum(ns,mp)
 
-      call copy(w1,z,n*ndim*ns)
-      call copy(w2,z,n*ndim*ns)
+      call copy(w1,z,n*ndim*ns(mid+1))
+      call copy(w2,z,n*ndim*ns(mid+1))
 
       imesh=1
       isd=1
