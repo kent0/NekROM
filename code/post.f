@@ -461,7 +461,7 @@ c-----------------------------------------------------------------------
 
       real gfac(lxyz,ieg1-ieg0+1,ng),w(lxyz*(ieg1-ieg0+1)*ng)
 
-      call rzero(gfac,lxyz*(ieg1-ieg0+1)*ng)
+      call rzero(gfac,lxyz*(ieg1-ieg0+1)*max(ng,4))
 
       do ieg=ieg0,ieg1
          if (gllnid(ieg).eq.nid) then
@@ -477,7 +477,7 @@ c-----------------------------------------------------------------------
          endif
       enddo
 
-      call gop(gfac,w,'+  ',lxyz*(ieg1-ieg0+1)*ng)
+      call gop(gfac,w,'+  ',lxyz*(ieg1-ieg0+1)*max(ng,4))
 
       return
       end
@@ -693,10 +693,8 @@ c          Fast 2-d mode: constant properties and undeformed element
            call mxm  (u(1,1,1,ie),lx1,dytm1,ly1,duds,ly1)
            call col3 (tmp1,dudr,gfac(1,1,1,ie,1),nxyz)
            call col3 (tmp2,duds,gfac(1,1,1,ie,2),nxyz)
-c          if (ifdfrm(ie)) then
-              call addcol3 (tmp1,duds,gfac(1,1,1,ie,4),nxyz)
-              call addcol3 (tmp2,dudr,gfac(1,1,1,ie,4),nxyz)
-c          endif
+           call addcol3 (tmp1,duds,gfac(1,1,1,ie,4),nxyz)
+           call addcol3 (tmp2,dudr,gfac(1,1,1,ie,4),nxyz)
            call col2 (tmp1,visc(1,1,1,ie),nxyz)
            call col2 (tmp2,visc(1,1,1,ie),nxyz)
            call mxm  (dxtm1,lx1,tmp1,lx1,tm1,nyz)
