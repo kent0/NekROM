@@ -1019,7 +1019,7 @@ c-----------------------------------------------------------------------
 
       call rzero(aa0,ms(nid+1)*ns)
       call rzero(bb0,ms(nid+1)*ns)
-      call rzero(cc0,ms(nid+1)*ns)
+      call rzero(cc0,ms(nid+1)*ns*ns)
 
       return
       end
