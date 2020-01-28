@@ -702,7 +702,7 @@ c-----------------------------------------------------------------------
       include 'RESTART'
       include 'INPUT'
 
-      common /ipparallel/ nps,penpb,melt,itmp(lx1*ly1*lz1*lelt)
+      common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
 
       integer stride
