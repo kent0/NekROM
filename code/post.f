@@ -454,6 +454,87 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
+c     call setcc_transfer(c,nl)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setcc_transfer(c,nl)
+
+      include 'POST'
+      include 'PARALLEL'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      real c(1)
+
+      nsg=ns
+
+      nl=0
+
+      n=ms(mid+1)
+      mmax=2*lsg*lsg
+      ntot=nsg*nsg*nsg
+
+      nmin=ntot/mp
+
+      id=0
+      msum=nmin+max(min(ntot-nmin*mp-id,1),0)
+      mm=msum
+
+      id=0
+      l=1
+
+      isg0=ilgls(1)
+      isg1=ilgls(ms(mid+1))
+
+      write (6,*) isg0,isg1,'isg'
+
+      m=1
+      do k=1,nsg
+      do j=1,nsg
+      do i=1,nsg
+         if (mm.lt.l) then
+            id=id+1
+            write (6,*) 'mm=',mm,l
+            mm=mm+nmin+max(min(ntot-nmin*mp-id,1),0)
+         endif
+         if (i.ge.isg0.and.i.le.isg1) then
+            iw1(m)=id
+            iw2(m)=l
+            m=m+1
+         endif
+         l=l+1
+      enddo
+      enddo
+      enddo
+
+      nl=n*nsg*nsg
+
+      do id=0,mp-1
+         if (mid.eq.id) then
+            do i=1,nl
+               write (6,1) id,i,nl,iw1(i),iw2(i),c(i)
+            enddo
+         endif
+         call nekgsync
+      enddo
+
+      call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
+      call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
+
+      do id=0,mp-1
+         if (mid.eq.id) then
+            do i=1,nl
+               write (6,2) id,i,nl,iw1(i),iw2(i),c(i)
+            enddo
+         endif
+         call nekgsync
+      enddo
+
+    1 format(i5,i5,i5,i5,i5,1pe13.4,' crystal1')
+    2 format(i5,i5,i5,i5,i5,1pe13.4,' crystal2')
+
       return
       end
 c-----------------------------------------------------------------------
