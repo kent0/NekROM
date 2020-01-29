@@ -65,7 +65,7 @@ c     nelp=32
          call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,igsh)
       enddo
 
       call setcc_snap(gc2)
@@ -150,31 +150,34 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
          m=n*ndim
          call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
 
-         do i=1,ns
-            ig=ilgls(i)
+c        do i=1,ns
+c           ig=ilgls(i)
 c           call cfill(zz(1+(i-1)*m),2.0**(ig-1),1)
-            call cfill(zz(1+(i-1)*m),1.0*ig,1)
-         enddo
-
-         nl=ms(nid+1)*ns*ns
+c           call cfill(zz(1+(i-1)*m),1.0*ig,1)
+c        enddo
 
          call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,igsh)
 
          call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
          call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,igsh)
       enddo
+
+      nl=ms(nid+1)*ns*ns
+      call setcc_transfer(cc,nl)
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
       call dump_parallel(cc,nl,'ops/cc_z ',nid)
+
+      call setcc_transfer(c0,nl)
 
       call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0_z ',nid)
       call dump_parallel(aa0,ms(nid+1)*ns,'ops/aa0_z ',nid)
@@ -426,7 +429,7 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       end
 c-----------------------------------------------------------------------
       subroutine setcc(
-     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,nsr,n,ndim,mdim,nel,nl,igsh)
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,nsr,n,ndim,mdim,nel,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
@@ -475,8 +478,6 @@ c-----------------------------------------------------------------------
          enddo
          call shift(igsh,w3,w4,n*ndim*nsmax)
       enddo
-
-      call setcc_transfer(c,nl)
 
       return
       end
