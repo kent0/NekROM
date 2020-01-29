@@ -448,37 +448,6 @@ c-----------------------------------------------------------------------
       j=igs
       k=igs
 
-c      do kid=0,mp-1
-c      do ks=1,ns(mod(kid+mid,mp)+1)
-c         do jid=0,mp-1
-c         do js=1,ns(mod(jid+mid,mp)+1)
-cc           call conv(w4,w2(1,1,js),.false.,
-cc    $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
-cc           call conv(w4(1,2,1),w2(1,2,js),.false.,
-cc    $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
-c            do is=1,ms
-cc             c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-cc    $            +vlsc2(w4,w1(1,1,is),n*mdim)
-cc             c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-cc    $            +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,js),n*mdim)
-c              c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-c     $            +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,ks),1)
-c            enddo
-cc           call shift(igsh,w2,w4,n*mdim*nsmax)
-c            j=mod(j,nsg)+1
-c         enddo
-c         enddo
-cc        call shift(igsh,w3,w4,n*ndim*nsmax)
-c         k=mod(k,nsg)+1
-c      enddo
-c      enddo
-
-c     if (mid.eq.0) then
-c        do i=1,mp
-c           write (6,*) i,nsr(1,i),nsr(2,i),'nsr'
-c        enddo
-c     endif
-
       do kid=0,mp-1
          k1=nsr(1,mod(kid+mid,mp)+1)
          k2=nsr(2,mod(kid+mid,mp)+1)
@@ -489,18 +458,14 @@ c     endif
             do ks=k1,k2
                j=1
                do js=j1,j2
-c                 call conv(w4,w2(1,1,js),.false.,
-c    $               w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
-c                 call conv(w4(1,2,1),w2(1,2,js),.false.,
-c    $               w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+                  call conv(w4,w2(1,1,j),.false.,
+     $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
+                  call conv(w4(1,2,1),w2(1,2,j),.false.,
+     $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
                   do i=1,ms
-c                   c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-c    $                  +vlsc2(w4,w1(1,1,is),n*mdim)
-c                   c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-c    $                  +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,js),n*mdim)
                     c(i+(js-1)*ms+(ks-1)*ms*nsg)=
      $              c(i+(js-1)*ms+(ks-1)*ms*nsg)
-     $                  +vlsc3(w1(1,1,i),w2(1,1,j),w3(1,1,k),1)
+     $                  +vlsc2(w4(1,1,1),w1(1,1,i),n*mdim)
                   enddo
                   j=j+1
                enddo
@@ -1132,7 +1097,6 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
                   w=wd(i)*wd(j)
                   do ii=1,4
                      rxp(l,ii,ie)=w*rxp(l,ii,ie)
-c                    rxp(l,ii,ie)=1.
                   enddo
                enddo
                enddo
