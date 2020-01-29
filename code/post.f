@@ -64,7 +64,7 @@ c     nelp=32
          call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,igsh)
+     $      ms,n,ndim,ndim,nel,nl,igsh)
       enddo
 
       call setcc_snap(gc2)
@@ -74,6 +74,7 @@ c     nelp=32
       call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
       if (np.eq.1)
      $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
+
       ! eigendecomposition here or external process
 
       mmm=(ns+1)*ns
@@ -121,6 +122,7 @@ c     nelp=32
          call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp0,ns,
      $      cc0(1+(i-1)*ns*ns),ns)
       enddo
+
       call mxm(evecpt0,ns,cc0,ns,wevecc,ns*ns)
       call copy(cc0,wevecc,ns*ns*ns)
       call dump_serial(cc0,ns*ns*ns,'ops/cc0 ',nid)
@@ -144,18 +146,19 @@ c     nelp=32
 
          m=n*ndim
          call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+
          call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,igsh)
+     $      ms,n,ndim,ndim,nel,nl,igsh)
 
          call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
          call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,igsh)
+     $      ms,n,ndim,ndim,nel,nl,igsh)
       enddo
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
@@ -311,7 +314,7 @@ c-----------------------------------------------------------------------
       subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-      
+
       integer ns(1),igsh(2)
 
       real b(1),u(n,ndim,1),mass(n),
@@ -408,7 +411,7 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       end
 c-----------------------------------------------------------------------
       subroutine setcc(
-     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,ndim,mdim,nel,igsh)
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,ndim,mdim,nel,nl,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
