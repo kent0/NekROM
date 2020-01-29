@@ -37,19 +37,22 @@ c     parameter (ls=lsg/lpmin+1)
      $             gc2(ls*lsg*lsg)
 
       common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
-     $             cc((ls+1)*(lsg+1)**2)
+     $             cc(2*(ls+1)*(lsg+1)**2)
 
       common /ops0/ aa0((ls+1)*(lsg+1)),
      $              bb0((ls+1)*(lsg+1)),
-     $              cc0((ls+1)*(lsg+1)**2)
+     $              cc0(2*(ls+1)*(lsg+1)**2)
 
       common /opst/ aat((ls+1)*(lsg+1)),
      $              bbt((ls+1)*(lsg+1)),
-     $              cct((ls+1)*(lsg+1)**2)
+     $              cct(2*(ls+1)*(lsg+1)**2)
 
       common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
-      common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg)
+      common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg),
+     $                    iw1(2*lsg*lsg*lsg)
+      integer*8 iw2
+      common /parallelp8/ iw2(2*lsg*lsg*lsg)
 
       common /scales/ zsc(lsg)
 
