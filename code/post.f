@@ -11,16 +11,17 @@ c-----------------------------------------------------------------------
       character*127 flist
 
       nelp=512
+c     nelp=47
 c     nelp=32
       nsnap=ns
 
       ns=ls
       call rflist(fnames,ns)
 
-      call ilgls_setup(ilgls,ms,ns,np,nid)
+      call ilgls_setup(ilgls,msr,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
 
-      call ilgls_setup(ilglsp,msp,nb+1,min(np,nb+1),nid)
+      call ilgls_setup(ilglsp,msrp,msp,nb+1,min(np,nb+1),nid)
 
       nsmax=ivlmax(ms,np)
       call shift_setup(igsh,nekcomm,itmp,nsmax*nelp*lxyz*ldim,np)
@@ -64,14 +65,16 @@ c     nelp=32
          call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
       enddo
 
       call setcc_snap(gc2)
 
       call dump_parallel(gb,ms(nid+1)*ns,'ops/gb ',nid)
       call dump_parallel(ga,ms(nid+1)*ns,'ops/ga ',nid)
-      call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
+      call dump_parallel(gc,nl,'ops/gc ',nid)
+c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
+
       if (np.eq.1)
      $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
@@ -147,27 +150,35 @@ c     nelp=32
          m=n*ndim
          call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
 
+         do i=1,ns
+            ig=ilgls(i)
+c           call cfill(zz(1+(i-1)*m),2.0**(ig-1),1)
+            call cfill(zz(1+(i-1)*m),1.0*ig,1)
+         enddo
+
+         nl=ms(nid+1)*ns*ns
+
          call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
 
          call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
          call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,n,ndim,ndim,nel,nl,igsh)
+     $      ms,msr,n,ndim,ndim,nel,nl,igsh)
       enddo
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
-      call dump_parallel(cc,ms(nid+1)*ns*ns,'ops/cc_z ',nid)
+      call dump_parallel(cc,nl,'ops/cc_z ',nid)
 
       call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0_z ',nid)
       call dump_parallel(aa0,ms(nid+1)*ns,'ops/aa0_z ',nid)
-      call dump_parallel(cc0,ms(nid+1)*ns*ns,'ops/cc0_z ',nid)
+      call dump_parallel(cc0,nl,'ops/cc0_z ',nid)
 
       call exitt0
     1 format(i8,i8,1p2e15.6,' zcomp')
@@ -227,16 +238,20 @@ c     call mxm(u,n,evec,nsg,z,nsg)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine ilgls_setup(ilgls,ms,msg,np,nid)
+      subroutine ilgls_setup(ilgls,msr,ms,msg,np,nid)
 
-      integer ilgls(1),ms(1)
+      integer ilgls(1),ms(1),msr(2,1)
 
       n=0
       msmin=msg/np
 
+      l=1
       do id=0,np-1
          ms(id+1)=msmin+max(min(msg-msmin*np-id,1),0)
          if (id.le.nid-1) n=n+ms(id+1)
+         msr(1,id+1)=l
+         msr(2,id+1)=l+ms(id+1)-1
+         l=l+ms(id+1)
       enddo
 
       do is=1,msmin+max(min(msg-msmin*np-nid,1),0)
@@ -411,15 +426,15 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       end
 c-----------------------------------------------------------------------
       subroutine setcc(
-     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,n,ndim,mdim,nel,nl,igsh)
+     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,nsr,n,ndim,mdim,nel,nl,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      integer ns(1),igsh(2)
+      integer ns(1),nsr(2,1),igsh(2)
 
       real rxp(1)
       real c(1),z(n,ndim,1),t(n,mdim,1),
-     $     w1(n,mdim,1),w2(n,ndim,1),w3(n,mdim,1),w4(n,mdim,1)
+     $     w1(n,mdim,1),w2(n,mdim,1),w3(n,ndim,1),w4(n,mdim,1)
 
       nsg=ivlsum(ns,mp)
       nsmax=ivlmax(ns,mp)
@@ -433,28 +448,70 @@ c-----------------------------------------------------------------------
       j=igs
       k=igs
 
+c      do kid=0,mp-1
+c      do ks=1,ns(mod(kid+mid,mp)+1)
+c         do jid=0,mp-1
+c         do js=1,ns(mod(jid+mid,mp)+1)
+cc           call conv(w4,w2(1,1,js),.false.,
+cc    $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+cc           call conv(w4(1,2,1),w2(1,2,js),.false.,
+cc    $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+c            do is=1,ms
+cc             c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+cc    $            +vlsc2(w4,w1(1,1,is),n*mdim)
+cc             c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+cc    $            +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,js),n*mdim)
+c              c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+c     $            +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,ks),1)
+c            enddo
+cc           call shift(igsh,w2,w4,n*mdim*nsmax)
+c            j=mod(j,nsg)+1
+c         enddo
+c         enddo
+cc        call shift(igsh,w3,w4,n*ndim*nsmax)
+c         k=mod(k,nsg)+1
+c      enddo
+c      enddo
+
+c     if (mid.eq.0) then
+c        do i=1,mp
+c           write (6,*) i,nsr(1,i),nsr(2,i),'nsr'
+c        enddo
+c     endif
+
       do kid=0,mp-1
-      do ks=1,ns(mod(kid+mid,mp)+1)
+         k1=nsr(1,mod(kid+mid,mp)+1)
+         k2=nsr(2,mod(kid+mid,mp)+1)
          do jid=0,mp-1
-         do js=1,ns(mod(jid+mid,mp)+1)
-            call conv(w4,w2(1,1,js),.false.,
-     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
-            call conv(w4(1,2,1),w2(1,2,js),.false.,
-     $         w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
-            do is=1,ms
-              c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
-     $            +vlsc2(w4,w1(1,1,is),n*mdim)
+            j1=nsr(1,mod(jid+mid,mp)+1)
+            j2=nsr(2,mod(jid+mid,mp)+1)
+            k=1
+            do ks=k1,k2
+               j=1
+               do js=j1,j2
+c                 call conv(w4,w2(1,1,js),.false.,
+c    $               w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+c                 call conv(w4(1,2,1),w2(1,2,js),.false.,
+c    $               w3(1,1,ks),w3(1,2,ks),w3(1,ndim,ks),.false.,rxp,nel)
+                  do i=1,ms
+c                   c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+c    $                  +vlsc2(w4,w1(1,1,is),n*mdim)
+c                   c(is+(j-1)*ms+(k-1)*ms*nsg)=c(is+(j-1)*ms+(k-1)*ms*nsg)
+c    $                  +vlsc3(w1(1,1,is),w2(1,1,js),w3(1,1,js),n*mdim)
+                    c(i+(js-1)*ms+(ks-1)*ms*nsg)=
+     $              c(i+(js-1)*ms+(ks-1)*ms*nsg)
+     $                  +vlsc3(w1(1,1,i),w2(1,1,j),w3(1,1,k),1)
+                  enddo
+                  j=j+1
+               enddo
+               k=k+1
             enddo
             call shift(igsh,w2,w4,n*mdim*nsmax)
-            j=mod(j,nsg)+1
-         enddo
          enddo
          call shift(igsh,w3,w4,n*ndim*nsmax)
-         k=mod(k,nsg)+1
-      enddo
       enddo
 
-c     call setcc_transfer(c,nl)
+      call setcc_transfer(c,nl)
 
       return
       end
@@ -1075,6 +1132,7 @@ c              Interpolate z+ and z- into fine mesh, translate to r-s-t coords
                   w=wd(i)*wd(j)
                   do ii=1,4
                      rxp(l,ii,ie)=w*rxp(l,ii,ie)
+c                    rxp(l,ii,ie)=1.
                   enddo
                enddo
                enddo

@@ -50,7 +50,8 @@ c     parameter (ls=lsg/lpmin+1)
       common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
       common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg),
-     $                    iw1(2*lsg*lsg*lsg)
+     $                    iw1(2*lsg*lsg*lsg),msr(2,lsg),msrp(2,lsg)
+
       integer*8 iw2
       common /parallelp8/ iw2(2*lsg*lsg*lsg)
 
