@@ -428,7 +428,7 @@ c-----------------------------------------------------------------------
       call copy(w2,t,n*mdim*ns(mid+1))
       call copy(w3,z,n*ndim*ns(mid+1))
 
-      ms=ns(1)
+      ms=ns(mid+1)
 
       j=igs
       k=igs
