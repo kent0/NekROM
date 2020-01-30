@@ -711,34 +711,6 @@ c     if3d=ndim.eq.3
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setgg(gram,u,mass,w1,w2,w3,ns,nsg,n,ndim)
-
-      real gram(ns,nsg),u(n,ndim,ns),mass(n),w1(n,ndim,ns),w2(n,ndim,ns)
-      real w3(n,ndim,ns,3)
-
-      write (6,*) 'ns,nsg,n,ndim',ns,nsg,n,ndim
-
-      call copy(w1,u,n*ndim*ns)
-      call copy(w2,u,n*ndim*ns)
-
-      do i=1,ns*ndim
-         call col2(w2(1,i,1),mass,n)
-      enddo
-
-      do ioff=0,nsg/ns-1 ! assume ns is the same across all processors
-         do js=1,ns
-         do is=1,ns
-            gram(is,js+ns*ioff)=gram(is,js+ns*ioff)
-     $         +vlsc2(w1(1,1,is),w2(1,1,js),n*ndim)
-         enddo
-         enddo
-         
-         call shift(w1,w3,n*ndim*ns)
-      enddo
-
-      return
-      end
-c-----------------------------------------------------------------------
 c     subroutine ax(au,u,helm1,helm2,imesh,isd)
       subroutine aop(au,u,visc,gfac,imesh,isd,mel)
 C------------------------------------------------------------------
@@ -1153,6 +1125,68 @@ c-----------------------------------------------------------------------
       call rzero(aa0,ms(nid+1)*ns)
       call rzero(bb0,ms(nid+1)*ns)
       call rzero(cc0,ms(nid+1)*ns*ns)
+
+      return
+      end
+c-----------------------------------------------------------------------
+c     call setgg(gram,gub,ilgls)
+c     call setqq(eevec,evecp,gram)
+      subroutine setgg(gram,gub,eevec,ilgls,nsg,ns)
+
+      real gram(nsg,nsg),gub(nsg,nsg),eevec(nsg*nsg)
+      integer ilgls(nsg)
+
+      call rzero(gram,nsg*nsg)
+
+      do is=1,ns
+         isg=ilgls(is)
+         call copy(gram(1,isg),gub(1,is),nsg)
+      enddo
+
+      call gop(gram,eevec,'+  ',nsg*nsg)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setqq(eevec,evecp,gram,nsg)
+
+      parameter (l=3)
+
+      common /test/ t1(l,l),t2(l,l)
+
+      real eevec(nsg,nsg),evecp(nsg),gram(nsg,nsg)
+
+      call genevec(eevec,evecp,gram,1)
+
+      call dump_serial(eevec,nsg*nsg,'ops/eevec1 ',0)
+
+      call mxm(gram,nsg,eevec,nsg,t1,nsg)
+
+      do j=1,nsg
+      do i=1,nsg
+         write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b1'
+      enddo
+      enddo
+
+      do i=1,nsg
+         s=1./sqrt(evecp(i))
+         call cmult(eevec(1,i),s,nsg)
+c        do j=1,nsg
+c           eevec(i,j)=eevec(i,j)*s
+c        enddo
+      enddo
+
+      call mxm(gram,nsg,eevec,nsg,t1,nsg)
+
+      do j=1,nsg
+      do i=1,nsg
+         write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b2'
+      enddo
+      enddo
+
+      call dump_serial(eevec,nsg*nsg,'ops/eevec2 ',0)
+
+      call exitt0
 
       return
       end
