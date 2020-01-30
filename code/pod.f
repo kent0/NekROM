@@ -615,7 +615,7 @@ c-----------------------------------------------------------------------
       
       common /scrgvec/ gc(ls,ls),wk(ls,ls)
 
-      real gram(ls,ls),vec(ls,nb),val(ls)
+      real gram(ls,ls),vec(ls,ls),val(ls)
 
       if (nio.eq.0) write (6,*) 'inside genevec'
 
@@ -634,13 +634,19 @@ c-----------------------------------------------------------------------
       call nekgsync
       eval_time=dnekclock()
 
-      do l = 1,nb
+      do l = 1,ls
          call copy(vec(1,l),wk(1,ls-l+1),ls) ! reverse order of wk
+      enddo
+
+      call copy(wk,val,ns)
+
+      do i=1,ns
+         val(i)=wk(ns-i+1,1)
       enddo
 
       do i=1,ns
          if (nio.eq.0) write (6,'(i5,1p1e16.6,3x,a,i1)')
-     $      i,val(ns-i+1),'eval',ifld
+     $      i,val(i),'eval',ifld
       enddo
 
       call nekgsync
