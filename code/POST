@@ -20,7 +20,7 @@ c     parameter (ls=lsg/lpmin+1)
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
       common /fvars/ uu(lxyz*lelp*ldim*ls),zz(lxyz*lelp*ldim*ls),
-     $               tt(lxyz*lelp*ls)
+     $               tt(lxyz*lelp*ls),zt(lxyz*lelp*ldim*ls)
 
       common /work/ wv1(lxyz*lelp*ldim),
      $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
@@ -32,7 +32,9 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*(lsg+1)),
      $             evecpt(ls*(lsg+1)),gram0(lsg),
-     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1))
+     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1)),
+     $             qu((lsg+1)**2),qt((lsg+1)**2),
+     $             qu0((lsg+1)**2),qt0((lsg+1)**2)
 
       common /gram/ gub(ls*lsg),gua(ls*lsg),
      $              guc(ls*lsg*lsg),guc2(ls*lsg*lsg),
@@ -49,6 +51,10 @@ c     parameter (ls=lsg/lpmin+1)
       common /opst/ aat((ls+1)*(lsg+1)),
      $              bbt((ls+1)*(lsg+1)),
      $              cct(2*(ls+1)*(lsg+1)**2)
+
+      common /opst0/ aat0((ls+1)*(lsg+1)),
+     $               bbt0((ls+1)*(lsg+1)),
+     $               cct0(2*(ls+1)*(lsg+1)**2)
 
       common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)

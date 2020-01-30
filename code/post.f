@@ -10,15 +10,17 @@ c-----------------------------------------------------------------------
 
       character*127 flist
 
-      nelp=512
+c     nelp=512
       nelp=47
 c     nelp=32
+c     nelp=1
       nsnap=ns
 
       ns=ls
       call rflist(fnames,ns)
 
-      iftherm=.false.
+c     iftherm=.false.
+      iftherm=.true.
 
       call ilgls_setup(ilgls,msr,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
@@ -56,6 +58,7 @@ c     nelp=32
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,tt,ieg0,ieg1)
+
          write (6,*) nid,'post rsnapsm'
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
@@ -94,32 +97,62 @@ c     nelp=32
      $   call dump_parallel(guc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
       call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
-      call setqq(evecp(nsg+1),eevec,gram,nsg)
+      call setqq(qu(nsg+1),eevec,gram,nsg)
 
       call dump_serial(gram,nsg*nsg,'ops/gu_ ',nid)
 
-      call rzero(evecp,nsg)
+      call rzero(qu,nsg)
 
-      call dump_serial(evecp,nsg*nsg,'ops/evecp_ ',nid)
+      call dump_serial(qu,nsg*nsg,'ops/qu ',nid)
 
       mmm=(ns+1)*ns
 
       call gsub0(gub,bbt,aat,ns,nsg)
-      call dump_parallel(gub,ms(nid+1)*ns,'ops/gb0 ',nid)
+      call dump_parallel(gub,ms(nid+1)*ns,'ops/gub0 ',nid)
 
       call gsub0(gua,bbt,aat,ns,nsg)
-      call dump_parallel(gua,ms(nid+1)*ns,'ops/ga0 ',nid)
+      call dump_parallel(gua,ms(nid+1)*ns,'ops/gua0 ',nid)
 
       call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
-      call setqq(evecp0(nsg+1),eevec,gram,nsg)
+      call setqq(qu0(nsg+1),eevec,gram,nsg)
 
-      call cfill(evecp0,1./nsg,nsg)
+      call cfill(qu0,1./nsg,nsg)
       do i=1,ns
-         s=-(1./nsg)*vlsum(evecp0(1+i*nsg),nsg)
-         call cadd(evecp0(1+i*nsg),s,nsg)
+         s=-(1./nsg)*vlsum(qu0(1+i*nsg),nsg)
+         call cadd(qu0(1+i*nsg),s,nsg)
       enddo
 
       call dump_serial(gram,nsg*nsg,'ops/gu0_ ',nid)
+
+      if (iftherm) then
+         call setgg(gram,gtb,eevec,ilgls,nsg,ms(mid+1))
+         call setqq(qt(nsg+1),eevec,gram,nsg)
+
+         call dump_serial(gram,nsg*nsg,'ops/gt_ ',nid)
+
+         call rzero(qt,nsg)
+
+c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
+
+         mmm=(ns+1)*ns
+
+         call gsub0(gtb,bbt,aat,ns,nsg)
+         call dump_parallel(gtb,ms(nid+1)*ns,'ops/gtb0 ',nid)
+
+         call gsub0(gta,bbt,aat,ns,nsg)
+         call dump_parallel(gta,ms(nid+1)*ns,'ops/gta0 ',nid)
+
+         call setgg(gram,gtb,eevec,ilgls,nsg,ms(mid+1))
+         call setqq(qt0(nsg+1),eevec,gram,nsg)
+
+         call cfill(qt0,1./nsg,nsg)
+         do i=1,ns
+            s=-(1./nsg)*vlsum(qt0(1+i*nsg),nsg)
+            call cadd(qt0(1+i*nsg),s,nsg)
+         enddo
+
+         call dump_serial(gram,nsg*nsg,'ops/gt0_ ',nid)
+      endif
 
       call rzero_ops
 
@@ -139,34 +172,68 @@ c     nelp=32
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
          m=n*ndim
-         call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
-
+         call setzz(zz,uu,qu,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
          call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
+         
+         if (iftherm) then
+         call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
+         call setzz(zt,tt,qt,wvf1,wvf2,ilgls,iglls,n,ms(nid+1),nsg)
+         call setbb(bbt,zt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
 
-         call setzz(zz,uu,evecp0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setaa(aat,zt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $      ms,n,nel,1,ng,igsh)
+         call setcc(cct,zz,zt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $      ms,msr,n,ndim,1,nel,igsh)
+         endif
+
+         call setzz(zz,uu,qu0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
          call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
+
+         if (iftherm) then
+            call setzz(zt,tt,qt0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
+            call setbb(bbt0,zt,mass,
+     $         wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
+            call setaa(aat0,zt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $         ms,n,nel,1,ng,igsh)
+            call setcc(cct0,zz,zt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $         ms,msr,n,ndim,1,nel,igsh)
+         endif
       enddo
 
       nl=ms(nid+1)*ns*ns
-c     call setcc_transfer(cc,nl)
+      call setcc_transfer(cc,nl)
 
-      call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
-      call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
-      call dump_parallel(cc,nl,'ops/cc_z ',nid)
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/bbu_z ',nid)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/aau_z ',nid)
+      call dump_parallel(cc,nl,'ops/ccu_z ',nid)
 
-      call setcc_transfer(c0,nl)
+      call setcc_transfer(cc0,nl)
 
-      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bb0_z ',nid)
-      call dump_parallel(aa0,ms(nid+1)*ns,'ops/aa0_z ',nid)
-      call dump_parallel(cc0,nl,'ops/cc0_z ',nid)
+      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bbu0_z ',nid)
+      call dump_parallel(aa0,ms(nid+1)*ns,'ops/aau0_z ',nid)
+      call dump_parallel(cc0,nl,'ops/ccu0_z ',nid)
+
+      if (iftherm) then
+         call setcc_transfer(cct,nl)
+
+         call dump_parallel(bbt,ms(nid+1)*ns,'ops/bbt_z ',nid)
+         call dump_parallel(aat,ms(nid+1)*ns,'ops/aat_z ',nid)
+         call dump_parallel(cct,nl,'ops/cct_z ',nid)
+
+         call setcc_transfer(cct0,nl)
+
+         call dump_parallel(bbt0,ms(nid+1)*ns,'ops/bbt0_z ',nid)
+         call dump_parallel(aat0,ms(nid+1)*ns,'ops/aat0_z ',nid)
+         call dump_parallel(cct0,nl,'ops/cct0_z ',nid)
+      endif
 
       call exitt0
     1 format(i8,i8,1p2e15.6,' zcomp')
@@ -1091,6 +1158,14 @@ c-----------------------------------------------------------------------
       call rzero(bb0,ms(nid+1)*ns)
       call rzero(cc0,ms(nid+1)*ns*ns)
 
+      call rzero(aat,ms(nid+1)*ns)
+      call rzero(bbt,ms(nid+1)*ns)
+      call rzero(cct,ms(nid+1)*ns*ns)
+
+      call rzero(aat0,ms(nid+1)*ns)
+      call rzero(bbt0,ms(nid+1)*ns)
+      call rzero(cct0,ms(nid+1)*ns*ns)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -1125,26 +1200,10 @@ c-----------------------------------------------------------------------
 
       call mxm(gram,nsg,eevec,nsg,t1,nsg)
 
-      do j=1,nsg
       do i=1,nsg
-         write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b1'
+         s=1./sqrt(evecp(i))
+         call cmult(eevec(1,i),s,nsg)
       enddo
-      enddo
-
-c     do i=1,nsg
-c        s=1./sqrt(evecp(i))
-c        call cmult(eevec(1,i),s,nsg)
-c     enddo
-
-c     call mxm(gram,nsg,eevec,nsg,t1,nsg)
-
-c     do j=1,nsg
-c     do i=1,nsg
-c        write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b2'
-c     enddo
-c     enddo
-
-c     call dump_serial(eevec,nsg*nsg,'ops/eevec2 ',0)
 
       return
       end
