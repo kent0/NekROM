@@ -63,17 +63,17 @@ c     nelp=32
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
-         call setbb(gb,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-         call setaa(ga,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+         call setbb(gub,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
+         call setaa(gua,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
-         call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+         call setcc(guc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
 
          if (iftherm) then
-            call setbb(gub,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
-            call setaa(gua,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+            call setbb(gtb,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
+            call setaa(gta,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $         ms,n,nel,1,ng,igsh)
-            call setcc(guc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+            call setcc(gtc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $         ms,msr,n,ndim,1,nel,igsh)
          endif
       enddo
