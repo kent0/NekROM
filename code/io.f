@@ -338,8 +338,8 @@ c-----------------------------------------------------------------------
          nelr=neltmp
 
          do ie=1,nelr
-c           call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
-            call copy(ut(1,ie),wk(1+(ie-1)*lxyz),lxyz)
+            call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
+c           call copy(ut(1,ie),wk(1+(ie-1)*lxyz),lxyz)
          enddo
       endif
 
