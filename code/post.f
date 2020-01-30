@@ -159,7 +159,7 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
          ieg1=min(ieg1+inel+nelp-1,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
-         call rsnapsm(uu,ieg0,ieg1)
+         call rsnapsm(uu,tt,ieg0,ieg1)
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
