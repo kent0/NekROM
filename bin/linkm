@@ -13,6 +13,7 @@ rm pdrive           &> /dev/null
 # link files
 
 ln -s {$MOR_DIR/code,${cwd}}/MOR
+ln -s {$MOR_DIR/code,${cwd}}/POST
 ln -s {$MOR_DIR/tests,$cwd}/test.usr
 ln -s {$MOR_DIR/bin,$cwd}/pdrive
 
