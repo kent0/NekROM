@@ -339,15 +339,15 @@ c-----------------------------------------------------------------------
          ifield=1
          call seta(au,au0,'ops/au ')
          call setb(bu,bu0,'ops/bu ')
-         call setc(cul,1,'ops/cu ')
-c        call setc(cul,0,'ops/cu0 ')
+c        call setc(cul,1,'ops/cu ')
+         call setc(cul,0,'ops/cu0 ')
       endif
       if (ifrom(2)) then
          ifield=2
          call seta(at,at0,'ops/at ')
          call setb(bt,bt0,'ops/bt ')
-         call setc(ctl,1,'ops/ct ')
-c        call setc(ctl,0,'ops/ct0 ')
+c        call setc(ctl,1,'ops/ct ')
+         call setc(ctl,0,'ops/ct0 ')
          call sets(st0,tb,'ops/ct ')
       endif
 
