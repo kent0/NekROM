@@ -317,7 +317,9 @@ c-----------------------------------------------------------------------
       enddo
 
       if (iftherm) then
-         iofldsr=iofldsr+2
+         iofldsr=iofldsr+ldim
+         if (ifgetpr) iofldsr=iofldsr+1
+         iloc=1
          do ig=1,ng
             ieg=i3(ig)
             nelr=i4(ig)
@@ -335,9 +337,9 @@ c-----------------------------------------------------------------------
 
          nelr=neltmp
 
-         lxyz=lx1*ly1*lz1
          do ie=1,nelr
-            call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
+c           call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
+            call copy(ut(1,ie),wk(1+(ie-1)*lxyz),lxyz)
          enddo
       endif
 
