@@ -90,36 +90,19 @@ c     nelp=32
          call dump_parallel(gtc,nl,'ops/gtc ',nid)
       endif
 
-      call exitt0
-c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
-
       if (np.eq.1)
      $   call dump_parallel(guc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
-      ! eigendecomposition here or external process
+      call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
+      call setqq(evecp(nsg+1),eevec,gram,nsg)
+
+      call dump_serial(gram,nsg*nsg,'ops/gu_ ',nid)
+
+      call rzero(evecp,nsg)
+
+      call dump_serial(evecp,nsg*nsg,'ops/evecp_ ',nid)
 
       mmm=(ns+1)*ns
-
-      call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
-      call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
-
-      call mxm(gub,ns,evecp,ns,wevec,ns+1)
-      call mxm(evecpt,ns+1,wevec,ns,bb,ns+1)
-      call dump_serial(bb,(ns+1)**2,'ops/bb ',nid)
-
-      call mxm(gua,ns,evecp,ns,wevec,ns+1)
-      call mxm(evecpt,ns+1,wevec,ns,aa,ns+1)
-      call dump_serial(aa,(ns+1)**2,'ops/aa ',nid)
-
-      call mxm(guc,ns*ns,evecp0,ns,wevecc,ns+1)
-      do i=1,ns
-         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
-     $      cc(1+(i-1)*ns*ns),ns)
-      enddo
-
-      call mxm(evecpt,ns,cc,ns,wevecc,ns*ns)
-      call copy(cc,wevecc,(ns+1)*3)
-      call dump_serial(cc,ns*ns*ns,'ops/cc ',nid)
 
       call gsub0(gub,bbt,aat,ns,nsg)
       call dump_parallel(gub,ms(nid+1)*ns,'ops/gb0 ',nid)
@@ -127,27 +110,16 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
       call gsub0(gua,bbt,aat,ns,nsg)
       call dump_parallel(gua,ms(nid+1)*ns,'ops/ga0 ',nid)
 
-      call read_serial(evecp0,mmm,'ops/evecp0 ',ug,nid)
-      call read_serial(evecpt0,mmm,'ops/evecpt0 ',ug,nid)
+      call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
+      call setqq(evecp0(nsg+1),eevec,gram,nsg)
 
-      call mxm(gub,ns,evecp0,ns,wevec,ns)
-      call mxm(evecpt0,ns,wevec,ns,bb0,ns)
-      call dump_serial(bb0,ns*ns,'ops/bb0 ',nid)
-
-      call mxm(gua,ns,evecp0,ns,wevec,ns)
-      call mxm(evecpt0,ns,wevec,ns,aa0,ns)
-      call dump_serial(aa0,ns*ns,'ops/aa0 ',nid)
-
-      call mxm(guc,ns*ns,evecp0,ns,wevecc,ns)
-
+      call cfill(evecp0,1./nsg,nsg)
       do i=1,ns
-         call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp0,ns,
-     $      cc0(1+(i-1)*ns*ns),ns)
+         s=-(1./nsg)*vlsum(evecp0(1+i*nsg),nsg)
+         call cadd(evecp0(1+i*nsg),s,nsg)
       enddo
 
-      call mxm(evecpt0,ns,cc0,ns,wevecc,ns*ns)
-      call copy(cc0,wevecc,ns*ns*ns)
-      call dump_serial(cc0,ns*ns*ns,'ops/cc0 ',nid)
+      call dump_serial(gram,nsg*nsg,'ops/gu0_ ',nid)
 
       call rzero_ops
 
@@ -169,12 +141,6 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
          m=n*ndim
          call setzz(zz,uu,evecp,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
 
-c        do i=1,ns
-c           ig=ilgls(i)
-c           call cfill(zz(1+(i-1)*m),2.0**(ig-1),1)
-c           call cfill(zz(1+(i-1)*m),1.0*ig,1)
-c        enddo
-
          call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
@@ -190,7 +156,7 @@ c        enddo
       enddo
 
       nl=ms(nid+1)*ns*ns
-      call setcc_transfer(cc,nl)
+c     call setcc_transfer(cc,nl)
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bb_z ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/aa_z ',nid)
@@ -1105,7 +1071,6 @@ c-----------------------------------------------------------------------
 
       include 'POST'
 
-      call rzero(gram,ms(nid+1)*ns)
       call rzero(gua,ms(nid+1)*ns)
       call rzero(gub,ms(nid+1)*ns)
       call rzero(guc,ms(nid+1)*ns*ns)
@@ -1129,8 +1094,6 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-c     call setgg(gram,gub,ilgls)
-c     call setqq(eevec,evecp,gram)
       subroutine setgg(gram,gub,eevec,ilgls,nsg,ns)
 
       real gram(nsg,nsg),gub(nsg,nsg),eevec(nsg*nsg)
@@ -1168,25 +1131,20 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      do i=1,nsg
-         s=1./sqrt(evecp(i))
-         call cmult(eevec(1,i),s,nsg)
-c        do j=1,nsg
-c           eevec(i,j)=eevec(i,j)*s
-c        enddo
-      enddo
+c     do i=1,nsg
+c        s=1./sqrt(evecp(i))
+c        call cmult(eevec(1,i),s,nsg)
+c     enddo
 
-      call mxm(gram,nsg,eevec,nsg,t1,nsg)
+c     call mxm(gram,nsg,eevec,nsg,t1,nsg)
 
-      do j=1,nsg
-      do i=1,nsg
-         write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b2'
-      enddo
-      enddo
+c     do j=1,nsg
+c     do i=1,nsg
+c        write (6,*) i,j,vlsc2(eevec(1,i),t1(1,j),nsg),'b2'
+c     enddo
+c     enddo
 
-      call dump_serial(eevec,nsg*nsg,'ops/eevec2 ',0)
-
-      call exitt0
+c     call dump_serial(eevec,nsg*nsg,'ops/eevec2 ',0)
 
       return
       end
