@@ -1,11 +1,12 @@
 c-----------------------------------------------------------------------
-      subroutine rsnapsm(v,ieg0,ieg1)
+      subroutine rsnapsm(v,s,ieg0,ieg1)
 
       include 'POST'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      real v(lxyz,ieg1-ieg0+1,ldim,ns)
+      real v(lxyz*(ieg1-ieg0+1),ldim,ns)
+      real s(lxyz*(ieg1-ieg0+1),ns)
 
       n=lxyz*(ieg1-ieg0+1)
 
@@ -17,8 +18,8 @@ c-----------------------------------------------------------------------
          js=ilgls(is)
          write (6,*) mid,is,'reading snapshot'
          call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
-         call rfldm_read(v(1,1,1,is),v(1,1,2,is),v(1,1,ldim,is),
-     $      ieg0,ieg1,ifcread)
+         call rfldm_read(v(1,1,is),v(1,2,is),v(1,ldim,is),s(1,is),
+     $      ieg0,ieg1,ifcread,iftherm)
          call rfldm_close(ifcread)
       enddo
 
@@ -233,7 +234,7 @@ c     write (6,*) fname,' fname'
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rfldm_read(ux,uy,uz,ieg0,ieg1,ifcread)
+      subroutine rfldm_read(ux,uy,uz,ut,ieg0,ieg1,ifcread,iftherm)
 
       include 'SIZE'
       include 'TOTAL'
@@ -244,11 +245,12 @@ c-----------------------------------------------------------------------
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
       common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
 
-      logical ifcread
+      logical ifcread,iftherm
 
-      real ux(lx1,ly1,lz1,ieg1-ieg0+1)
-      real uy(lx1,ly1,lz1,ieg1-ieg0+1)
-      real uz(lx1,ly1,lz1,ieg1-ieg0+1)
+      real ux(lx1*ly1*lz1,ieg1-ieg0+1)
+      real uy(lx1*ly1*lz1,ieg1-ieg0+1)
+      real uz(lx1*ly1*lz1,ieg1-ieg0+1)
+      real ut(lx1*ly1*lz1,ieg1-ieg0+1)
 
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
 
@@ -308,11 +310,36 @@ c-----------------------------------------------------------------------
 
       lxyz=lx1*ly1*lz1
       do ie=1,nelr
-         call copy(ux(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
-         call copy(uy(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
+         call copy(ux(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
+         call copy(uy(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
          if (ldim.eq.3) call
-     $      copy(uz(1,1,1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
+     $      copy(uz(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
       enddo
+
+      if (iftherm) then
+         iofldsr=iofldsr+2
+         do ig=1,ng
+            ieg=i3(ig)
+            nelr=i4(ig)
+            nwk=nelr*nxyzr8
+            offs = offs0 + iofldsr*stride + !ldim*strideB +
+     $         (ieg-1)*nxyzr8*wdsizr
+            if (ifcread) then
+               call byte_seek(offs/4,ierr)
+            else
+               call byte_set_view(offs,ifh_mbyte)
+            endif
+            call mfi_getw(wk(iloc),nwk,ifcread)
+            iloc=iloc+nwk
+         enddo
+
+         nelr=neltmp
+
+         lxyz=lx1*ly1*lz1
+         do ie=1,nelr
+            call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
+         enddo
+      endif
 
       return
       end

@@ -11,12 +11,14 @@ c-----------------------------------------------------------------------
       character*127 flist
 
       nelp=512
-c     nelp=47
+      nelp=47
 c     nelp=32
       nsnap=ns
 
       ns=ls
       call rflist(fnames,ns)
+
+      iftherm=.false.
 
       call ilgls_setup(ilgls,msr,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
@@ -53,7 +55,7 @@ c     nelp=32
          write (6,*) nid,'working on elements ',ieg0,ieg1
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
-         call rsnapsm(uu,ieg0,ieg1)
+         call rsnapsm(uu,tt,ieg0,ieg1)
          write (6,*) nid,'post rsnapsm'
 
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
@@ -66,17 +68,33 @@ c     nelp=32
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(gc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
+
+         if (iftherm) then
+            call setbb(gub,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
+            call setaa(gua,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+     $         ms,n,nel,1,ng,igsh)
+            call setcc(guc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+     $         ms,msr,n,ndim,1,nel,igsh)
+         endif
       enddo
 
       call setcc_snap(gc2)
 
-      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb ',nid)
-      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga ',nid)
-      call dump_parallel(gc,nl,'ops/gc ',nid)
+      call dump_parallel(gub,ms(nid+1)*ns,'ops/gub ',nid)
+      call dump_parallel(gua,ms(nid+1)*ns,'ops/gua ',nid)
+      call dump_parallel(guc,nl,'ops/guc ',nid)
+
+      if (iftherm) then
+         call dump_parallel(gtb,ms(nid+1)*ns,'ops/gtb ',nid)
+         call dump_parallel(gta,ms(nid+1)*ns,'ops/gta ',nid)
+         call dump_parallel(gtc,nl,'ops/gtc ',nid)
+      endif
+
+      call exitt0
 c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
 
       if (np.eq.1)
-     $   call dump_parallel(gc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
+     $   call dump_parallel(guc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
       ! eigendecomposition here or external process
 
@@ -85,15 +103,15 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
       call read_serial(evecp,mmm,'ops/evecp ',ug,nid)
       call read_serial(evecpt,mmm,'ops/evecpt ',ug,nid)
 
-      call mxm(gb,ns,evecp,ns,wevec,ns+1)
+      call mxm(gub,ns,evecp,ns,wevec,ns+1)
       call mxm(evecpt,ns+1,wevec,ns,bb,ns+1)
       call dump_serial(bb,(ns+1)**2,'ops/bb ',nid)
 
-      call mxm(ga,ns,evecp,ns,wevec,ns+1)
+      call mxm(gua,ns,evecp,ns,wevec,ns+1)
       call mxm(evecpt,ns+1,wevec,ns,aa,ns+1)
       call dump_serial(aa,(ns+1)**2,'ops/aa ',nid)
 
-      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns+1)
+      call mxm(guc,ns*ns,evecp0,ns,wevecc,ns+1)
       do i=1,ns
          call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp,ns,
      $      cc(1+(i-1)*ns*ns),ns)
@@ -103,24 +121,25 @@ c     call dump_parallel(gc,ms(nid+1)*ns*ns,'ops/gc ',nid)
       call copy(cc,wevecc,(ns+1)*3)
       call dump_serial(cc,ns*ns*ns,'ops/cc ',nid)
 
-      call gsub0(gb,bbt,aat,ns,nsg)
-      call dump_parallel(gb,ms(nid+1)*ns,'ops/gb0 ',nid)
+      call gsub0(gub,bbt,aat,ns,nsg)
+      call dump_parallel(gub,ms(nid+1)*ns,'ops/gb0 ',nid)
 
-      call gsub0(ga,bbt,aat,ns,nsg)
-      call dump_parallel(ga,ms(nid+1)*ns,'ops/ga0 ',nid)
+      call gsub0(gua,bbt,aat,ns,nsg)
+      call dump_parallel(gua,ms(nid+1)*ns,'ops/ga0 ',nid)
 
       call read_serial(evecp0,mmm,'ops/evecp0 ',ug,nid)
       call read_serial(evecpt0,mmm,'ops/evecpt0 ',ug,nid)
 
-      call mxm(gb,ns,evecp0,ns,wevec,ns)
+      call mxm(gub,ns,evecp0,ns,wevec,ns)
       call mxm(evecpt0,ns,wevec,ns,bb0,ns)
       call dump_serial(bb0,ns*ns,'ops/bb0 ',nid)
 
-      call mxm(ga,ns,evecp0,ns,wevec,ns)
+      call mxm(gua,ns,evecp0,ns,wevec,ns)
       call mxm(evecpt0,ns,wevec,ns,aa0,ns)
       call dump_serial(aa0,ns*ns,'ops/aa0 ',nid)
 
-      call mxm(gc,ns*ns,evecp0,ns,wevecc,ns)
+      call mxm(guc,ns*ns,evecp0,ns,wevecc,ns)
+
       do i=1,ns
          call mxm(wevecc(2+(i-1)*ns*ns),ns,evecp0,ns,
      $      cc0(1+(i-1)*ns*ns),ns)
@@ -1115,10 +1134,17 @@ c-----------------------------------------------------------------------
       include 'POST'
 
       call rzero(gram,ms(nid+1)*ns)
-      call rzero(ga,ms(nid+1)*ns)
-      call rzero(gb,ms(nid+1)*ns)
-      call rzero(gc,ms(nid+1)*ns*ns)
-      call rzero(gc2,ms(nid+1)*ns*ns)
+      call rzero(gua,ms(nid+1)*ns)
+      call rzero(gub,ms(nid+1)*ns)
+      call rzero(guc,ms(nid+1)*ns*ns)
+      call rzero(guc2,ms(nid+1)*ns*ns)
+
+      if (iftherm) then
+         call rzero(gta,ms(nid+1)*ns)
+         call rzero(gtb,ms(nid+1)*ns)
+         call rzero(gtc,ms(nid+1)*ns*ns)
+         call rzero(gtc2,ms(nid+1)*ns*ns)
+      endif
 
       call rzero(aa,ms(nid+1)*ns)
       call rzero(bb,ms(nid+1)*ns)

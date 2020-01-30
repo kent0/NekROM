@@ -32,9 +32,12 @@ c     parameter (ls=lsg/lpmin+1)
 
       common /pod/ gram(ls*lsg),eevec(ls*lsg),evecp(ls*(lsg+1)),
      $             evecpt(ls*(lsg+1)),gram0(lsg),
-     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1)),
-     $             gb(ls*lsg),ga(ls*lsg),gc(ls*lsg*lsg),
-     $             gc2(ls*lsg*lsg)
+     $             evecp0(ls*(lsg+1)),evecpt0(ls*(lsg+1))
+
+      common /gram/ gub(ls*lsg),gua(ls*lsg),
+     $              guc(ls*lsg*lsg),guc2(ls*lsg*lsg),
+     $              gtb(ls*lsg),gta(ls*lsg),
+     $              gtc(ls*lsg*lsg),gtc2(ls*lsg*lsg)
 
       common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
      $             cc(2*(ls+1)*(lsg+1)**2)
@@ -60,7 +63,7 @@ c     parameter (ls=lsg/lpmin+1)
       character*1 fnames
       common /snapf/ fnames(132*lsg)
 
-      logical ifcread
-      common /ifpar/ ifcread
+      logical ifcread,iftherm
+      common /ifpar/ ifcread,iftherm
 
       common /pcomm/ igsh(2),igshp(2)
