@@ -16,7 +16,6 @@ c-----------------------------------------------------------------------
 
       do is=1,ms(mid+1)
          js=ilgls(is)
-         write (6,*) mid,is,'reading snapshot'
          call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
          call rfldm_read(v(1,1,is),v(1,2,is),v(1,ldim,is),s(1,is),
      $      ieg0,ieg1,ifcread,iftherm)
@@ -217,7 +216,7 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
 
-      write (6,*) nid,fname_in,' fname_in'
+      write (6,1) nid,fname_in
       ! add path
       call blank(fname,132)
       lenp = ltrunc(path,132)
@@ -226,10 +225,11 @@ c-----------------------------------------------------------------------
       call chcopy(fnam1(lenp+1),fname_in,lenf)
 
       nio=-1
-c     write (6,*) fname,' fname'
       call my_mfi_prepare(fname,ieg0,ieg1,ifcread) ! determine reader nodes +
                                                    ! read hdr + element mapping 
       nio=nid
+
+    1 format (i8,2x,a60,' fname_in')
 
       return
       end

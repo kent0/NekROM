@@ -59,8 +59,6 @@ c     iftherm=.false.
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,tt,ieg0,ieg1)
 
-         write (6,*) nid,'post rsnapsm'
-
          call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
          call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
          call setmass(mass,wv1,ieg0,ieg1,lxyz)
@@ -366,9 +364,7 @@ c-----------------------------------------------------------------------
       nsmax=ivlmax(ns,mp)
 
       do id=0,mp-1
-         if (mid.eq.0) write (6,*) 'id=',id
          do k=1,ns(mod(mid+id,mp)+1)
-            if (mid.eq.0) write (6,*) 'k=',k
             do i=1,ns(mid+1)
                a(j+(i-1)*nsg)=a(j+(i-1)*nsg)+
      $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
@@ -406,9 +402,7 @@ c-----------------------------------------------------------------------
       nsmax=ivlmax(ns,mp)
 
       do id=0,mp-1
-         if (mid.eq.0) write (6,*) 'id=',id
          do k=1,ns(mod(mid+id,mp)+1)
-            if (mid.eq.0) write (6,*) 'k=',k
             do i=1,ns(mid+1)
                b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
      $            vlsc2(w1(1,1,i),w2(1,1,k),n*ndim)
