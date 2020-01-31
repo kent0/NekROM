@@ -14,6 +14,7 @@ c-----------------------------------------------------------------------
 
       ifcread=.true.
 
+      nio=-1
       do is=1,ms(mid+1)
          js=ilgls(is)
          call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
@@ -21,6 +22,7 @@ c-----------------------------------------------------------------------
      $      ieg0,ieg1,ifcread,iftherm)
          call rfldm_close(ifcread)
       enddo
+      nio=nid
 
       return
       end
@@ -216,7 +218,7 @@ c-----------------------------------------------------------------------
       common /scrns/ wk(lwk)
       common /scrcg/ pm1(lx1*ly1*lz1,lelv)
 
-      write (6,1) nid,fname_in
+c     if (nio.eq.0) write (6,1) nid,fname_in
       ! add path
       call blank(fname,132)
       lenp = ltrunc(path,132)

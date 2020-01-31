@@ -601,8 +601,8 @@ c-----------------------------------------------------------------------
          call nekgsync
       enddo
 
-    1 format(i5,i5,i5,i5,i5,1pe13.4,' crystal1')
-    2 format(i5,i5,i5,i5,i5,1pe13.4,' crystal2')
+    1 format(i5,i8,i8,i5,i8,1pe13.4,' crystal1')
+    2 format(i5,i8,i8,i5,i8,1pe13.4,' crystal2')
 
       return
       end
