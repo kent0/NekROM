@@ -178,7 +178,7 @@ c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
      $      ms,n,nel,ndim,ng,igsh)
          call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
-         
+
          if (iftherm) then
          call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
          call setzz(zt,tt,qt,wvf1,wvf2,ilgls,iglls,n,ms(nid+1),nsg)
@@ -564,6 +564,8 @@ c-----------------------------------------------------------------------
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       real c(1)
+
+      if (mp.eq.1) return
 
       nsg=ns
 
