@@ -11,16 +11,17 @@ c-----------------------------------------------------------------------
       character*127 flist
 
 c     nelp=512
-      nelp=47
 c     nelp=32
 c     nelp=1
+
+      nelp=47
       nsnap=ns
 
       ns=ls
       call rflist(fnames,ns)
 
-c     iftherm=.false.
-      iftherm=.true.
+      iftherm=.false.
+c     iftherm=.true.
 
       call ilgls_setup(ilgls,msr,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
