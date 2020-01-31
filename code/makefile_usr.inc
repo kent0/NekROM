@@ -13,7 +13,7 @@ $(OBJDIR)/read.o   :$(MOR_DIR)/code/read.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/rk.o     :$(MOR_DIR)/code/rk.f     MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/rom.o    :$(MOR_DIR)/code/rom.f    MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/time.o   :$(MOR_DIR)/code/time.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/post.o   :$(MOR_DIR)/code/post.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/io.o     :$(MOR_DIR)/code/io.f     MOR LMOR;  $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/post.o   :$(MOR_DIR)/code/post.f   POST LPOST MOR LMOR;  $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/io.o     :$(MOR_DIR)/code/io.f     POST LPOST MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 
 $(OBJDIR)/unit.o   :$(MOR_DIR)/tests/unit.f  MOR LMOR;  $(FC) -c $(FL2) $< -o $@
