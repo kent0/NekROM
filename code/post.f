@@ -1268,3 +1268,44 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setabcut(au,bu,cu,at,bt,ct,but,uu,tt,qu,qt,
+     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh)
+
+      include 'SIZE'
+      include 'LMOR'
+      include 'LPOST'
+
+      real mass
+      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
+     $                rxp(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                grav(lxyz*lelp*ldim),
+     $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
+
+      common /abcwk/ w6(lxyz*lelp*6),
+     $               ws1(lxyz*lelp*ls*ldim),
+     $               ws2(lxyz*lelp*ls*ldim),
+     $               ws3(lxyz*lelp*ls*ldim)
+c     common /mycomm/ igsh1(2),igsh2(2)
+      integer igsh(2),iglls(1),ilgls(1),ms(1),msr(1)
+
+      real uu(1),tt(1),aa(1),bb(1),cc(1)
+
+      nel=ieg1-ieg0+1
+
+      call setgeom(gfac,w6,ieg0,ieg1,lxyz,ng,nid)
+      call setvisc(visc,w6,ieg0,ieg1,lxyz,nid)
+      call setmass(mass,wv1,ieg0,ieg1,lxyz)
+      call setrxp(rxp,rxpt,ieg0,ieg1)
+
+      m=n*ndim
+      call setzz(zz,uu,qu,ws1,ws2,ilgls,iglls,m,ms(nid+1),nsg)
+      call setbb(bb,zz,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
+      call setaa(aa,zz,visc,gfac,ws1,ws2,ws3,ilgls(1),
+     $      ms,n,nel,ndim,ng,igsh)
+      call setcc(cc,zz,zz,rxp,ws1,ws2,ws3,ws4,ilgls(1),
+     $      ms,msr,n,ndim,ndim,nel,igsh)
+
+      return
+      end
+c-----------------------------------------------------------------------
