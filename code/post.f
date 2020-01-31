@@ -235,6 +235,32 @@ c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
          call dump_parallel(cct0,nl,'ops/cct0_z ',nid)
       endif
 
+      if (ifavg0) then
+         call setcc_transfer(cc0,nl)
+         call dump_parallel(bb0,ms(nid+1)*ns,'ops/bu_ ',nid)
+         call dump_parallel(aa0,ms(nid+1)*ns,'ops/au_ ',nid)
+         call dump_parallel(cc0,nl,'ops/cu_ ',nid)
+
+         if (iftherm) then
+            call setcc_transfer(cct0,nl)
+            call dump_parallel(bbt0,ms(nid+1)*ns,'ops/bt_ ',nid)
+            call dump_parallel(aat0,ms(nid+1)*ns,'ops/at_ ',nid)
+            call dump_parallel(cct0,nl,'ops/ct_ ',nid)
+         endif
+      else
+         call setcc_transfer(cc,nl)
+         call dump_parallel(bb,ms(nid+1)*ns,'ops/bu_ ',nid)
+         call dump_parallel(aa,ms(nid+1)*ns,'ops/au_ ',nid)
+         call dump_parallel(cc,nl,'ops/cu_ ',nid)
+
+         if (iftherm) then
+            call setcc_transfer(cct,nl)
+            call dump_parallel(bbt,ms(nid+1)*ns,'ops/bt_ ',nid)
+            call dump_parallel(aat,ms(nid+1)*ns,'ops/at_ ',nid)
+            call dump_parallel(cct,nl,'ops/ct_ ',nid)
+         endif
+      endif
+
       call exitt0
     1 format(i8,i8,1p2e15.6,' zcomp')
 
