@@ -6,7 +6,8 @@ c     parameter (ldim=2)
 
       parameter (lxyz=lx1*ly1*lz1)
       parameter (lxyzd=lxd*lyd*lzd)
-      parameter (lelp=lelt)
+c     parameter (lelp=lelt)
+      parameter (lelp=50)
 
       parameter (lsg=ls)
 
