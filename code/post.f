@@ -67,15 +67,15 @@ c     iftherm=.false.
          call setbb(gub,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
          call setaa(gua,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
-         call setcc(guc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,igsh)
+c        call setcc(guc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+c    $      ms,msr,n,ndim,ndim,nel,igsh)
 
          if (iftherm) then
             call setbb(gtb,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
             call setaa(gta,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
      $         ms,n,nel,1,ng,igsh)
-            call setcc(gtc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $         ms,msr,n,ndim,1,nel,igsh)
+c           call setcc(gtc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
+c    $         ms,msr,n,ndim,1,nel,igsh)
          endif
       enddo
 

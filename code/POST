@@ -17,7 +17,9 @@ c     parameter (ls=lsg/lpmin+1)
       real mass
       common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
      $                rxp(lxd*lyd*lzd*ldim*ldim*lelp),
-     $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp)
+     $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                grav(lxyz*lelp*ldim)
+
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
       common /fvars/ uu(lxyz*lelp*ldim*ls),zz(lxyz*lelp*ldim*ls),
