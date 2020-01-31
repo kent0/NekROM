@@ -79,7 +79,9 @@ c    $         ms,msr,n,ndim,1,nel,igsh)
          endif
       enddo
 
-      call setcc_snap(gc2)
+      if (nio.eq.0) write (6,*) 'finished first loop'
+
+c     call setcc_snap(guc2)
 
       call dump_parallel(gub,ms(nid+1)*ns,'ops/gub ',nid)
       call dump_parallel(gua,ms(nid+1)*ns,'ops/gua ',nid)
