@@ -712,6 +712,41 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setgrav(grav,w,ieg0,ieg1,lxyz)!,nid)
+
+      include 'SIZE' ! nid
+      include 'LMOR'
+      include 'PARALLEL'
+
+      common /morforce/ fx(lx1*ly1*lz1*lelm),
+     $                  fy(lx1*ly1*lz1*lelm),
+     $                  fz(lx1*ly1*lz1*lelm),
+     $                  gx(lx1*ly1*lz1*lelm),
+     $                  gy(lx1*ly1*lz1*lelm),
+     $                  gz(lx1*ly1*lz1*lelm),
+     $                  qq(lx1*ly1*lz1*lelm)
+
+      real grav(lxyz,ieg1-ieg0+1,ldim), w(lxyz*(ieg1-ieg0+1),ldim)
+
+      ! TODO: set bm1
+
+      call rzero(grav,lxyz*(ieg1-ieg0+1)*ldim)
+
+      do ieg=ieg0,ieg1
+         if (gllnid(ieg).eq.nid) then
+            ie=gllel(ieg)
+            call copy(grav(1,ieg-ieg0+1,1),gx(1+(ie-1)*lxyz),lxyz)
+            call copy(grav(1,ieg-ieg0+1,2),gy(1+(ie-1)*lxyz),lxyz)
+            if (ldim.eq.3)
+     $         call copy(grav(1,ieg-ieg0+1,ldim),gz(1+(ie-1)*lxyz),lxyz)
+         endif
+      enddo
+
+      call gop(grav,w,'+  ',lxyz*(ieg1-ieg0+1)*ldim)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine setconv(rxd,w,ieg0,ieg1,lxyz)!,ndim,nid)
 
       include 'SIZE' ! ndim & nid
