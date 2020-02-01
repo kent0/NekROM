@@ -42,7 +42,6 @@ c     iftherm=.true.
 
       call sleep(1)
 
-      inel=1
       ieg1=0
 
       ns=ls
@@ -50,36 +49,17 @@ c     iftherm=.true.
 
       call rzero_ops
 
-      ng=(ndim-1)*3
-
       if (nio.eq.0) write (6,*) 'begin first loop'
 
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
-         ieg1=min(ieg1+inel+nelp-1,nelgv)
+         ieg1=min(ieg1+nelp,nelgv)
          write (6,*) nid,'working on elements ',ieg0,ieg1
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,tt,ieg0,ieg1)
-
-         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
-         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
-         call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call setrxp(rxp,rxpt,ieg0,ieg1)
-
-         call setbb(gub,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-c        call setaa(gua,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-c    $      ms,n,nel,ndim,ng,igsh)
-c        call setcc(guc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-c    $      ms,msr,n,ndim,ndim,nel,igsh)
-
-         if (iftherm) then
-            call setbb(gtb,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
-c           call setaa(gta,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-c    $         ms,n,nel,1,ng,igsh)
-c           call setcc(gtc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-c    $         ms,msr,n,ndim,1,nel,igsh)
-         endif
+         call setabcut(aa,gub,cc,aat,gtb,cct,bbut,uu,tt,qu,qt,
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,.true.)
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'
@@ -109,20 +89,19 @@ c     call setcc_snap(guc2)
 
       call rzero_ops
 
-      inel=1
       ieg1=0
 
       if (nio.eq.0) write (6,*) 'begin second loop'
 
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
-         ieg1=min(ieg1+inel+nelp-1,nelgv)
+         ieg1=min(ieg1+nelp,nelgv)
          nel=ieg1-ieg0+1
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,tt,ieg0,ieg1)
 
          call setabcut(aa,bb,cc,aat,bbt,cct,bbut,uu,tt,qu,qt,
-     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm)
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,.false.)
 
          m=n*ndim
       enddo
@@ -1170,13 +1149,13 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine setabcut(au,bu,cu,at,bt,ct,but,uu,tt,qu,qt,
-     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm)
+     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,ifp1)
 
       include 'SIZE'
       include 'LMOR'
       include 'LPOST'
 
-      logical iftherm
+      logical iftherm,ifp1
 
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
@@ -1203,34 +1182,42 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
      $     qu(1),q1(1)
 
       nel=ieg1-ieg0+1
-
-      ng=3
-      if (ldim.eq.3) ng=6
-
-      call setgeom(gfac,w6,ieg0,ieg1,lxyz,ng,nid)
-      call setvisc(visc,w6,ieg0,ieg1,lxyz,nid)
-      call setmass(mass,ws1,ieg0,ieg1,lxyz)
-      call setrxp(rxp,rxpt,ieg0,ieg1)
-
       n=lxyz*nel
-      m=n*ndim
 
-      call setzz(zu,uu,qu,ws1,ws2,ilgls,iglls,m,ms(nid+1),nsg)
-      call setbb(bu,zu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
-      call setaa(au,zu,visc,gfac,ws1,ws2,ws3,ilgls(1),
-     $      ms,n,nel,ndim,ng,igsh)
-      call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,igsh)
+      call setmass(mass,ws1,ieg0,ieg1,lxyz)
 
-      if (iftherm) then
-         call setzz(zt,tt,qt,ws1,ws2,ilgls,iglls,n,ms(nid+1),nsg)
-         call setbb(bt,zt,mass,ws1,ws2,ws3,ilgls(1),ms,n,1,igsh)
+      if (.not.ifp1) then
+         ng=(ldim-1)*3
+         m=n*ndim
 
-         call setaa(at,zt,visc,gfac,ws1,ws2,ws3,ilgls(1),
-     $      ms,n,nel,1,ng,igsh)
-         call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,ilgls(1),
-     $      ms,msr,n,ndim,1,nel,igsh)
+         call setgeom(gfac,w6,ieg0,ieg1,lxyz,ng,nid)
+         call setvisc(visc,w6,ieg0,ieg1,lxyz,nid)
+         call setrxp(rxp,rxpt,ieg0,ieg1)
       endif
+
+      if (ifp1) then
+         call setbb(bu,uu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
+         if (iftherm)
+     $      call setbb(bt,tt,mass,ws1,ws2,ws3,ilgls(1),ms,n,1,igsh)
+      else
+         call setzz(zu,uu,qu,ws1,ws2,ilgls,iglls,m,ms(nid+1),nsg)
+         call setbb(bu,zu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
+         call setaa(au,zu,visc,gfac,ws1,ws2,ws3,ilgls(1),
+     $         ms,n,nel,ndim,ng,igsh)
+         call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,ilgls(1),
+     $         ms,msr,n,ndim,ndim,nel,igsh)
+
+         if (iftherm) then
+            call setzz(zt,tt,qt,ws1,ws2,ilgls,iglls,n,ms(nid+1),nsg)
+            call setbb(bt,zt,mass,ws1,ws2,ws3,ilgls(1),ms,n,1,igsh)
+
+            call setaa(at,zt,visc,gfac,ws1,ws2,ws3,ilgls(1),
+     $         ms,n,nel,1,ng,igsh)
+            call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,ilgls(1),
+     $         ms,msr,n,ndim,1,nel,igsh)
+         endif
+      endif
+
 
       return
       end
