@@ -68,15 +68,15 @@ c     iftherm=.true.
          call setrxp(rxp,rxpt,ieg0,ieg1)
 
          call setbb(gub,uu,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-         call setaa(gua,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $      ms,n,nel,ndim,ng,igsh)
+c        call setaa(gua,uu,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+c    $      ms,n,nel,ndim,ng,igsh)
 c        call setcc(guc,uu,uu,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
 c    $      ms,msr,n,ndim,ndim,nel,igsh)
 
          if (iftherm) then
             call setbb(gtb,tt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
-            call setaa(gta,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $         ms,n,nel,1,ng,igsh)
+c           call setaa(gta,tt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
+c    $         ms,n,nel,1,ng,igsh)
 c           call setcc(gtc,uu,tt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
 c    $         ms,msr,n,ndim,1,nel,igsh)
          endif
@@ -99,62 +99,12 @@ c     call setcc_snap(guc2)
       if (np.eq.1)
      $   call dump_parallel(guc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
-      call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
-      call setqq(qu(nsg+1),eevec,gram,nsg)
-
-      call dump_serial(gram,nsg*nsg,'ops/gu_ ',nid)
-
-      call rzero(qu,nsg)
-
-      call dump_serial(qu,nsg*nsg,'ops/qu ',nid)
-
-      mmm=(ns+1)*ns
-
-      call gsub0(gub,bbt,aat,ns,nsg)
-      call dump_parallel(gub,ms(nid+1)*ns,'ops/gub0 ',nid)
-
-      call gsub0(gua,bbt,aat,ns,nsg)
-      call dump_parallel(gua,ms(nid+1)*ns,'ops/gua0 ',nid)
-
-      call setgg(gram,gub,eevec,ilgls,nsg,ms(mid+1))
-      call setqq(qu0(nsg+1),eevec,gram,nsg)
-
-      call cfill(qu0,1./nsg,nsg)
-      do i=1,ns
-         s=-(1./nsg)*vlsum(qu0(1+i*nsg),nsg)
-         call cadd(qu0(1+i*nsg),s,nsg)
-      enddo
-
-      call dump_serial(gram,nsg*nsg,'ops/gu0_ ',nid)
+      call setgg(gram,gub,eevec,evecp,ilgls,nsg,ms(mid+1),ifavg0)
+      call setqq(qu,eevec,gram,evecp,nsg,ifavg0)
 
       if (iftherm) then
-         call setgg(gram,gtb,eevec,ilgls,nsg,ms(mid+1))
-         call setqq(qt(nsg+1),eevec,gram,nsg)
-
-         call dump_serial(gram,nsg*nsg,'ops/gt_ ',nid)
-
-         call rzero(qt,nsg)
-
-c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
-
-         mmm=(ns+1)*ns
-
-         call gsub0(gtb,bbt,aat,ns,nsg)
-         call dump_parallel(gtb,ms(nid+1)*ns,'ops/gtb0 ',nid)
-
-         call gsub0(gta,bbt,aat,ns,nsg)
-         call dump_parallel(gta,ms(nid+1)*ns,'ops/gta0 ',nid)
-
-         call setgg(gram,gtb,eevec,ilgls,nsg,ms(mid+1))
-         call setqq(qt0(nsg+1),eevec,gram,nsg)
-
-         call cfill(qt0,1./nsg,nsg)
-         do i=1,ns
-            s=-(1./nsg)*vlsum(qt0(1+i*nsg),nsg)
-            call cadd(qt0(1+i*nsg),s,nsg)
-         enddo
-
-         call dump_serial(gram,nsg*nsg,'ops/gt0_ ',nid)
+         call setgg(gram,gtb,eevec,evecp,ilgls,nsg,ms(mid+1),ifavg0)
+         call setqq(qt,eevec,gram,evecp,nsg,ifavg0)
       endif
 
       call rzero_ops
@@ -211,20 +161,6 @@ c-----------------------------------------------------------------------
       enddo
 
       call gop(gram0,wk,'+  ',nsg)
-      s=1./real(nsg)
-
-      call cmult(gram0,s,nsg)
-      gram00=s*vlsum(gram0,nsg)
-
-      do i=1,ns
-         call sub2(gram(1+(i-1)*nsg),gram0,nsg)
-      enddo
-
-      call cadd(gram0,-gram00,nsg)
-
-      do i=1,ns
-         call cadd(gram(1+(i-1)*nsg),-gram0(i),nsg)
-      enddo
 
       return
       end
@@ -1159,10 +1095,11 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setgg(gram,gub,eevec,ilgls,nsg,ns)
+      subroutine setgg(gram,gub,gram0,wk,ilgls,nsg,ns,ifavg0)
 
-      real gram(nsg,nsg),gub(nsg,nsg),eevec(nsg*nsg)
+      real gram(nsg,nsg),gub(nsg,1),gram0(nsg),wk(nsg*nsg)
       integer ilgls(nsg)
+      logical ifavg0
 
       call rzero(gram,nsg*nsg)
 
@@ -1171,29 +1108,63 @@ c-----------------------------------------------------------------------
          call copy(gram(1,isg),gub(1,is),nsg)
       enddo
 
-      call gop(gram,eevec,'+  ',nsg*nsg)
+      call gop(gram,wk,'+  ',nsg*nsg)
+
+      if (ifavg0) then
+         call rzero(gram0,nsg)
+
+         do i=1,nsg
+            call add2(gram0,gram(1,i),nsg)
+         enddo
+
+         s=1./real(nsg)
+
+         call cmult(gram0,s,nsg)
+         gram00=s*vlsum(gram0,nsg)
+
+         do i=1,ns
+            call sub2(gram(1,i),gram0,nsg)
+         enddo
+
+         call cadd(gram0,-gram00,nsg)
+
+         do i=1,ns
+            s=-gram0(i)
+            call cadd(gram(1,i),s,nsg)
+         enddo
+      endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setqq(eevec,evecp,gram,nsg)
+      subroutine setqq(qu,elam,gram,w,nsg,ifavg0)
 
       parameter (l=3)
 
       common /test/ t1(l,l),t2(l,l)
 
-      real eevec(nsg,nsg),evecp(nsg),gram(nsg,nsg)
+      logical ifavg0
+      real qu(nsg,nsg+1),elam(nsg),gram(nsg,nsg),w(nsg,nsg)
 
-      call genevec(eevec,evecp,gram,1)
+      call genevec(qu(1,2),elam,gram,1)
 
-      call dump_serial(eevec,nsg*nsg,'ops/eevec1 ',0)
-
-      call mxm(gram,nsg,eevec,nsg,t1,nsg)
+      call mxm(gram,nsg,qu(1,2),nsg,t1,nsg)
 
       do i=1,nsg
-         s=1./sqrt(evecp(i))
-         call cmult(eevec(1,i),s,nsg)
+         s=1./sqrt(elam(i))
+         call cmult(qu(1,i+1),s,nsg)
       enddo
+
+      if (ifavg0) then
+         s=1./nsg
+         call cfill(qu,s,nsg)
+         do i=1,nsg
+            s=-(1./nsg)*vlsum(qu(1,i+1),nsg)
+            call cadd(qu(1,i+1),s,nsg)
+         enddo
+      else
+         call rzero(qu,nsg)
+      endif
 
       return
       end
