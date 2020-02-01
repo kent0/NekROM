@@ -122,7 +122,7 @@ c     call setcc_snap(guc2)
          call rsnapsm(uu,tt,ieg0,ieg1)
 
          call setabcut(aa,bb,cc,aat,bbt,cct,bbut,uu,tt,qu,qt,
-     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh)
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm)
 
          m=n*ndim
       enddo
