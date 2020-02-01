@@ -54,30 +54,13 @@ c     iftherm=.true.
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
-         write (6,*) nid,'working on elements ',ieg0,ieg1
-         nel=ieg1-ieg0+1
-         n=lxyz*(ieg1-ieg0+1)
+
          call rsnapsm(uu,tt,ieg0,ieg1)
          call setabcut(aa,gub,cc,aat,gtb,cct,bbut,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,.true.)
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'
-
-c     call setcc_snap(guc2)
-
-      call dump_parallel(gub,ms(nid+1)*ns,'ops/gub ',nid)
-      call dump_parallel(gua,ms(nid+1)*ns,'ops/gua ',nid)
-      call dump_parallel(guc,nl,'ops/guc ',nid)
-
-      if (iftherm) then
-         call dump_parallel(gtb,ms(nid+1)*ns,'ops/gtb ',nid)
-         call dump_parallel(gta,ms(nid+1)*ns,'ops/gta ',nid)
-         call dump_parallel(gtc,nl,'ops/gtc ',nid)
-      endif
-
-      if (np.eq.1)
-     $   call dump_parallel(guc2,ms(nid+1)*ns*ns,'ops/gc2 ',nid)
 
       call setgg(gram,gub,eevec,evecp,ilgls,nsg,ms(mid+1),ifavg0)
       call setqq(qu,eevec,gram,evecp,nsg,ifavg0)
@@ -96,14 +79,10 @@ c     call setcc_snap(guc2)
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
-         nel=ieg1-ieg0+1
-         n=lxyz*(ieg1-ieg0+1)
-         call rsnapsm(uu,tt,ieg0,ieg1)
 
+         call rsnapsm(uu,tt,ieg0,ieg1)
          call setabcut(aa,bb,cc,aat,bbt,cct,bbut,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,.false.)
-
-         m=n*ndim
       enddo
 
       if (nio.eq.0) write (6,*) 'finished second loop'
