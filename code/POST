@@ -33,7 +33,7 @@
      $              gtc(ls*lsg*lsg),gtc2(ls*lsg*lsg)
 
       common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
-     $             bbut((ls+1)*(lsg+1)),
+     $             bbut((ls+1)*(lsg+1)),bbtu((ls+1)*(lsg+1)),
      $             cc(2*(ls+1)*(lsg+1)**2)
 
       common /ops0/ aa0((ls+1)*(lsg+1)),

@@ -56,8 +56,9 @@ c     iftherm=.true.
          ieg1=min(ieg1+nelp,nelgv)
 
          call rsnapsm(uu,tt,ieg0,ieg1)
-         call setabcut(aa,gub,cc,aat,gtb,cct,bbut,uu,tt,qu,qt,
-     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,.true.,ifbuoy)
+         call setabcut(aa,gub,cc,aat,gtb,cct,bbut,bbtu,uu,tt,qu,qt,
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
+     $      iftherm,.true.,ifbuoy,.false.)
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'
@@ -81,8 +82,9 @@ c     iftherm=.true.
          ieg1=min(ieg1+nelp,nelgv)
 
          call rsnapsm(uu,tt,ieg0,ieg1)
-         call setabcut(aa,bb,cc,aat,bbt,cct,bbut,uu,tt,qu,qt,ieg0,ieg1,
-     $      nsg,ms,msr,iglls,ilgls,igsh,iftherm,.false.,ifbuoy)
+         call setabcut(aa,bb,cc,aat,bbt,cct,bbut,bbtu,uu,tt,qu,qt,
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
+     $      iftherm,.false.,ifbuoy,.false.)
       enddo
 
       if (nio.eq.0) write (6,*) 'finished second loop'
@@ -274,7 +276,7 @@ c-----------------------------------------------------------------------
 
       integer ns(1),igsh(2)
 
-      real b(1),u(n,ndim,1),grav(n,ndim),
+      real b(1),u(n,ndim,1),t(n,1),grav(n,ndim),
      $     w1(n,ndim,1),w2(n,ndim,1)
 
       real w3(n,ndim,1,3)
@@ -314,6 +316,49 @@ c-----------------------------------------------------------------------
             do i=1,ns(mid+1)
                b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
      $            vlsc2(w1(1,1,i),w2(1,1,k),n)
+            enddo
+            j=mod(j,nsg)+1
+         enddo
+         call shift(igsh,w2,w3,n*ndim*nsmax)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setbbtu(b,u,t,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      integer ns(1),igsh(2)
+
+      real b(1),u(n,ndim,1),t(n,1),mass(n),
+     $     w1(n,1),w2(n,1)
+
+      real w3(n,ndim,1,3)
+
+      nsg=ivlsum(ns,mp)
+
+      call copy(w2,t,n*ns(mid+1))
+
+      if (ndim.eq.2) then
+         do is=1,ns(mid+1)
+            call col3(w1(1,is),u(1,1,is),mass,n)
+         enddo
+      else
+         do is=1,ns(mid+1)
+            call col3(w1(1,is),u(1,ndim,is),mass,n)
+         enddo
+      endif
+
+      j=igs
+
+      nsmax=ivlmax(ns,mp)
+
+      do id=0,mp-1
+         do k=1,ns(mod(mid+id,mp)+1)
+            do i=1,ns(mid+1)
+               b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
+     $            vlsc2(w1(1,i),w2(1,k),n)
             enddo
             j=mod(j,nsg)+1
          enddo
@@ -1182,14 +1227,15 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setabcut(au,bu,cu,at,bt,ct,but,uu,tt,qu,qt,
-     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm,ifp1,ifbuoy)
+      subroutine setabcut(au,bu,cu,at,bt,ct,but,btu,uu,tt,qu,qt,
+     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
+     $   iftherm,ifp1,ifbuoy,ifvsink)
 
       include 'SIZE'
       include 'LMOR'
       include 'LPOST'
 
-      logical iftherm,ifp1,ifbuoy
+      logical iftherm,ifp1,ifbuoy,ifvsink
 
       common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
 
@@ -1213,7 +1259,7 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
       integer igsh(2),iglls(1),ilgls(1),ms(1),msr(1)
 
       real uu(1),tt(1),au(1),bu(1),cu(1),at(1),bt(1),ct(1),but(1),
-     $     qu(1),q1(1)
+     $     btu(1),qu(1),q1(1)
 
       nel=ieg1-ieg0+1
       n=lxyz*nel
@@ -1251,11 +1297,11 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
             call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,ilgls(1),
      $         ms,msr,n,ndim,1,nel,igsh)
          endif
-
          if (ifbuoy) call setbbut(but,zu,zt,grav,ws1,ws2,ws3,
      $      ilgls(1),ms,n,ndim,igsh)
+         if (ifvsink) call setbbtu(btu,zu,zt,mass,ws1,ws2,ws3,
+     $      ilgls(1),ms,n,ndim,igsh)
       endif
-
 
       return
       end
