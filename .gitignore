@@ -1,5 +1,6 @@
 # Specific files
 
+.DS_Store
 *nek5000*
 tags
 makefile
