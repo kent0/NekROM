@@ -52,6 +52,8 @@ c     iftherm=.true.
 
       ng=(ndim-1)*3
 
+      if (nio.eq.0) write (6,*) 'begin first loop'
+
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+inel+nelp-1,nelgv)
@@ -160,6 +162,8 @@ c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
       inel=1
       ieg1=0
 
+      if (nio.eq.0) write (6,*) 'begin second loop'
+
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+inel+nelp-1,nelgv)
@@ -167,102 +171,30 @@ c        call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
          n=lxyz*(ieg1-ieg0+1)
          call rsnapsm(uu,tt,ieg0,ieg1)
 
-         call setgeom(gfac,w9,ieg0,ieg1,lxyz,ng,nid)
-         call setvisc(visc,w,ieg0,ieg1,lxyz,nid)
-         call setmass(mass,wv1,ieg0,ieg1,lxyz)
-         call setrxp(rxp,rxpt,ieg0,ieg1)
+         call setabcut(aa,bb,cc,aat,bbt,cct,bbut,uu,tt,qu,qt,
+     $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh)
 
          m=n*ndim
-         call setzz(zz,uu,qu,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
-         call setbb(bb,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-         call setaa(aa,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $      ms,n,nel,ndim,ng,igsh)
-         call setcc(cc,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,igsh)
-
-         if (iftherm) then
-         call dump_serial(qt,nsg*nsg,'ops/qt ',nid)
-         call setzz(zt,tt,qt,wvf1,wvf2,ilgls,iglls,n,ms(nid+1),nsg)
-         call setbb(bbt,zt,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
-
-         call setaa(aat,zt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $      ms,n,nel,1,ng,igsh)
-         call setcc(cct,zz,zt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,1,nel,igsh)
-         endif
-
-         call setzz(zz,uu,qu0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
-         call setbb(bb0,zz,mass,wvf1,wvf2,wvf12,ilgls(1),ms,n,ndim,igsh)
-         call setaa(aa0,zz,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $      ms,n,nel,ndim,ng,igsh)
-         call setcc(cc0,zz,zz,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $      ms,msr,n,ndim,ndim,nel,igsh)
-
-         if (iftherm) then
-            call setzz(zt,tt,qt0,wvf1,wvf2,ilgls,iglls,m,ms(nid+1),nsg)
-            call setbb(bbt0,zt,mass,
-     $         wvf1,wvf2,wvf12,ilgls(1),ms,n,1,igsh)
-            call setaa(aat0,zt,visc,gfac,wvf1,wvf2,wvf12,ilgls(1),
-     $         ms,n,nel,1,ng,igsh)
-            call setcc(cct0,zz,zt,rxp,wvf1,wvf2,wvf3,wvf4,ilgls(1),
-     $         ms,msr,n,ndim,1,nel,igsh)
-         endif
       enddo
+
+      if (nio.eq.0) write (6,*) 'finished second loop'
 
       nl=ms(nid+1)*ns*ns
       call setcc_transfer(cc,nl)
 
-      call dump_parallel(bb,ms(nid+1)*ns,'ops/bbu_z ',nid)
-      call dump_parallel(aa,ms(nid+1)*ns,'ops/aau_z ',nid)
-      call dump_parallel(cc,nl,'ops/ccu_z ',nid)
-
-      call setcc_transfer(cc0,nl)
-
-      call dump_parallel(bb0,ms(nid+1)*ns,'ops/bbu0_z ',nid)
-      call dump_parallel(aa0,ms(nid+1)*ns,'ops/aau0_z ',nid)
-      call dump_parallel(cc0,nl,'ops/ccu0_z ',nid)
+      call dump_parallel(bb,ms(nid+1)*ns,'ops/bu_ ',nid)
+      call dump_parallel(aa,ms(nid+1)*ns,'ops/au_ ',nid)
+      call dump_parallel(cc,nl,'ops/cu_ ',nid)
 
       if (iftherm) then
          call setcc_transfer(cct,nl)
-
-         call dump_parallel(bbt,ms(nid+1)*ns,'ops/bbt_z ',nid)
-         call dump_parallel(aat,ms(nid+1)*ns,'ops/aat_z ',nid)
-         call dump_parallel(cct,nl,'ops/cct_z ',nid)
-
-         call setcc_transfer(cct0,nl)
-
-         call dump_parallel(bbt0,ms(nid+1)*ns,'ops/bbt0_z ',nid)
-         call dump_parallel(aat0,ms(nid+1)*ns,'ops/aat0_z ',nid)
-         call dump_parallel(cct0,nl,'ops/cct0_z ',nid)
-      endif
-
-      if (ifavg0) then
-         call setcc_transfer(cc0,nl)
-         call dump_parallel(bb0,ms(nid+1)*ns,'ops/bu_ ',nid)
-         call dump_parallel(aa0,ms(nid+1)*ns,'ops/au_ ',nid)
-         call dump_parallel(cc0,nl,'ops/cu_ ',nid)
-
-         if (iftherm) then
-            call setcc_transfer(cct0,nl)
-            call dump_parallel(bbt0,ms(nid+1)*ns,'ops/bt_ ',nid)
-            call dump_parallel(aat0,ms(nid+1)*ns,'ops/at_ ',nid)
-            call dump_parallel(cct0,nl,'ops/ct_ ',nid)
-         endif
-      else
-         call setcc_transfer(cc,nl)
-         call dump_parallel(bb,ms(nid+1)*ns,'ops/bu_ ',nid)
-         call dump_parallel(aa,ms(nid+1)*ns,'ops/au_ ',nid)
-         call dump_parallel(cc,nl,'ops/cu_ ',nid)
-
-         if (iftherm) then
-            call setcc_transfer(cct,nl)
-            call dump_parallel(bbt,ms(nid+1)*ns,'ops/bt_ ',nid)
-            call dump_parallel(aat,ms(nid+1)*ns,'ops/at_ ',nid)
-            call dump_parallel(cct,nl,'ops/ct_ ',nid)
-         endif
+         call dump_parallel(bbt,ms(nid+1)*ns,'ops/bt_ ',nid)
+         call dump_parallel(aat,ms(nid+1)*ns,'ops/at_ ',nid)
+         call dump_parallel(cct,nl,'ops/ct_ ',nid)
       endif
 
       call exitt0
+
     1 format(i8,i8,1p2e15.6,' zcomp')
 
       return
@@ -369,12 +301,10 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      integer igsh(2)
+      integer igsh(2),ns(1)
       real a(1),z(n,ndim,1),w1(n,ndim,1),w2(n,ndim,1)
       real w3(n,ndim,1,2)
       real visc(n),gfac(n,ng)
-
-      integer ns(1)
 
       nsg=ivlsum(ns,mp)
 
@@ -1269,42 +1199,67 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine setabcut(au,bu,cu,at,bt,ct,but,uu,tt,qu,qt,
-     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh)
+     $   ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,iftherm)
 
       include 'SIZE'
       include 'LMOR'
       include 'LPOST'
 
+      logical iftherm
+
+      common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
+
       real mass
       common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
      $                rxp(lxd*lyd*lzd*ldim*ldim*lelp),
      $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp),
-     $                grav(lxyz*lelp*ldim),
-     $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
+     $                grav(lxyz*lelp*ldim)
+c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
 
       common /abcwk/ w6(lxyz*lelp*6),
      $               ws1(lxyz*lelp*ls*ldim),
      $               ws2(lxyz*lelp*ls*ldim),
-     $               ws3(lxyz*lelp*ls*ldim)
-c     common /mycomm/ igsh1(2),igsh2(2)
+     $               ws3(lxyz*lelp*ls*ldim),
+     $               ws4(lxyz*lelp*ls*ldim)
+
+       common /fvars/ uuu(lxyz*lelp*ldim*ls),zu(lxyz*lelp*ldim*ls),
+     $           ttt(lxyz*lelp*ls),zt(lxyz*lelp*ldim*ls)
+
+
       integer igsh(2),iglls(1),ilgls(1),ms(1),msr(1)
 
-      real uu(1),tt(1),aa(1),bb(1),cc(1)
+      real uu(1),tt(1),au(1),bu(1),cu(1),at(1),bt(1),ct(1),but(1),
+     $     qu(1),q1(1)
 
       nel=ieg1-ieg0+1
 
+      ng=3
+      if (ldim.eq.3) ng=6
+
       call setgeom(gfac,w6,ieg0,ieg1,lxyz,ng,nid)
       call setvisc(visc,w6,ieg0,ieg1,lxyz,nid)
-      call setmass(mass,wv1,ieg0,ieg1,lxyz)
+      call setmass(mass,ws1,ieg0,ieg1,lxyz)
       call setrxp(rxp,rxpt,ieg0,ieg1)
 
+      n=lxyz*nel
       m=n*ndim
-      call setzz(zz,uu,qu,ws1,ws2,ilgls,iglls,m,ms(nid+1),nsg)
-      call setbb(bb,zz,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
-      call setaa(aa,zz,visc,gfac,ws1,ws2,ws3,ilgls(1),
+
+      call setzz(zu,uu,qu,ws1,ws2,ilgls,iglls,m,ms(nid+1),nsg)
+      call setbb(bu,zu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
+      call setaa(au,zu,visc,gfac,ws1,ws2,ws3,ilgls(1),
      $      ms,n,nel,ndim,ng,igsh)
-      call setcc(cc,zz,zz,rxp,ws1,ws2,ws3,ws4,ilgls(1),
+      call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,ilgls(1),
      $      ms,msr,n,ndim,ndim,nel,igsh)
+
+      if (iftherm) then
+         call setzz(zt,tt,qt,ws1,ws2,ilgls,iglls,n,ms(nid+1),nsg)
+         call setbb(bt,zt,mass,ws1,ws2,ws3,ilgls(1),ms,n,1,igsh)
+
+         call setaa(at,zt,visc,gfac,ws1,ws2,ws3,ilgls(1),
+     $      ms,n,nel,1,ng,igsh)
+         call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,ilgls(1),
+     $      ms,msr,n,ndim,1,nel,igsh)
+      endif
 
       return
       end
