@@ -820,7 +820,7 @@ c     include 'CTIMER'
       real           ysm1  (lx1)
       equivalence    (dudr,tm1),(duds,tm2),(dudt,tm3)
 
-      real gfac(lx1,ly1,lz1,mel,ng)
+      real gfac(lx1,ly1,lz1,mel,1)
 
       naxhm = naxhm + 1
       etime1 = dnekclock()
