@@ -63,12 +63,12 @@ c     iftherm=.true.
 
       if (nio.eq.0) write (6,*) 'finished first loop'
 
-      call setgg(gram,gub,eevec,evecp,ilgls,nsg,ms(mid+1),ifavg0)
-      call setqq(qu,eevec,gram,evecp,nsg,ifavg0)
+      call setgg(gram,gub,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
+      call setqq(qu,wevec,gram,wevecc,nsg,ifavg0)
 
       if (iftherm) then
-         call setgg(gram,gtb,eevec,evecp,ilgls,nsg,ms(mid+1),ifavg0)
-         call setqq(qt,eevec,gram,evecp,nsg,ifavg0)
+         call setgg(gram,gtb,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
+         call setqq(qt,wevec,gram,wevecc,nsg,ifavg0)
       endif
 
       call rzero_ops
@@ -368,6 +368,17 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setsst(sst,t,ff,n,ns)
+
+      real sst(ns),t(n,ns),ff(n)
+
+      do is=1,ns
+         sst(is)=vlsc2(t(1,is),ff,n)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine setcc_snap(cc)
 
       include 'SIZE'
@@ -621,8 +632,6 @@ c-----------------------------------------------------------------------
 
       real mass(lxyz,ieg1-ieg0+1), w(lxyz*(ieg1-ieg0+1))
 
-      ! TODO: set bm1
-
       call rzero(mass,lxyz*(ieg1-ieg0+1))
 
       do ieg=ieg0,ieg1
@@ -652,8 +661,6 @@ c-----------------------------------------------------------------------
      $                  qq(lx1*ly1*lz1*lelm)
 
       real grav(lxyz,ieg1-ieg0+1,ldim), w(lxyz*(ieg1-ieg0+1),ldim)
-
-      ! TODO: set bm1
 
       call rzero(grav,lxyz*(ieg1-ieg0+1)*ldim)
 
@@ -724,6 +731,52 @@ c     if3d=ndim.eq.3
             call intp_rstd(rxd(1,9,ie),w1(1,9,ie),lx1,lxd,if3d,0) ! 0 --> fwd
          endif
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setflux(flux,w,ieg0,ieg1,lxyz)!,nid)
+
+      include 'SIZE'
+      include 'LMOR'
+      include 'PARALLEL'
+      include 'INPUT'
+      include 'GEOM'
+
+      common /morforce/ fx(lx1*ly1*lz1*lelm),
+     $                  fy(lx1*ly1*lz1*lelm),
+     $                  fz(lx1*ly1*lz1*lelm),
+     $                  gx(lx1*ly1*lz1*lelm),
+     $                  gy(lx1*ly1*lz1*lelm),
+     $                  gz(lx1*ly1*lz1*lelm),
+     $                  qq(lx1,ly1,lz1,lelm)
+
+      real flux(lx1,ly1,lz1,ieg1-ieg0+1), w(lxyz*(ieg1-ieg0+1))
+
+      call rzero(flux,lxyz*(ieg1-ieg0+1))
+
+      do ieg=ieg0,ieg1
+         if (gllnid(ieg).eq.nid) then
+            ie=gllel(ieg)
+            do ifc=1,2*ldim
+               if (cbc(ifc,ie,2).eq.'f  ') then
+                  call facind(kx1,kx2,ky1,ky2,kz1,kz2,lx1,ly1,lz1,ifc)
+                  l=1
+                  do iz=kz1,kz2
+                  do iy=ky1,ky2
+                  do ix=kx1,kx2
+                     flux(ix,iy,iz,ie)=flux(ix,iy,iz,ie)+
+     $                  qq(ix,iy,iz,ie)*area(l,1,ifc,ie)
+                     l=l+1
+                  enddo
+                  enddo
+                  enddo
+               endif
+            enddo
+         endif
+      enddo
+
+      call gop(flux,w,'+  ',lxyz*(ieg1-ieg0+1))
 
       return
       end
@@ -1138,17 +1191,9 @@ c-----------------------------------------------------------------------
       call rzero(bb,ms(nid+1)*ns)
       call rzero(cc,ms(nid+1)*ns*ns)
 
-      call rzero(aa0,ms(nid+1)*ns)
-      call rzero(bb0,ms(nid+1)*ns)
-      call rzero(cc0,ms(nid+1)*ns*ns)
-
       call rzero(aat,ms(nid+1)*ns)
       call rzero(bbt,ms(nid+1)*ns)
       call rzero(cct,ms(nid+1)*ns*ns)
-
-      call rzero(aat0,ms(nid+1)*ns)
-      call rzero(bbt0,ms(nid+1)*ns)
-      call rzero(cct0,ms(nid+1)*ns*ns)
 
       return
       end
@@ -1237,7 +1282,7 @@ c-----------------------------------------------------------------------
 
       logical iftherm,ifp1,ifbuoy,ifvsink
 
-      common /geo/ gfac(lxyz*lelp,6),rxd(lxyzd*ldim*ldim*lelp)
+      common /geo/ gfac(lxyz*lelp,6)
 
       real mass
       common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
