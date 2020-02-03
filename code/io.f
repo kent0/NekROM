@@ -815,10 +815,7 @@ c-----------------------------------------------------------------------
         do while (ic.le.nelgv)
            mel=min(melt,nelgv)
            call byte_read(er,mel,ierr)! get element mapping
-           do je=1,5
-              write (6,*) je,er(je),iw(je),'er'
-           enddo
-           call exitt0
+           if (if_byte_sw) call byte_reverse(er,mel,ierr)
            jc=1
            do while (ie.le.mel)
               if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
@@ -829,10 +826,6 @@ c-----------------------------------------------------------------------
            enddo
            ic=ic+mel
         enddo
-        write (6,*) 'wp 4'
-        call exitt0
-
-        if(if_byte_sw) call byte_reverse(er,nelr,ierr)
       else
 
         pid0r  = nid
