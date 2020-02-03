@@ -261,7 +261,7 @@ c-----------------------------------------------------------------------
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      call rzero(wk,7*lx1*ly1*lz1*nelt*ldim)
+      call rzero(wk,7*lx1*ly1*lz1*nelt)
 
       iofldsr=0
       if (ifgetxr) iofldsr=ldim
