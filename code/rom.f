@@ -1451,6 +1451,7 @@ c-----------------------------------------------------------------------
       include 'LMOR'
       include 'INPUT'
       include 'GEOM'
+      include 'PARALLEL'
 
       common /morforce/ fx(lx1*ly1*lz1*lelm),
      $                  fy(lx1*ly1*lz1*lelm),
