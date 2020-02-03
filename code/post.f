@@ -51,6 +51,8 @@ c     iftherm=.true.
 
       if (nio.eq.0) write (6,*) 'begin first loop'
 
+      if (nio.eq.0) call dump_serial(gub,nsg*nsg,'gub0 ',nid)
+
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
@@ -59,6 +61,8 @@ c     iftherm=.true.
          call setabcut(aa,gub,cc,aat,gtb,cct,bbut,bbtu,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
      $      iftherm,.true.,ifbuoy,.false.)
+          if (nio.eq.0) call dump_serial(gub,nsg*nsg,'gub ',nid)
+          call exitt0
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'

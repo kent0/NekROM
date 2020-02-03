@@ -305,10 +305,20 @@ c-----------------------------------------------------------------------
             call byte_set_view(offs,ifh_mbyte)
          endif
          call mfi_getw(wk(iloc),nwk,ifcread)
+
          iloc=iloc+nwk
       enddo
 
       nelr=neltmp
+      nwk=nelr*ldim*nxyzr8
+
+      if (if_byte_sw) then
+      if (wdsizr.eq.8) then
+         call byte_reverse8(wk,nwk*2,ierr)
+      else
+         call byte_reverse(wk,nwk,ierr)
+      endif
+      endif
 
       lxyz=lx1*ly1*lz1
       do ie=1,nelr
@@ -317,7 +327,6 @@ c-----------------------------------------------------------------------
          if (ldim.eq.3) call
      $      copy(uz(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
       enddo
-
 
       if (iftherm) then
          iofldsr=iofldsr+ldim
@@ -339,10 +348,18 @@ c-----------------------------------------------------------------------
          enddo
 
          nelr=neltmp
+         nwk=nelr*nxyzr8
+
+         if (if_byte_sw) then
+         if (wdsizr.eq.8) then
+            call byte_reverse8(wk,nwk*2,ierr)
+         else
+            call byte_reverse(wk,nwk,ierr)
+         endif
+         endif
 
          do ie=1,nelr
             call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
-c           call copy(ut(1,ie),wk(1+(ie-1)*lxyz),lxyz)
          enddo
       endif
 
