@@ -51,8 +51,6 @@ c     iftherm=.true.
 
       if (nio.eq.0) write (6,*) 'begin first loop'
 
-      if (nio.eq.0) call dump_serial(gub,nsg*nsg,'gub0 ',nid)
-
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
@@ -61,11 +59,11 @@ c     iftherm=.true.
          call setabcut(aa,gub,cc,aat,gtb,cct,bbut,bbtu,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
      $      iftherm,.true.,ifbuoy,.false.)
-          if (nio.eq.0) call dump_serial(gub,nsg*nsg,'gub ',nid)
-          call exitt0
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'
+
+      if (nio.eq.0) call dump_serial(gub,nsg*nsg,'ops/gu_ ',nid)
 
       call setgg(gram,gub,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
       call setqq(qu,wevec,gram,wevecc,nsg,ifavg0)
@@ -107,6 +105,7 @@ c     iftherm=.true.
          call dump_parallel(cct,nl,'ops/ct_ ',nid)
       endif
 
+      if (nio.eq.0) write (6,*) 'exiting of drivep'
       call exitt0
 
     1 format(i8,i8,1p2e15.6,' zcomp')
