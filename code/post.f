@@ -558,8 +558,8 @@ c-----------------------------------------------------------------------
          call nekgsync
       enddo
 
-      call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
-      call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
+c     call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
+c     call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
 
       do id=0,mp-1
          if (mid.eq.id) then
