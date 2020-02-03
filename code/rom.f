@@ -228,6 +228,8 @@ c-----------------------------------------------------------------------
 
       call setbases
 
+      call setn
+
       call checker('aea',ad_step)
       call setops
       call checker('afa',ad_step)
@@ -646,7 +648,20 @@ c-----------------------------------------------------------------------
 
       ad_qstep=nint(param(180))+ad_iostep*max(1-nint(param(180)),0)
 
-      iftneu=(param(178).ne.0.and.param(174).ne.0)
+      ntneu=0
+
+      do ie=1,nelt
+      do ifc=1,2*ldim
+         if (cbc(ifc,ie,2).eq.'f  ') ntneu=ntneu+1
+      enddo
+      enddo
+
+      ntneu=iglsum(ntneu,1)
+
+      if (nio.eq.0) write (6,*)
+     $   'number of inhomogeneous Neumann faces:',ntneu
+
+      iftneu=ntneu.gt.0
 
       ifctke=.false.
       if (param(181).ne.0) ifctke=.true.
@@ -1174,35 +1189,14 @@ c-----------------------------------------------------------------------
 
       if (rmode.eq.'ON '.or.rmode.eq.'ONB'.or.rmode.eq.'CP ') then
          if (nio.eq.0) write (6,*) 'reading s...'
-         call read_mat_serial(s0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
+         call read_serial(s0,nb+1,fname,tab,nid)
       else
          if (nio.eq.0) write (6,*) 'forming s...'
-         nio=-1
+         n=lx1*ly1*lz1*lelt
          do i=0,nb
             if (nio.eq.0) write (6,*) 'sets: ',i,'/',nb
-            s=0.
-            do ie=1,nelt
-            do ifc=1,2*ldim
-               if (cbc(ifc,ie,2).ne.'E  '.and.
-     $             cbc(ifc,ie,2).ne.'P  ') then
-                  call facind(kx1,kx2,ky1,ky2,kz1,kz2,
-     $                        lx1,ly1,lz1,ifc)
-                  l=0
-                  do iz=kz1,kz2
-                  do iy=ky1,ky2
-                  do ix=kx1,kx2
-                     l=l+1
-                     s=s+area(l,1,ifc,ie)*tt(ix,iy,iz,ie,i)
-     $                                   *gn(ix,iy,iz,ie)
-                  enddo
-                  enddo
-                  enddo
-               endif
-            enddo
-            enddo
-            s0(i)=glsum(s,1)
+            s0(i)=glsc2(qq,tt,n)
          enddo
-         nio=nid
       endif
 
       return
@@ -1447,6 +1441,46 @@ c-----------------------------------------------------------------------
       if (ifrom(2)) call dump_serial(uta,nb+1,'ops/uta ',nid)
 
       if (ifrecon) call dump_sfld
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setn
+
+      include 'SIZE'
+      include 'LMOR'
+      include 'INPUT'
+      include 'GEOM'
+
+      common /morforce/ fx(lx1*ly1*lz1*lelm),
+     $                  fy(lx1*ly1*lz1*lelm),
+     $                  fz(lx1*ly1*lz1*lelm),
+     $                  gx(lx1*ly1*lz1*lelm),
+     $                  gy(lx1*ly1*lz1*lelm),
+     $                  gz(lx1*ly1*lz1*lelm),
+     $                  qq(lx1,ly1,lz1,lelm)
+
+      call rzero(qq,lx1*ly1*lz1*nelt)
+
+      do ie=1,nelt
+         ieg=lglel(ie)
+         do ifc=1,2*ldim
+            if (cbc(ifc,ie,2).eq.'f  ') then
+               call facind(kx1,kx2,ky1,ky2,kz1,kz2,lx1,ly1,lz1,ifc)
+               l=1
+               do iz=kz1,kz2
+               do iy=ky1,ky2
+               do ix=kx1,kx2
+                  call userbc(ix,iy,iz,ifc,ieg)
+                  qq(ix,iy,iz,ie)=qq(ix,iy,iz,ie)+
+     $               flux*area(l,1,ifc,ie)
+                  l=l+1
+               enddo
+               enddo
+               enddo
+            endif
+         enddo
+      enddo
 
       return
       end
