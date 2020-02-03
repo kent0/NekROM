@@ -17,10 +17,13 @@ c-----------------------------------------------------------------------
       nio=-1
       do is=1,ms(mid+1)
          js=ilgls(is)
+         write (6,*) 'wp 0'
          call rfldm_open(fnames(1+(js-1)*132),ieg0,ieg1,ifcread)
          call rfldm_read(v(1,1,is),v(1,2,is),v(1,ldim,is),s(1,is),
      $      ieg0,ieg1,ifcread,iftherm)
+         write (6,*) 'wp 2'
          call rfldm_close(ifcread)
+         write (6,*) 'wp 3'
       enddo
       nio=nid
 
@@ -261,7 +264,7 @@ c-----------------------------------------------------------------------
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      call rzero(wk,7*lx1*ly1*lz1*nelt*ldim)
+      call rzero(wk,7*lx1*ly1*lz1*nelt)
 
       iofldsr=0
       if (ifgetxr) iofldsr=ldim
@@ -269,6 +272,10 @@ c-----------------------------------------------------------------------
       nelr=ieg1-ieg0+1
 
       icount=1
+
+      do ie=1,nelr
+        write (6,*) i1(ie),i2(ie),'i1/i2 pre-sort'
+      enddo
 
       call isort(i1,i2,nelr)
 
@@ -288,6 +295,15 @@ c-----------------------------------------------------------------------
             i4(ng)=i4(ng)+1
          endif
       enddo
+
+      do ie=1,nelr
+        write (6,*) i1(ie),i2(ie),'i1/i2 sorted'
+      enddo
+
+      do ig=1,ng
+        write (6,*) i3(ig),i4(ig),'i3/i4'
+      enddo
+      call exitt0
 
       neltmp=nelr
 
@@ -317,6 +333,7 @@ c-----------------------------------------------------------------------
          if (ldim.eq.3) call
      $      copy(uz(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
       enddo
+
 
       if (iftherm) then
          iofldsr=iofldsr+ldim
@@ -736,6 +753,13 @@ c-----------------------------------------------------------------------
       common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
       common /scrread/ i1(lelt),i2(lelt),i3(lelt),i4(lelt)
 
+      integer*8 iw
+      common /iscrread/ iw(2*lelt)
+      common /rscrread/ rw(2*lelt)
+
+      real*4 r4w
+      common /rscrread/ r4w(2*lelt)
+
       integer stride
       character*132 hdr, hname_
       logical if_byte_swap_test,ifcread
@@ -792,6 +816,12 @@ c-----------------------------------------------------------------------
         pid0r = nid
         pid1r = nid + stride
         fid0r = nid / stride
+
+
+        open (unit=123,file='hdr1')
+        write (123,*) hdr
+        close (unit=123)
+
         call blank(hdr,iHeaderSize)
 
         call addfid(hname,fid0r)
@@ -799,29 +829,46 @@ c-----------------------------------------------------------------------
         if(ierr.ne.0) goto 102
 
         call byte_read(hdr,iHeaderSize/4,ierr)  
+
+        open (unit=123,file='hdr2')
+        write (123,*) hdr
+        close (unit=123)
+
         if(ierr.ne.0) goto 102
 
         call byte_read(bytetest,1,ierr) 
         if(ierr.ne.0) goto 102
+        write (6,*) bytetest,'bytetest'
 
         call mfi_parse_hdr(hdr,ierr) ! replace hdr with correct one 
 
         ic=1
         ie=1
 
+        write (6,*) 'wp 3',ieg0,ieg1
+
         do while (ic.le.nelgv)
+            write (6,*) 'wp 3.1',ic
            mel=min(melt,nelgv)
            call byte_read(er,mel,ierr)! get element mapping
+           do je=1,5
+              write (6,*) je,er(je),iw(je),'er'
+           enddo
+           call exitt0
            jc=1
            do while (ie.le.mel)
+                write (6,*) 'wp 3.2',ie,jc
               if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
                  i1(er(ie)-ieg0+1)=ie
+                 write (6,*) ic,i1(er(ie)-ieg0+1),'seti1'
                  jc=jc+1
               endif
               ie=ie+1
            enddo
            ic=ic+mel
         enddo
+        write (6,*) 'wp 4'
+        call exitt0
 
         if(if_byte_sw) call byte_reverse(er,nelr,ierr)
       else
