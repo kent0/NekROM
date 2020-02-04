@@ -504,14 +504,14 @@ c-----------------------------------------------------------------------
 
       real c(1)
 
-      if (mp.eq.1) return
+c     if (mp.eq.1) return
 
       nsg=ns
 
       nl=0
 
       n=ms(mid+1)
-      mmax=2*lsg*lsg
+      mmax=2*lsg*lsg*lsg
       ntot=nsg*nsg*nsg
 
       nmin=ntot/mp
@@ -558,8 +558,8 @@ c-----------------------------------------------------------------------
          call nekgsync
       enddo
 
-c     call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
-c     call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
+      call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
+      call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
 
       do id=0,mp-1
          if (mid.eq.id) then
