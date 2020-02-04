@@ -66,7 +66,7 @@ c     iftherm=.true.
       if (nio.eq.0) call dump_serial(gub,nsg*nsg,'ops/gu_ ',nid)
 
       call setgg(gram,gub,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
-      call setqq(qu,wevec,gram,wevecc,nsg,ifavg0)
+      call setqq(qu,wevec,gram,nsg,ifavg0)
 
       if (iftherm) then
          call setgg(gram,gtb,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
@@ -1243,18 +1243,12 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setqq(qu,elam,gram,w,nsg,ifavg0)
-
-      parameter (l=3)
-
-      common /test/ t1(l,l),t2(l,l)
+      subroutine setqq(qu,elam,gram,nsg,ifavg0)
 
       logical ifavg0
-      real qu(nsg,nsg+1),elam(nsg),gram(nsg,nsg),w(nsg,nsg)
+      real qu(nsg,nsg+1),elam(nsg),gram(nsg,nsg)
 
       call genevec(qu(1,2),elam,gram,1)
-
-      call mxm(gram,nsg,qu(1,2),nsg,t1,nsg)
 
       do i=1,nsg
          s=1./sqrt(elam(i))
