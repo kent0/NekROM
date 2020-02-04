@@ -478,6 +478,9 @@ c-----------------------------------------------------------------------
      $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
                   call conv(w4(1,2,1),w2(1,2,j),.false.,
      $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
+                  if (ndim.eq.3) call conv(w4(1,ndim,1),w2(1,ndim,j),
+     $               .false.,w3(1,1,k),w3(1,2,k),w3(1,ndim,k),
+     $               .false.,rxp,nel)
                   do i=1,ms
                     c(i+(js-1)*ms+(ks-1)*ms*nsg)=
      $              c(i+(js-1)*ms+(ks-1)*ms*nsg)
