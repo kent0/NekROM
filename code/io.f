@@ -925,3 +925,47 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine shift_test
+
+      include 'POST'
+      include 'MASS'
+      include 'GEOM'
+      include 'PARALLEL'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      character*127 flist
+
+      nelp=47
+
+      nsnap=ns
+
+      ns=ls
+      call rflist(fnames,ns)
+
+      iftherm=.false.
+
+      call ilgls_setup(ilgls,msr,ms,ns,np,nid)
+      call iglls_setup(iglls,itmp,ms,ns,np,nid)
+
+      call ilgls_setup(ilglsp,msrp,msp,nb+1,min(np,nb+1),nid)
+
+      call shift_setup(igsh,nekcomm,itmp,3,np)
+
+      do i=1,3
+         iw1(i)=i+mid*3
+      enddo
+      call shift(igsh,iw1,iw2,3)
+
+      do id=0,mp-1
+         if (id.eq.mid) then
+            do i=1,3
+               write (6,*) id,i,iw1(i),'shift'
+            enddo
+         endif
+         call nekgsync
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
