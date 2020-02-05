@@ -51,6 +51,7 @@ c-----------------------------------------------------------------------
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
+         if (nio.eq.0) write (6,*) 'processing',ieg0,ieg1,nelgv
 
          call rsnapsm(uu,tt,ieg0,ieg1)
          call setabcut(aa,gub,cc,aat,gtb,cct,bbut,bbtu,uu,tt,qu,qt,
