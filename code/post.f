@@ -20,6 +20,13 @@ c-----------------------------------------------------------------------
       iftherm=.false.
       iftherm=ifheat
 
+      aa_time=0.
+      bb_time=0.
+      cc_time=0.
+      zz_time=0.
+      read_time=0.
+      comm_time=0.
+
       call ilgls_setup(ilgls,msr,ms,ns,np,nid)
       call iglls_setup(iglls,itmp,ms,ns,np,nid)
 
@@ -135,12 +142,15 @@ c-----------------------------------------------------------------------
       subroutine setzz(z,u,evec,w1,w2,ilgls,iglls,n,ns,nsg)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer ilgls(1),iglls(1)
 
       real z(n,1),u(n,1)
       real evec(nsg,nsg)
       real w1(n),w2(n)
+
+      ttime=dnekclock()
 
       do isg=1,nsg
          is=iglls(isg)
@@ -150,7 +160,7 @@ c-----------------------------------------------------------------------
          if (is.gt.0.and.is.le.ns) call copy(z(1,is),w1,n)
       enddo
 
-c     call mxm(u,n,evec,nsg,z,nsg)
+      zz_time=zz_time+dnekclock()-ttime
 
       return
       end
@@ -203,12 +213,14 @@ c-----------------------------------------------------------------------
       subroutine setaa(a,z,visc,gfac,w1,w2,w3,igs,ns,n,nel,ndim,ng,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer igsh(2),ns(1)
       real a(1),z(n,ndim,1),w1(n,ndim,1),w2(n,ndim,1)
       real w3(n,ndim,1,2)
       real visc(n),gfac(n,ng)
 
+      ttime=dnekclock()
       nsg=ivlsum(ns,mp)
 
       call copy(w1,z,n*ndim*ns(mid+1))
@@ -236,12 +248,15 @@ c-----------------------------------------------------------------------
          call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
+      aa_time=aa_time+dnekclock()-ttime
+
       return
       end
 c-----------------------------------------------------------------------
       subroutine setbb(b,u,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer ns(1),igsh(2)
 
@@ -250,6 +265,7 @@ c-----------------------------------------------------------------------
 
       real w3(n,ndim,1,3)
 
+      ttime=dnekclock()
       nsg=ivlsum(ns,mp)
 
       call copy(w1,u,n*ndim*ns(mid+1))
@@ -274,12 +290,15 @@ c-----------------------------------------------------------------------
          call shift(igsh,w2,w3,n*ndim*nsmax)
       enddo
 
+      bb_time=bb_time+dnekclock()-ttime
+
       return
       end
 c-----------------------------------------------------------------------
       subroutine setbbut(b,u,t,grav,w1,w2,w3,igs,ns,n,ndim,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer ns(1),igsh(2)
 
@@ -334,6 +353,7 @@ c-----------------------------------------------------------------------
       subroutine setbbtu(b,u,t,mass,w1,w2,w3,igs,ns,n,ndim,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer ns(1),igsh(2)
 
@@ -448,6 +468,7 @@ c-----------------------------------------------------------------------
      $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,nsr,n,ndim,mdim,nel,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer ns(1),nsr(2,1),igsh(2)
 
@@ -455,6 +476,7 @@ c-----------------------------------------------------------------------
       real c(1),z(n,ndim,1),t(n,mdim,1),
      $     w1(n,mdim,1),w2(n,mdim,1),w3(n,ndim,1),w4(n,mdim,1)
 
+      ttime=dnekclock()
       nsg=ivlsum(ns,mp)
       nsmax=ivlmax(ns,mp)
 
@@ -498,6 +520,8 @@ c-----------------------------------------------------------------------
          call shift(igsh,w3,w4,n*ndim*nsmax)
       enddo
 
+      cc_time=cc_time+dnekclock()-ttime
+
       return
       end
 c-----------------------------------------------------------------------
@@ -507,10 +531,12 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       real c(1)
 
       if (mp.eq.1) return
+      ttime=dnekclock()
 
       nsg=ns
 
@@ -575,6 +601,8 @@ c-----------------------------------------------------------------------
          endif
          call nekgsync
       enddo
+
+      comm_time=comm_time+dnekclock()-ttime
 
     1 format(i5,i8,i8,i5,i8,1pe13.4,' crystal1')
     2 format(i5,i8,i8,i5,i8,1pe13.4,' crystal2')

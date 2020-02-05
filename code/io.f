@@ -4,6 +4,7 @@ c-----------------------------------------------------------------------
       include 'POST'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,read_time,comm_time
 
       real v(lxyz*(ieg1-ieg0+1),ldim,ns)
       real s(lxyz*(ieg1-ieg0+1),ns)
@@ -13,6 +14,7 @@ c-----------------------------------------------------------------------
       melt=(lelt-3)*lxyz
 
       ifcread=.true.
+      ttime=nekclock()
 
       nio=-1
       do is=1,ms(mid+1)
@@ -23,6 +25,8 @@ c-----------------------------------------------------------------------
          call rfldm_close(ifcread)
       enddo
       nio=nid
+
+      read_time=read_time+nekclock()-ttime
 
       return
       end

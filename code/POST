@@ -57,3 +57,5 @@
       common /ifpar/ ifcread,iftherm
 
       common /pcomm/ igsh(2),igshp(2)
+
+      common /ptime/ aa_time,bb_time,zz_time,cc_time,read_time,comm_time
