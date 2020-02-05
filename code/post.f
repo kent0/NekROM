@@ -60,14 +60,16 @@ c-----------------------------------------------------------------------
 
       if (nio.eq.0) write (6,*) 'finished first loop'
 
-      if (nio.eq.0) call dump_serial(gub,nsg*nsg,'ops/gu_ ',nid)
-
       call setgg(gram,gub,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
       call setqq(qu,wevec,gram,nsg,ifavg0)
+
+      call dump_serial(gram,nsg*nsg,'ops/gu_ ',nid)
 
       if (iftherm) then
          call setgg(gram,gtb,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
          call setqq(qt,wevec,gram,nsg,ifavg0)
+
+         call dump_serial(gram,nsg*nsg,'ops/gt_ ',nid)
       endif
 
       call rzero_ops
