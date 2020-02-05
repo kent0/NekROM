@@ -5,6 +5,7 @@ c-----------------------------------------------------------------------
       include 'MASS'
       include 'GEOM'
       include 'PARALLEL'
+      include 'INPUT'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
