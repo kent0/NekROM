@@ -116,6 +116,13 @@ c-----------------------------------------------------------------------
 
       if (ifbuoy) call dump_parallel(bbut,ms(nid+1)*ns,'ops/but_ ',nid)
 
+      if (nio.eq.0) write (6,*) 'aa_time:',aa_time
+      if (nio.eq.0) write (6,*) 'bb_time:',bb_time
+      if (nio.eq.0) write (6,*) 'cc_time:',cc_time
+      if (nio.eq.0) write (6,*) 'zz_time:',zz_time
+      if (nio.eq.0) write (6,*) 'read_time:',read_time
+      if (nio.eq.0) write (6,*) 'comm_time:',comm_time
+
       if (nio.eq.0) write (6,*) 'exiting of drivep'
       call exitt0
 
@@ -531,7 +538,6 @@ c-----------------------------------------------------------------------
       include 'PARALLEL'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
-      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       real c(1)
 
