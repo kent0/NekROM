@@ -78,6 +78,7 @@ c-----------------------------------------------------------------------
 
       if (nio.eq.0) write (6,*) 'begin second loop'
 
+      ifbuoy=.true.
       do while (ieg1+1.le.nelgv)
          ieg0=ieg1+1
          ieg1=min(ieg1+nelp,nelgv)
@@ -103,6 +104,8 @@ c-----------------------------------------------------------------------
          call dump_parallel(aat,ms(nid+1)*ns,'ops/at_ ',nid)
          call dump_parallel(cct,nl,'ops/ct_ ',nid)
       endif
+
+      if (ifbuoy) call dump_parallel(bbut,ms(nid+1)*ns,'ops/but_ ',nid)
 
       if (nio.eq.0) write (6,*) 'exiting of drivep'
       call exitt0
@@ -279,7 +282,7 @@ c-----------------------------------------------------------------------
       integer ns(1),igsh(2)
 
       real b(1),u(n,ndim,1),t(n,1),grav(n,ndim),
-     $     w1(n,ndim,1),w2(n,ndim,1)
+     $     w1(n,ndim,1),w2(n,1)
 
       real w3(n,ndim,1,3)
 
@@ -294,17 +297,16 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      l=1
       if (ndim.eq.2) then
          do is=1,ns(mid+1)
          do i=1,n
-            w1(i,l,1)=w1(i,1,is)+w1(i,2,is)
+            w1(i,is,1)=w1(i,1,is)+w1(i,2,is)
          enddo
          enddo
       else
          do is=1,ns(mid+1)
          do i=1,n
-            w1(i,l,1)=w1(i,1,is)+w1(i,2,is)+w1(i,ndim,is)
+            w1(i,is,1)=w1(i,1,is)+w1(i,2,is)+w1(i,ndim,is)
          enddo
          enddo
       endif
@@ -317,11 +319,11 @@ c-----------------------------------------------------------------------
          do k=1,ns(mod(mid+id,mp)+1)
             do i=1,ns(mid+1)
                b(j+(i-1)*nsg)=b(j+(i-1)*nsg)+
-     $            vlsc2(w1(1,1,i),w2(1,1,k),n)
+     $            vlsc2(w1(1,k,1),w2(1,i),n)
             enddo
             j=mod(j,nsg)+1
          enddo
-         call shift(igsh,w2,w3,n*ndim*nsmax)
+         call shift(igsh,w1,w3,n*ndim*nsmax)
       enddo
 
       return
