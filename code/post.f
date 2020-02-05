@@ -70,7 +70,7 @@ c     iftherm=.true.
 
       if (iftherm) then
          call setgg(gram,gtb,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
-         call setqq(qt,wevec,gram,wevecc,nsg,ifavg0)
+         call setqq(qt,wevec,gram,nsg,ifavg0)
       endif
 
       call rzero_ops
