@@ -273,8 +273,6 @@ c-----------------------------------------------------------------------
 
       call isort(i1,i2,nelr)
 
-      ngroup=1
-
       ic=1
       ng=1
       i3(1)=i1(1)
@@ -443,25 +441,25 @@ c        ei = er(e)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine mfi_getw(wk,lwk,ifcread)
+      subroutine mfi_getw(wk,n,ifcread)
 
       include 'SIZE'
       include 'INPUT'
       include 'PARALLEL'
       include 'RESTART'
 
-      real*4 wk(lwk)
+      real wk(1)
       logical ifcread
 
-      nxyzr  = ldim*nxr*nyr*nzr
+      nxyzr  = n
       if (wdsizr.eq.8) nxyzr = 2*nxyzr
 
       ierr = 0
       if (ifcread) then
-         call byte_read(wk,nxyzr*nelr,ierr)
+         call byte_read(wk,nxyzr,ierr)
          ierr=ierr*10*(nid+1)
       else
-         call byte_read_mpi(wk,nxyzr*nelr,-1,ifh_mbyte,ierr)
+         call byte_read_mpi(wk,nxyzr,-1,ifh_mbyte,ierr)
       endif
 
       return
