@@ -108,11 +108,12 @@ c-----------------------------------------------------------------------
       real u(n),w(m,2)
 
       if (mp.eq.1) return
+      if (n.gt.m) call exitti('n > m in shift$',n-m)
 
       if (mod(mp,2).eq.1)
      $   call exitti('no support for odd number of mpi-ranks$',mp)
 
-      if (mod(mid,2).eq.0) then
+      if (mod(mid,2).ne.0) then
          call copy(w,u,n)
          call rzero(w(1,2),n)
       else
@@ -123,7 +124,7 @@ c-----------------------------------------------------------------------
       call fgslib_gs_op(igsh,w,1,1,0)
       call fgslib_gs_op(igsh(2),w(1,2),1,1,0)
 
-      if (mod(mid,2).eq.0) then
+      if (mod(mid,2).ne.0) then
          call copy(u,w(1,2),n)
       else
          call copy(u,w,n)
