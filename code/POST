@@ -58,4 +58,5 @@
 
       common /pcomm/ igsh(2),igshp(2)
 
-      common /ptime/ aa_time,bb_time,zz_time,cc_time,read_time,comm_time
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
+      common /cnvtime/ cnv_time
