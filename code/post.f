@@ -642,6 +642,10 @@ c-----------------------------------------------------------------------
       comm_time=comm_time+dnekclock()-ttime
       call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
 
+      do i=1,nl
+         if (abs(c(i)).le.1.e-200) c(i)=0.
+      enddo
+
       return
       end
 c-----------------------------------------------------------------------
