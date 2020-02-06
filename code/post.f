@@ -20,10 +20,14 @@ c-----------------------------------------------------------------------
       iftherm=.false.
       iftherm=ifheat
 
+      tttime=dnekclock()
       aa_time=0.
       bb_time=0.
       cc_time=0.
       zz_time=0.
+      gq_time=0.
+      abc_time=0.
+      cnv_time=0.
       read_time=0.
       comm_time=0.
 
@@ -61,21 +65,27 @@ c-----------------------------------------------------------------------
          if (nio.eq.0) write (6,*) 'processing',ieg0,ieg1,nelgv
 
          call rsnapsm(uu,tt,ieg0,ieg1)
+         ttime=dnekclock()
          call setabcut(aa,gub,cc,aat,gtb,cct,bbut,bbtu,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
      $      iftherm,.true.,ifbuoy,.false.)
+         abc_time=abc_time+dnekclock()-ttime
       enddo
 
       if (nio.eq.0) write (6,*) 'finished first loop'
 
+      ttime=dnekclock()
       call setgg(gram,gub,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
       call setqq(qu,wevec,gram,nsg,ifavg0)
+      gq_time=gq_time+dnekclock()-ttime
 
       call dump_serial(gram,nsg*nsg,'ops/gu_ ',nid)
 
       if (iftherm) then
+         ttime=dnekclock()
          call setgg(gram,gtb,wevec,wevecc,ilgls,nsg,ms(mid+1),ifavg0)
          call setqq(qt,wevec,gram,nsg,ifavg0)
+         gq_time=gq_time+dnekclock()-ttime
 
          call dump_serial(gram,nsg*nsg,'ops/gt_ ',nid)
       endif
@@ -93,9 +103,11 @@ c-----------------------------------------------------------------------
          if (nio.eq.0) write (6,*) 'processing',ieg0,ieg1,nelgv
 
          call rsnapsm(uu,tt,ieg0,ieg1)
+         ttime=dnekclock()
          call setabcut(aa,bb,cc,aat,bbt,cct,bbut,bbtu,uu,tt,qu,qt,
      $      ieg0,ieg1,nsg,ms,msr,iglls,ilgls,igsh,
      $      iftherm,.false.,ifbuoy,.false.)
+         abc_time=abc_time+dnekclock()-ttime
       enddo
 
       if (nio.eq.0) write (6,*) 'finished second loop'
@@ -119,9 +131,13 @@ c-----------------------------------------------------------------------
       if (nio.eq.0) write (6,*) 'aa_time:',aa_time
       if (nio.eq.0) write (6,*) 'bb_time:',bb_time
       if (nio.eq.0) write (6,*) 'cc_time:',cc_time
+      if (nio.eq.0) write (6,*) 'abc_time:',abc_time
       if (nio.eq.0) write (6,*) 'zz_time:',zz_time
+      if (nio.eq.0) write (6,*) 'gq_time:',gq_time
+      if (nio.eq.0) write (6,*) 'cnv_time:',cnv_time
       if (nio.eq.0) write (6,*) 'read_time:',read_time
       if (nio.eq.0) write (6,*) 'comm_time:',comm_time
+      if (nio.eq.0) write (6,*) 'total_time:',dnekclock()-tttime
 
       if (nio.eq.0) write (6,*) 'exiting of drivep'
       call exitt0

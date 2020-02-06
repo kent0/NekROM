@@ -106,6 +106,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       common /myshift/ m
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
 
       integer igsh(2)
       real u(n),w(m,2)
@@ -124,8 +125,10 @@ c-----------------------------------------------------------------------
          call rzero(w,n)
       endif
 
+      ttime=dnekclock()
       call fgslib_gs_op(igsh,w,1,1,0)
       call fgslib_gs_op(igsh(2),w(1,2),1,1,0)
+      comm_time=comm_time+dnekclock()-ttime
 
       if (mod(mid,2).ne.0) then
          call copy(u,w(1,2),n)
