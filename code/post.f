@@ -488,16 +488,20 @@ c    $         z(1,1,ks),z(1,2,ks),z(1,mdim,ks),.false.)
       end
 c-----------------------------------------------------------------------
       subroutine setcc(
-     $   c,z,t,rxp,w1,w2,w3,w4,igs,ns,nsr,n,ndim,mdim,nel,igsh)
+     $   c,z,t,rxp,w1,w2,w3,w4,w5,w6,igs,ns,nsr,n,nd,ndim,mdim,nel,igsh)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
+      common /cnvtime/ cnv_time
 
       integer ns(1),nsr(2,1),igsh(2)
 
       real rxp(1)
       real c(1),z(n,ndim,1),t(n,mdim,1),
-     $     w1(n,mdim,1),w2(n,mdim,1),w3(n,ndim,1),w4(n,mdim,1)
+     $     w1(n,mdim,1),w2(n,mdim,1),w3(n,ndim,1),w4(n,mdim,1),
+     $     w5(nd,ndim,1),w6(nd,mdim,1)
+
+      logical ifuf,ifcf
 
       ttime=dnekclock()
       nsg=ivlsum(ns,mp)
@@ -512,23 +516,53 @@ c-----------------------------------------------------------------------
       j=igs
       k=igs
 
+      ifuf=.true.
+      ifcf=.true.
+
       do kid=0,mp-1
          k1=nsr(1,mod(kid+mid,mp)+1)
          k2=nsr(2,mod(kid+mid,mp)+1)
+         if (ifcf) then
+            do k=1,k2-k1+1
+               call set_convect_new_part(w5(1,1,k),w5(1,2,k),
+     $            w5(1,ndim,k),w3(1,1,k),w3(1,2,k),w3(1,ndim,k),rxp,nel)
+            enddo
+         else
+            do k=1,k2-k1+1
+            do idim=1,ndim
+               call copy(w5(1,idim,k),w3(1,idim,k),n)
+            enddo
+            enddo
+         endif
          do jid=0,mp-1
             j1=nsr(1,mod(jid+mid,mp)+1)
             j2=nsr(2,mod(jid+mid,mp)+1)
+            if (ifuf) then
+                do j=1,j2-j1+1
+                do idim=1,mdim
+                    call intp_rstd_all(w6(1,idim,j),w2(1,idim,j),nel)
+                enddo
+                enddo
+            else
+                do j=1,j2-j1+1
+                do idim=1,mdim
+                    call copy(w6(1,idim,j),w2(1,idim,j),n)
+                enddo
+                enddo
+            endif
             k=1
             do ks=k1,k2
                j=1
                do js=j1,j2
-                  call conv(w4,w2(1,1,j),.false.,
-     $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
-                  call conv(w4(1,2,1),w2(1,2,j),.false.,
-     $               w3(1,1,k),w3(1,2,k),w3(1,ndim,k),.false.,rxp,nel)
-                  if (ndim.eq.3) call conv(w4(1,ndim,1),w2(1,ndim,j),
-     $               .false.,w3(1,1,k),w3(1,2,k),w3(1,ndim,k),
-     $               .false.,rxp,nel)
+                  tttime=dnekclock()
+                  call conv(w4,w6(1,1,j),ifuf,
+     $               w5(1,1,k),w5(1,2,k),w5(1,ndim,k),ifcf,rxp,nel)
+                  call conv(w4(1,2,1),w6(1,2,j),ifuf,
+     $               w5(1,1,k),w5(1,2,k),w5(1,ndim,k),ifcf,rxp,nel)
+                  if (ndim.eq.3) call conv(w4(1,ndim,1),w6(1,ndim,j),
+     $               ifuf,w5(1,1,k),w5(1,2,k),w5(1,ndim,k),
+     $               ifcf,rxp,nel)
+                  cnv_time=cnv_time+dnekclock()-tttime
                   do i=1,ms
                     c(i+(js-1)*ms+(ks-1)*ms*nsg)=
      $              c(i+(js-1)*ms+(ks-1)*ms*nsg)
@@ -603,31 +637,10 @@ c-----------------------------------------------------------------------
 
       nl=n*nsg*nsg
 
-      do id=0,mp-1
-         if (mid.eq.id) then
-            do i=1,nl
-               write (6,1) id,i,nl,iw1(i),iw2(i),c(i)
-            enddo
-         endif
-         call nekgsync
-      enddo
-
+      ttime=dnekclock()
       call fgslib_crystal_tuple_transfer(cr_h,nl,mmax,iw1,1,iw2,1,c,1,1)
-      call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
-
-      do id=0,mp-1
-         if (mid.eq.id) then
-            do i=1,nl
-               write (6,2) id,i,nl,iw1(i),iw2(i),c(i)
-            enddo
-         endif
-         call nekgsync
-      enddo
-
       comm_time=comm_time+dnekclock()-ttime
-
-    1 format(i5,i8,i8,i5,i8,1pe13.4,' crystal1')
-    2 format(i5,i8,i8,i5,i8,1pe13.4,' crystal2')
+      call fgslib_crystal_tuple_sort(cr_h,nl,iw1,1,iw2,1,c,1,2,1)
 
       return
       end
@@ -1348,7 +1361,10 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
      $               ws1(lxyz*lelp*ls*ldim),
      $               ws2(lxyz*lelp*ls*ldim),
      $               ws3(lxyz*lelp*ls*ldim),
-     $               ws4(lxyz*lelp*ls*ldim)
+     $               ws4(lxyz*lelp*ls*ldim),
+     $               wd1(lxyzd*lelp*ls*ldim),
+     $               wd2(lxyzd*lelp*ls*ldim)
+
 
        common /fvars/ uuu(lxyz*lelp*ldim*ls),zu(lxyz*lelp*ldim*ls),
      $           ttt(lxyz*lelp*ls),zt(lxyz*lelp*ldim*ls)
@@ -1361,7 +1377,7 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
 
       nel=ieg1-ieg0+1
       n=lxyz*nel
-
+      nd=lxyzd*nel
       call setmass(mass,ws1,ieg0,ieg1,lxyz)
 
       if (.not.ifp1) then
@@ -1383,8 +1399,8 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
          call setbb(bu,zu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
          call setaa(au,zu,visc,gfac,ws1,ws2,ws3,ilgls(1),
      $         ms,n,nel,ndim,ng,igsh)
-         call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,ilgls(1),
-     $         ms,msr,n,ndim,ndim,nel,igsh)
+         call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,wd1,wd2,ilgls(1),
+     $         ms,msr,n,nd,ndim,ndim,nel,igsh)
 
          if (iftherm) then
             call setzz(zt,tt,qt,ws1,ws2,ilgls,iglls,n,ms(nid+1),nsg)
@@ -1392,14 +1408,71 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
 
             call setaa(at,zt,visc,gfac,ws1,ws2,ws3,ilgls(1),
      $         ms,n,nel,1,ng,igsh)
-            call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,ilgls(1),
-     $         ms,msr,n,ndim,1,nel,igsh)
+            call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,wd1,wd2,ilgls(1),
+     $         ms,msr,n,nd,ndim,1,nel,igsh)
          endif
          if (ifbuoy) call setbbut(but,zu,zt,grav,ws1,ws2,ws3,
      $      ilgls(1),ms,n,ndim,igsh)
          if (ifvsink) call setbbtu(btu,zu,zt,mass,ws1,ws2,ws3,
      $      ilgls(1),ms,n,ndim,igsh)
       endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_convect_new_part(cr,cs,ct,ux,uy,uz,rxp,mel)
+C
+C     Put vxd,vyd,vzd into rst form on fine mesh
+C
+C     For rst form, see eq. (4.8.5) in Deville, Fischer, Mund (2002).
+C
+      include 'SIZE'
+      include 'TOTAL'
+
+      parameter (lxy=lx1*ly1*lz1,ltd=lxd*lyd*lzd)
+
+      real cr(ltd,1),cs(ltd,1),ct(ltd,1)
+      real ux(lxy,1),uy(lxy,1),uz(lxy,1)
+      real rxp(lxd*lyd*lzd,ldim*ldim,mel)
+
+      common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
+     $             , ur(ltd),us(ltd),ut(ltd)
+     $             , tr(ltd,3),uf(ltd)
+
+      integer e
+
+      nxyz1 = lx1*ly1*lz1
+      nxyzd = lxd*lyd*lzd
+
+      ic = 1    ! pointer to vector field C
+
+      do e=1,mel
+
+c        Map coarse velocity to fine mesh (C-->F)
+
+         call intp_rstd(fx,ux(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+         call intp_rstd(fy,uy(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+         if (if3d) call intp_rstd(fz,uz(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+
+c        Convert convector F to r-s-t coordinates
+
+         if (if3d) then
+
+           do i=1,nxyzd
+              cr(i,e)=rxp(i,1,e)*fx(i)+rxp(i,2,e)*fy(i)+rxp(i,3,e)*fz(i)
+              cs(i,e)=rxp(i,4,e)*fx(i)+rxp(i,5,e)*fy(i)+rxp(i,6,e)*fz(i)
+              ct(i,e)=rxp(i,7,e)*fx(i)+rxp(i,8,e)*fy(i)+rxp(i,9,e)*fz(i)
+           enddo
+
+         else
+
+           do i=1,nxyzd
+              cr(i,e)=rxp(i,1,e)*fx(i)+rxp(i,2,e)*fy(i)
+              cs(i,e)=rxp(i,3,e)*fx(i)+rxp(i,4,e)*fy(i)
+           enddo
+
+         endif
+      enddo
 
       return
       end
