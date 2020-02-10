@@ -113,14 +113,14 @@ c-----------------------------------------------------------------------
       if (nio.eq.0) write (6,*) 'finished second loop'
 
       nl=ms(nid+1)*ns*ns
-      call setcc_transfer(cc,nl)
+c     call setcc_transfer(cc,nl)
 
       call dump_parallel(bb,ms(nid+1)*ns,'ops/bu_ ',nid)
       call dump_parallel(aa,ms(nid+1)*ns,'ops/au_ ',nid)
       call dump_parallel(cc,nl,'ops/cu_ ',nid)
 
       if (iftherm) then
-         call setcc_transfer(cct,nl)
+c        call setcc_transfer(cct,nl)
          call dump_parallel(bbt,ms(nid+1)*ns,'ops/bt_ ',nid)
          call dump_parallel(aat,ms(nid+1)*ns,'ops/at_ ',nid)
          call dump_parallel(cct,nl,'ops/ct_ ',nid)
@@ -564,8 +564,8 @@ c-----------------------------------------------------------------------
      $               ifcf,rxp,nel)
                   cnv_time=cnv_time+dnekclock()-tttime
                   do i=1,ms
-                    c(i+(js-1)*ms+(ks-1)*ms*nsg)=
-     $              c(i+(js-1)*ms+(ks-1)*ms*nsg)
+                     c(i+(js-1)*ms+(ks-1)*ms*nsg)=
+     $               c(i+(js-1)*ms+(ks-1)*ms*nsg)
      $                  +vlsc2(w4(1,1,1),w1(1,1,i),n*mdim)
                   enddo
                   j=j+1
@@ -579,6 +579,96 @@ c-----------------------------------------------------------------------
 
       cc_time=cc_time+dnekclock()-ttime
 
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setcc2(
+     $   c,z,t,rxp,w1,w2,w3,w4,w5,w6,igs,ns,nsr,n,nd,ndim,mdim,nel,igsh)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
+      common /cnvtime/ cnv_time
+
+      integer ns(1),nsr(2,1),igsh(2)
+
+      real rxp(1)
+      real c(1),z(n,ndim,1),t(n,mdim,1),
+     $     w1(n,mdim,1),w2(n,mdim,1),w3(n,ndim,1),w4(n,mdim,1),
+     $     w5(nd,ndim,1),w6(nd,mdim,1)
+
+      logical ifuf,ifcf
+
+      ttime=dnekclock()
+      nsg=ivlsum(ns,mp)
+      nsmax=ivlmax(ns,mp)
+
+      call copy(w1,t,n*mdim*ns(mid+1))
+      call copy(w2,t,n*mdim*ns(mid+1))
+      call copy(w3,z,n*ndim*ns(mid+1))
+
+      ms=ns(mid+1)
+
+
+      ifuf=.true.
+      ifcf=.true.
+
+      do k=1,ms
+         if (ifcf) then
+            call set_convect_new_part(w5(1,1,k),w5(1,2,k),
+     $         w5(1,ndim,k),w3(1,1,k),w3(1,2,k),w3(1,ndim,k),rxp,nel)
+         else
+            do idim=1,ndim
+               call copy(w5(1,idim,k),w3(1,idim,k),n)
+            enddo
+         endif
+      enddo
+
+      do jid=0,mp-1
+         j1=nsr(1,mod(jid+mid,mp)+1)
+         j2=nsr(2,mod(jid+mid,mp)+1)
+         do j=1,j2-j1+1
+            if (ifuf) then
+                do idim=1,mdim
+                   call intp_rstd_all(w6(1,idim,j),w2(1,idim,j),nel)
+                enddo
+            else
+                do idim=1,mdim
+                   call copy(w6(1,idim,j),w2(1,idim,j),n)
+                enddo
+            endif
+         enddo
+         do iid=0,mp-1
+            i1=nsr(1,mod(iid+mid,mp)+1)
+            i2=nsr(2,mod(iid+mid,mp)+1)
+            do k=1,ms
+               j=1
+               do js=j1,j2
+                  tttime=dnekclock()
+                  call conv(w4,w6(1,1,j),ifuf,
+     $               w5(1,1,k),w5(1,2,k),w5(1,ndim,k),ifcf,rxp,nel)
+                  call conv(w4(1,2,1),w6(1,2,j),ifuf,
+     $               w5(1,1,k),w5(1,2,k),w5(1,ndim,k),ifcf,rxp,nel)
+                  if (ndim.eq.3) call conv(w4(1,ndim,1),w6(1,ndim,j),
+     $               ifuf,w5(1,1,k),w5(1,2,k),w5(1,ndim,k),
+     $               ifcf,rxp,nel)
+                  cnv_time=cnv_time+dnekclock()-tttime
+                  i=1
+                  do is=i1,i2
+                     c(is+(js-1)*nsg+(k-1)*nsg*nsg)=
+     $               c(is+(js-1)*nsg+(k-1)*nsg*nsg)
+     $                  +vlsc2(w4(1,1,1),w1(1,1,i),n*mdim)
+                     i=i+1
+                  enddo
+                  j=j+1
+               enddo
+            enddo
+            call shift(igsh,w1,w4,n*mdim*nsmax)
+         enddo
+         call shift(igsh,w2,w4,n*ndim*nsmax)
+      enddo
+
+      cc_time=cc_time+dnekclock()-ttime
+		  
       return
       end
 c-----------------------------------------------------------------------
@@ -1403,16 +1493,16 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
          call setbb(bu,zu,mass,ws1,ws2,ws3,ilgls(1),ms,n,ndim,igsh)
          call setaa(au,zu,visc,gfac,ws1,ws2,ws3,ilgls(1),
      $         ms,n,nel,ndim,ng,igsh)
-         call setcc(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,wd1,wd2,ilgls(1),
+         call setcc2(cu,zu,zu,rxp,ws1,ws2,ws3,ws4,wd1,wd2,ilgls(1),
      $         ms,msr,n,nd,ndim,ndim,nel,igsh)
 
          if (iftherm) then
             call setzz(zt,tt,qt,ws1,ws2,ilgls,iglls,n,ms(nid+1),nsg)
             call setbb(bt,zt,mass,ws1,ws2,ws3,ilgls(1),ms,n,1,igsh)
-
             call setaa(at,zt,visc,gfac,ws1,ws2,ws3,ilgls(1),
      $         ms,n,nel,1,ng,igsh)
-            call setcc(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,wd1,wd2,ilgls(1),
+            call setcc2(ct,zu,zt,rxp,ws1,ws2,ws3,ws4,wd1,wd2,
+     $      ilgls(1),
      $         ms,msr,n,nd,ndim,1,nel,igsh)
          endif
          if (ifbuoy) call setbbut(but,zu,zt,grav,ws1,ws2,ws3,
