@@ -31,7 +31,6 @@ c-----------------------------------------------------------------------
 
       ifmult=.not.ifrom(2).and.ifheat
 
-
       if (rmode.ne.'OFF') then
       if (ifmult) then
          if (ifflow) call exitti(
@@ -1552,6 +1551,54 @@ c-----------------------------------------------------------------------
          fname='ops/but '
          if (nio.eq.0) write (6,*) 'reading but...'
          call read_mat_serial(but0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setbtu(b)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'AVG'
+      include 'INPUT'
+      include 'MASS'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      common /scrread/ tab((lb+1)**2)
+      common /scrk/ wk1(lt),wk2(lt),wk3(lt)
+
+      logical iftmp
+
+      real b(0:nb,0:nb)
+
+      character*128 fname
+
+      if (rmode.eq.'ALL'.or.rmode.eq.'OFF') then
+         do j=0,nb
+         do i=0,nb
+            b(j,i)=op_glsc2_wt(ub(1,i),vb(1,i),wb(1,i),
+     $                            gx,gy,gz,tb(1,j))
+            if (nio.eq.0) write (6,*) i,j,b(i,j),'btu0'
+         enddo
+         enddo
+
+         iftmp=ifxyo
+         ifxyo=.true.
+         call outpost(gx,gy,gz,pavg,tavg,'ggg')
+
+         call invcol3(wk1,gx,bm1,n)
+         call invcol3(wk2,gy,bm1,n)
+         call invcol3(wk3,gz,bm1,n)
+
+         call outpost(wk1,wk2,wk3,pavg,tavg,'ggg')
+         ifxyo=iftmp
+         call dump_serial(b,(nb+1)**2,'ops/btu ',nid)
+      else
+         fname='ops/btu '
+         if (nio.eq.0) write (6,*) 'reading btu...'
+         call read_mat_serial(btu0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
       endif
 
       return
