@@ -8,6 +8,7 @@ c-----------------------------------------------------------------------
       include 'INPUT'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+      common /iconv/ icc
 
       character*127 flist
 
@@ -21,6 +22,7 @@ c-----------------------------------------------------------------------
       iftherm=ifheat
 
       tttime=dnekclock()
+      icc=0
       aa_time=0.
       bb_time=0.
       cc_time=0.
@@ -138,6 +140,8 @@ c        call setcc_transfer(cct,nl)
       if (nio.eq.0) write (6,*) 'read_time:',read_time
       if (nio.eq.0) write (6,*) 'comm_time:',comm_time
       if (nio.eq.0) write (6,*) 'total_time:',dnekclock()-tttime
+
+      if (nio.eq.0) write (6,*) 'icc',icc
 
       if (nio.eq.0) write (6,*) 'exiting of drivep'
       call exitt0
@@ -1166,12 +1170,14 @@ c
       logical ifuf,ifcf            ! u and/or c already on fine mesh?
 
       parameter (lxy=lx1*ly1*lz1,ltd=lxd*lyd*lzd)
+      common /iconv/ icc
       common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
      $             , ur(ltd),us(ltd),ut(ltd)
      $             , tr(ltd,3),uf(ltd)
 
       integer e
 
+      icc=icc+1
       nxyz1=lx1*ly1*lz1
       nxyzd=lxd*lyd*lzd
 
@@ -1455,14 +1461,12 @@ c    $                zu(lxyz*lelp*ldim),zt(lxyz*lelp)
      $               ws1(lxyz*lelp*ls*ldim),
      $               ws2(lxyz*lelp*ls*ldim),
      $               ws3(lxyz*lelp*ls*ldim),
-     $               ws4(lxyz*lelp*ls*ldim),
+     $               ws4(lxyz*lelp*ls*ls*ldim),
      $               wd1(lxyzd*lelp*ls*ldim),
      $               wd2(lxyzd*lelp*ls*ldim)
 
-
        common /fvars/ uuu(lxyz*lelp*ldim*ls),zu(lxyz*lelp*ldim*ls),
      $           ttt(lxyz*lelp*ls),zt(lxyz*lelp*ldim*ls)
-
 
       integer igsh(2),iglls(1),ilgls(1),ms(1),msr(1)
 
