@@ -73,7 +73,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine parse_std_hdr(hdr)
 
-      include 'OFFLINE'
+      include 'LVAR'
       include 'IO'
 
       character*132 hdr
@@ -168,7 +168,7 @@ c      ifgtim  = .true.  ! always get time
 c-----------------------------------------------------------------------
       subroutine parse_std_hdr_2006(hdr,rlcode)
 
-      include 'OFFLINE'
+      include 'LVAR'
 		include 'IO'
 
       character*132 hdr
@@ -522,7 +522,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine offline_init(comm_out)
 C
-      include 'OFFLINE'
+      include 'LVAR'
       include 'IO'
 
       integer comm_out

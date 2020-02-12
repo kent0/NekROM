@@ -1,6 +1,7 @@
 c-----------------------------------------------------------------------
         program offline
 
+        include 'LVAR'
         include 'OFFLINE'
 
         character*132 fname

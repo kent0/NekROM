@@ -29,6 +29,9 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine rxupt_read(xyz,upt,ieg,ifread)
 
+      include 'LVAR'
+      include 'IO'
+
       ! TODO: add IO without adding OFFLINE
 
       real xyz(1),upt(1)
@@ -39,10 +42,10 @@ c-----------------------------------------------------------------------
 
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
 
-      logical if_byte_sw ! to be removed
-      logical ifgetxr ! to be removed
-      logical ifgetpr ! to be removed
-      logical ifgetur ! to be removed
+c     logical if_byte_sw ! to be removed
+c     logical ifgetxr ! to be removed
+c     logical ifgetpr ! to be removed
+c     logical ifgetur ! to be removed
 
       write (6,*) 'starting rxupt_read'
 
@@ -105,7 +108,6 @@ c-----------------------------------------------------------------------
       endif
       endif
 
-      lxyz=lx1*ly1*lz1
       do ie=1,nelr
 c        call copy(ux(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
 c        call copy(uy(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
@@ -198,7 +200,7 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine my_mfi_prepare(hname)
 
-      include 'OFFLINE'
+      include 'LVAR'
       include 'IO'
 
       common /ipparallel/ nps,lenpb,melt

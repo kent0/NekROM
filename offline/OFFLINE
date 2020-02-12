@@ -1,22 +1,3 @@
-      parameter (lsg=512)
-      parameter (leg=512)
-      parameter (ldim=2)
-      parameter (lx1=8)
-      parameter (ldimt=1)
-      parameter (lpmin=1)
-
-      parameter (lfld=ldimt+ldim)
-      parameter (lsl=lsg/lpmin+1)
-      parameter (lel=leg/lpmin+1)
-      parameter (ly1=lx1)
-      parameter (lz1=lx1*1)
-      parameter (lxyz=lx1*ly1*lz1)
-      parameter (lxd=lx1*3/2+1)
-      parameter (lyd=ly1*3/2+1)
-      parameter (lzd=lz1*3/2+1)
-      parameter (lxyzd=lx1*ly1*lz1)
-      parameter (lgld=lfld)
-
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*lel*lgld*lel*lsl),
      $              ga(lsg*lsl*lgld),gb(lsg*lsl*lgld),
      $              gc(lsg*lsg*lsl*lgld)
