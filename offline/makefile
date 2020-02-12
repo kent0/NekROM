@@ -139,7 +139,7 @@ $(NOBJS) : ./SIZE
 
 # NEK CORE     #################################################################
 $(OBJDIR)/dprocmap.o    :$S/dprocmap.f $S/DPROCMAP;     $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/comm_mpi.o	:$S/comm_mpi.f;			$(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/comm_mpi.o	:$(MOR_DIR)/offline/comm_mpi.f;	$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mpi_dummy.o	:$S/mpi_dummy.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/byte_mpi.o	:$S/byte_mpi.f;			$(FC) -c $(FL2) $< -o $@
 
