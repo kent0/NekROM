@@ -19,7 +19,7 @@ LDFLAGS=
 PPPO=
 PPS= MPI UNDERSCORE TIMER
 
-USR=aux.o io.o
+USR=aux.o io.o integ.o
 USR_LFLAGS=-mcmodel=medium -L/Users/kaneko/Developer/Nek5000/3rd_party/gslib/lib -lgs
 
 MPI=1
@@ -137,18 +137,18 @@ endif
 
 $(NOBJS) : ./SIZE
 
-# NEK CORE     ##################################################################
+# NEK CORE     #################################################################
 $(OBJDIR)/dprocmap.o    :$S/dprocmap.f $S/DPROCMAP;     $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/comm_mpi.o	:$S/comm_mpi.f;			$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mpi_dummy.o	:$S/mpi_dummy.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/byte_mpi.o	:$S/byte_mpi.f;			$(FC) -c $(FL2) $< -o $@
 
-# MXM       ############################################################################
-$(OBJDIR)/mxm_wrapper.o	  :$S/mxm_wrapper.f;		$(FC) -c $(FL2) $< -o $@ 
+# MXM       ####################################################################
+$(OBJDIR)/mxm_wrapper.o	  :$S/mxm_wrapper.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mxm_std.o	  :$S/mxm_std.f;		$(FC) -c $(FL3) $< -o $@
 $(OBJDIR)/mxm_bgq.o	  :$S/mxm_bgq.f;		$(FC) -c $(FL3) $< -o $@
 
-# C Files ##################################################################################
+# C Files ######################################################################
 $(OBJDIR)/nek_comm.o         :$S/nek_comm.c;          $(CC) -c $(cFL2) $< -o $@
 $(OBJDIR)/byte.o             :$S/byte.c;              $(CC) -c $(cFL2) $< -o $@
 $(OBJDIR)/chelpers.o         :$S/chelpers.c;          $(CC) -c $(cFL2) $< -o $@
@@ -159,14 +159,17 @@ $(OBJDIR)/crs_amg.o          :$S/crs_amg.c;           $(CC) -c $(cFL2) $(GSLIB_I
 $(OBJDIR)/fem_amg_preco.o    :$S/experimental/fem_amg_preco.c; $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(HYPRE_IFLAGS) $< -o $@
 $(OBJDIR)/crs_hypre.o        :$S/experimental/crs_hypre.c; $(CC) -c $(cFL2) $(GSLIB_IFLAGS) $(HYPRE_IFLAGS) $< -o $@
 
-# 3rd party #######################################################################################
-$(OBJDIR)/dsygv.o     	:$S/3rd_party/dsygv.f;  	$(FC) -c $(L0) $(PPS_F) $< -o $@
-$(OBJDIR)/blas.o   	:$S/3rd_party/blas.f;		$(FC) -w -c $(L0) $(PPS_F) $< -o $@
-$(OBJDIR)/visit.o        :$S/3rd_party/visit.f;		$(FC) -c $(VISIT_IFLAGS) $(FL2) $< -o $@
-$(OBJDIR)/nek_in_situ.o  :$S/3rd_party/nek_in_situ.f;	$(FC) -c $(VISIT_IFLAGS) $(FL2) $< -o $@
-$(OBJDIR)/finiparser.o   :$S/3rd_party/finiparser.c;    $(CC)  -c $(cFL2) $(JL) $< -o $@
-$(OBJDIR)/iniparser.o    :$S/3rd_party/iniparser.c;     $(CC)  -c $(cFL2) $(JL) $< -o $@
-$(OBJDIR)/dictionary.o   :$S/3rd_party/dictionary.c;    $(CC)  -c $(cFL2) $(JL) $< -o $@
+# 3rd party ####################################################################
+$(OBJDIR)/dsygv.o      :$S/3rd_party/dsygv.f;        $(FC) -c $(L0) $(PPS_F) $< -o $@
+$(OBJDIR)/blas.o       :$S/3rd_party/blas.f;	      $(FC) -w -c $(L0) $(PPS_F) $< -o $@
+$(OBJDIR)/visit.o      :$S/3rd_party/visit.f;	      $(FC) -c $(VISIT_IFLAGS) $(FL2) $< -o $@
+$(OBJDIR)/nek_in_situ.o:$S/3rd_party/nek_in_situ.f; $(FC) -c $(VISIT_IFLAGS) $(FL2) $< -o $@
+$(OBJDIR)/finiparser.o :$S/3rd_party/finiparser.c;  $(CC)  -c $(cFL2) $(JL) $< -o $@
+$(OBJDIR)/iniparser.o  :$S/3rd_party/iniparser.c;   $(CC)  -c $(cFL2) $(JL) $< -o $@
+$(OBJDIR)/dictionary.o :$S/3rd_party/dictionary.c;  $(CC)  -c $(cFL2) $(JL) $< -o $@
+
+# My Files #####
 
 $(OBJDIR)/aux.o :$(MOR_DIR)/offline/aux.f IO OFFLINE; $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/io.o  :$(MOR_DIR)/offline/io.f  IO OFFLINE; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/integ.o  :$(MOR_DIR)/offline/integ.f  IO OFFLINE; $(FC) -c $(FL2) $< -o $@
