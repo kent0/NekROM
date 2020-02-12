@@ -7,7 +7,7 @@ c-----------------------------------------------------------------------
       character*132 fname
 
       write (6,*) 'starting rxupt'
-      call rxupt_open(fname,ieg)
+      call rxupt_open(fname)
       call rxupt_read(xyz,upt,ieg,ifread)
       call rxupt_close(fname)
       write (6,*) 'ending rxupt'
@@ -15,13 +15,13 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_open(fname,ieg)
+      subroutine rxupt_open(fname)
 
       character*132 fname
       integer ieg(1)
 
       write (6,*) 'starting rxupt_open'
-      call my_mfi_prepare(fname,ieg)
+      call my_mfi_prepare(fname)
       write (6,*) 'ending rxupt_open'
 
       return
@@ -218,56 +218,56 @@ c-----------------------------------------------------------------------
       call chcopy(hname_,hname,132)
       call addfid(hname_,0)
       call byte_open(hname_,ierr)
-      if(ierr.ne.0) goto 101
+      if (ierr.ne.0) goto 101
 
-      call blank     (hdr,iHeaderSize)
-      call byte_read (hdr,iHeaderSize/4,ierr)
-      if(ierr.ne.0) goto 101
+      call blank(hdr,iHeaderSize)
+      call byte_read(hdr,iHeaderSize/4,ierr)
+      if (ierr.ne.0) goto 101
 
-      call byte_read (bytetest,1,ierr)
-      if(ierr.ne.0) goto 101
+      call byte_read(bytetest,1,ierr)
+      if (ierr.ne.0) goto 101
 
       if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
-      if(ierr.ne.0) goto 101
+      if (ierr.ne.0) goto 101
 
-      call byte_close(ierr)
-      if(ierr.ne.0) goto 101
-
- 101  continue
+  101 continue
 
       call mfi_parse_hdr(hdr,ierr)
 
       if (nelr.gt.lelr) then
-         write(6,*) 'ERROR: increase lelr in SIZE!', lelr, nelr
-         call exitt
+         write (6,*) 'ERROR: increase lelr in SIZE!',lelr,nelr
+         goto 102
       endif
 
-      stride = np / nfiler
+      stride=np/nfiler
       if (stride.lt.1) then
-         write(6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
-         call exitt
+         write (6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
+         goto 102
       endif
 
-      pid0r = nid
-      pid1r = nid + stride
-      fid0r = nid / stride
+      pid0r=nid
+      pid1r=nid+stride
+      fid0r=nid/stride
 
       call blank(hdr,iHeaderSize)
 
       call addfid(hname,fid0r)
       call byte_open(hname,ierr)
-      if(ierr.ne.0) goto 102
+      if (ierr.ne.0) goto 102
 
       call byte_read(hdr,iHeaderSize/4,ierr)  
-
-      if(ierr.ne.0) goto 102
+      if (ierr.ne.0) goto 102
 
       call byte_read(bytetest,1,ierr) 
-      if(ierr.ne.0) goto 102
+      if (ierr.ne.0) goto 102
 
-      call mfi_parse_hdr(hdr,ierr) ! replace hdr with correct one 
+      call mfi_parse_hdr(hdr,ierr) ! replace hdr with correct one
 
- 102  continue
+      return
+  102 continue
+
+      call byte_close(ierr)
+      call exitt
 
       return
       end
