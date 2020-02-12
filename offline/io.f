@@ -201,17 +201,10 @@ c-----------------------------------------------------------------------
       include 'OFFLINE'
       include 'IO'
 
-      logical ifmpiio
-      character*132 hname
-
       common /ipparallel/ nps,lenpb,melt
 
-      integer stride
-      character*132 hdr, hname_
-      logical if_byte_swap_test,ifcread
+      character*132 hdr,hname,hname_
       real*4 bytetest
-
-      integer*8 offs0,offs
 
       ierr = 0
 
@@ -239,15 +232,15 @@ c-----------------------------------------------------------------------
          goto 102
       endif
 
-      stride=np/nfiler
-      if (stride.lt.1) then
+      istride=np/nfiler
+      if (istride.lt.1) then
          write (6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
          goto 102
       endif
 
       pid0r=nid
-      pid1r=nid+stride
-      fid0r=nid/stride
+      pid1r=nid+istride
+      fid0r=nid/istride
 
       call blank(hdr,iHeaderSize)
 
