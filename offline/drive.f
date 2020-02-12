@@ -16,7 +16,7 @@ c-----------------------------------------------------------------------
         ieg(1)=1
         ieg(2)=nel
 
-        call setifread(ifread,ldimt)
+        call setindxr(indxr,ldimt)
         write (6,*) 'buf(1)',buf(1)
         call rxupt(buf,ieg,indxr,fname)
         write (6,*) 'buf(1)',buf(1)

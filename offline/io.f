@@ -1,14 +1,13 @@
 c-----------------------------------------------------------------------
-      subroutine rxupt(xyz,upt,ieg,ifread,fname)
+      subroutine rxupt(xupt,ieg,indxr,fname)
 
-      real xyz(1),upt(1)
-      integer ieg(1)
-      logical ifread(1)
+      real xupt(1)
+      integer ieg(1),indxr(1)
       character*132 fname
 
       write (6,*) 'starting rxupt'
       call rxupt_open(fname)
-      call rxupt_read(xyz,upt,ieg,ifread)
+      call rxupt_read(xupt,ieg,indxr)
       call rxupt_close(fname)
       write (6,*) 'ending rxupt'
 
@@ -47,7 +46,7 @@ c-----------------------------------------------------------------------
       ic=1
       ie=1
 
-      mel=ieeg1-ieg0+1
+      mel=ieg1-ieg0+1
 
       do while (ic.le.mel)
          nel=min(lel,mel-ic+1)
@@ -127,8 +126,6 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'IO'
 
-      common /ipparallel/ nps,lenpb,melt
-
       character*132 hdr,hname,hname_
       real*4 bytetest
 
@@ -163,24 +160,6 @@ c-----------------------------------------------------------------------
          write (6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
          goto 102
       endif
-
-      pid0r=nid
-      pid1r=nid+istride
-      fid0r=nid/istride
-
-      call blank(hdr,iHeaderSize)
-
-      call addfid(hname,fid0r)
-      call byte_open(hname,ierr)
-      if (ierr.ne.0) goto 102
-
-      call byte_read(hdr,iHeaderSize/4,ierr)  
-      if (ierr.ne.0) goto 102
-
-      call byte_read(bytetest,1,ierr) 
-      if (ierr.ne.0) goto 102
-
-      call mfi_parse_hdr(hdr,ierr) ! replace hdr with correct one
 
       return
   102 continue
@@ -297,9 +276,9 @@ c-----------------------------------------------------------------------
       real xupt(1),wk(1)
       integer i2(1),i3(1),i4(1),indxr(1)
 
-      ner=1
+      ner=0
       i=1
-      do while (i3(i).ne.0)
+      do while (i4(i).ne.0)
          ner=ner+i4(i)
          i=i+1
       enddo
@@ -343,6 +322,7 @@ c-----------------------------------------------------------------------
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
+      iloc=1
       ig=1
       do while (i4(ig).ne.0)
          ie=i3(ig)
@@ -354,9 +334,11 @@ c-----------------------------------------------------------------------
          call byte_seek(offs/4,ierr)
          call mfi_getw(wk(iloc),nwk)
 
+c        write (6,*) ig,i3(ig),i4(ig),'i3/i4'
          iloc=iloc+nwk
          ig=ig+1
       enddo
+c     call exitt0
 
       nwk=ner*ldim*nxyzr8
 
