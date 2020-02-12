@@ -27,122 +27,50 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_read(xyz,upt,ieg,ifread)
+      subroutine rxupt_read(xupt,ieg,indxr)
 
       include 'LVAR'
       include 'IO'
 
-      ! TODO: add IO without adding OFFLINE
+      real xupt(1)
+      integer ieg(1),indxr(1)
 
-      real xyz(1),upt(1)
-      integer ieg(1)
-      logical ifread(1)
-
-      common /scrns/ wk(1)
-
-      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
-
-c     logical if_byte_sw ! to be removed
-c     logical ifgetxr ! to be removed
-c     logical ifgetpr ! to be removed
-c     logical ifgetur ! to be removed
+      common /scrread/ wk(lxyz*ldim*lel)
 
       write (6,*) 'starting rxupt_read'
 
-      offs0   = iHeadersize + 4 + isize*nelgr
-      nxyzr8  = nxr*nyr*nzr
-      strideB = nelBr* nxyzr8*wdsizr
-      stride  = nelgr* nxyzr8*wdsizr
+      ieg(2)=min(ieg(2),nelgr)
+
+      ieg0=ieg(1)
+      ieg1=ieg(2)
 
       ic=1
       ie=1
 
-      do while (ic.le.neg)
-         mel=min(melt,neg)
-         call byte_read(er,mel,ierr)! get element mapping
-         if (if_byte_sw) call byte_reverse(er,mel,ierr)
+      mel=ieeg1-ieg0+1
+
+      do while (ic.le.mel)
+         nel=min(lel,mel-ic+1)
+         call byte_read(er,nel,ierr)! get element mapping
+         if (if_byte_sw) call byte_reverse(er,nel,ierr)
          jc=1
-         do while (ie.le.mel)
+         do while (ie.le.nel)
             if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
                ieg(er(ie)-ieg0+1)=ie
                jc=jc+1
             endif
             ie=ie+1
          enddo
-         ic=ic+mel
+         ic=ic+nel
       enddo
 
-      iofldsr=0
-      if (ifgetxr) iofldsr=ldim
+      call esort(ieg,mel)
 
-      nelr=ieg1-ieg0+1
+      call rxupt_read_helper1(xupt,wk,
+     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr)
 
-      icount=1
-
-      call esort(ieg,ieg1-ieg0+1)
-
-      neltmp=nelr
-
-      iloc=1
-
-      do ig=1,ng
-         ie=i3(ig)
-         nelr=i4(ig)
-         nwk=nelr*ldim*nxyzr8
-         offs = offs0 + iofldsr*stride + !ldim*strideB +
-     $      ldim*(ie-1)*nxyzr8*wdsizr
-         call byte_seek(offs/4,ierr)
-         call mfi_getw(wk(iloc),nwk,ifcread)
-
-         iloc=iloc+nwk
-      enddo
-
-      nelr=neltmp
-      nwk=nelr*ldim*nxyzr8
-
-      if (if_byte_sw) then
-      if (wdsizr.eq.8) then
-         call byte_reverse8(wk,nwk*2,ierr)
-      else
-         call byte_reverse(wk,nwk,ierr)
-      endif
-      endif
-
-      do ie=1,nelr
-c        call copy(ux(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim),lxyz)
-c        call copy(uy(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+lxyz),lxyz)
-c        if (ldim.eq.3) call
-c    $      copy(uz(1,i2(ie)),wk(1+(ie-1)*lxyz*ldim+2*lxyz),lxyz)
-      enddo
-
-         iofldsr=iofldsr+ldim
-         if (ifgetpr) iofldsr=iofldsr+1
-         iloc=1
-         do ig=1,ng
-            ie=i3(ig)
-            nelr=i4(ig)
-            nwk=nelr*nxyzr8
-            offs = offs0 + iofldsr*stride + !ldim*strideB +
-     $         (ie-1)*nxyzr8*wdsizr
-            call byte_seek(offs/4,ierr)
-            call mfi_getw(wk(iloc),nwk,ifcread)
-            iloc=iloc+nwk
-         enddo
-
-         nelr=neltmp
-         nwk=nelr*nxyzr8
-
-         if (if_byte_sw) then
-         if (wdsizr.eq.8) then
-            call byte_reverse8(wk,nwk*2,ierr)
-         else
-            call byte_reverse(wk,nwk,ierr)
-         endif
-         endif
-
-         do ie=1,nelr
-c           call copy(ut(1,i2(ie)),wk(1+(ie-1)*lxyz),lxyz)
-         enddo
+      ieg(1)=ieg0
+      ieg(2)=ieg1
 
       write (6,*) 'ending rxupt_read'
 
@@ -164,11 +92,7 @@ c-----------------------------------------------------------------------
 
       real wk(1)
 
-      ! TODO: set n outside to be twice it self if wdsizr = 8
-
-      ierr = 0
       call byte_read(wk,n,ierr)
-      ierr=ierr*10*(nid+1)
 
       return
       end
@@ -313,23 +237,23 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine esort(ieg,nel)
 
-      integer ieg(1)
+      integer ieg(nel,4)
 
-      call isort(i1,i2,nel)
+      call isort(ieg,ieg(1,2),nel)
 
-      ic=1
+      call izero(ieg(1,3),nel)
+      call ione(ieg(1,4),nel)
+
       ng=1
-c     i3(1)=i1(1)
-
-      call ione(i4,nel)
+      ieg(1,3)=ieg(1,1)
 
       do ie=2,nel
-c        if (i1(ie)-i1(ie-1).gt.1) then ! if jump
-c           ng=ng+1
-c           i3(ng)=i1(ie)
-c        else
-c           i4(ng)=i4(ng)+1
-c        endif
+         if (ieg(ie,1)-ieg(ie-1,1).gt.1) then ! jump
+            ng=ng+1
+            ieg(ng,3)=ieg(ie,1)
+         else
+            ieg(ng,4)=ieg(ng,4)+1
+         endif
       enddo
 
       return
@@ -337,29 +261,112 @@ c        endif
 c-----------------------------------------------------------------------
       subroutine setifread(ifread,ndimt)
 
-      logical ifread(7+ndimt)
+      logical ifread(3+ndimt)
 
-      ! xyz
+      ! xup
 
       ifread(1)=.false.
       ifread(2)=.false.
       ifread(3)=.false.
 
-      ! uvw
-
-      ifread(4)=.true.
-      ifread(5)=.true.
-      ifread(6)=.false.
-
-      ! p
-
-      ifread(7)=.false.
-
       ! t
 
       do i=1,ndimt
-         ifread(7+i)=.false.
+         ifread(3+i)=.false.
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setindxr(indxr,ndimt)
+
+      integer indxr(3+ndimt)
+
+      ! U only
+
+      indxr(1)=2
+      indxr(2)=0
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine rxupt_read_helper1(xupt,wk,i2,i3,i4,indxr)
+
+      include 'LVAR'
+
+      real xupt(1),wk(1)
+      integer i2(1),i3(1),i4(1),indxr(1)
+
+      ner=1
+      i=1
+      do while (i3(i).ne.0)
+         ner=ner+i4(i)
+         i=i+1
+      enddo
+
+      i=1
+      jdim=1
+      do while (indxr(i).ne.0)
+         call rxupt_read_helper2(wk,ner,i3,i4,indxr(i))
+         ndim=1
+         if (indxr(i).le.2) ndim=ldim
+         do idim=1,ndim
+            do ie=1,ner
+               call copy(xupt(1+(i2(ie)-1)*lxyz+lxyz*ner*(jdim-1)),
+     $            wk(1+(idim-1)*lxyz+(ie-1)*lxyz*ndim),lxyz)
+            enddo
+            jdim=jdim+1
+         enddo
+         i=i+1
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine rxupt_read_helper2(wk,ner,i3,i4,ifld)
+
+      include 'LVAR'
+      include 'IO'
+
+      real wk(1)
+      integer i3(1),i4(1)
+      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
+
+      iofldsr=0
+
+      if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ldim
+      if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ldim
+      if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1
+
+      offs0   = iHeadersize + 4 + isize*nelgr
+      nxyzr8  = nxr*nyr*nzr
+      strideB = nelBr* nxyzr8*wdsizr
+      stride  = nelgr* nxyzr8*wdsizr
+
+      ig=1
+      do while (i4(ig).ne.0)
+         ie=i3(ig)
+         nep=i4(ig)
+         nwk=nep*ldim*nxyzr8
+         if (wdsizr.eq.8) nwk=nwk*2
+         offs = offs0 + iofldsr*stride + !ldim*strideB +
+     $      ldim*(ie-1)*nxyzr8*wdsizr
+         call byte_seek(offs/4,ierr)
+         call mfi_getw(wk(iloc),nwk)
+
+         iloc=iloc+nwk
+         ig=ig+1
+      enddo
+
+      nwk=ner*ldim*nxyzr8
+
+      if (if_byte_sw) then
+      if (wdsizr.eq.8) then
+         call byte_reverse8(wk,nwk*2,ierr)
+      else
+         call byte_reverse(wk,nwk,ierr)
+      endif
+      endif
 
       return
       end

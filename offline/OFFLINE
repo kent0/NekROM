@@ -1,4 +1,5 @@
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*lel*lgld*lel*lsl),
+     $              buf(lxyz*(ldim+ldim+1+ldimt)*lel),
      $              ga(lsg*lsl*lgld),gb(lsg*lsl*lgld),
      $              gc(lsg*lsg*lsl*lgld)
 
@@ -6,7 +7,7 @@
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
      $               geom(lxyz*lel*(ldim-1)*3),rx(lxyzd*ldim*ldim*lel)
 
-      common /ivec/ ieg(lel*4)
+      common /ivec/ ieg(lel*4),indxr(3+ldimt)
       common /isca/ nel,neg,nsl,nsg
 
       logical ifread

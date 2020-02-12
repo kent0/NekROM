@@ -313,12 +313,21 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rzero(a,n)
-      DIMENSION  A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 0.0
+      subroutine izero(a,n)
+      integer a(1)
+      do i=1,n
+         a(i)=0
+      enddo
       return
-      END
+      end
+c-----------------------------------------------------------------------
+      subroutine rzero(a,n)
+      real a(1)
+      do i=1,n
+         a(i)=0.0
+      enddo
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine rescale_x(x,x0,x1)
 

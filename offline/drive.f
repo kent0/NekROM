@@ -17,10 +17,10 @@ c-----------------------------------------------------------------------
         ieg(2)=nel
 
         call setifread(ifread,ldimt)
-        write (6,*) 'upt(1)',upt(1)
-        call rxupt(xyz,upt,ieg,ifread,fname)
-        write (6,*) 'upt(1)',upt(1)
-        call setb(gb,upt,upt,1,512*lxyz)
+        write (6,*) 'buf(1)',buf(1)
+        call rxupt(buf,ieg,indxr,fname)
+        write (6,*) 'buf(1)',buf(1)
+        call setb(gb,buf,buf,1,512*lxyz)
 
         write (6,*) 'gb(1)',gb(1)
 
