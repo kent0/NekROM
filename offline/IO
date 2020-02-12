@@ -1,0 +1,91 @@
+      parameter (iHeaderSize=132)
+      parameter (lelr=512)
+      parameter (lelt=lel)
+      parameter (lelg=leg)
+      parameter (ldimt1=10)
+      parameter (nsessmax=1)
+      parameter (ldimt3=3+1)
+
+      integer         max_rst
+      common /crst_i/ max_rst            ! for full restart
+
+      integer nxr,nyr,nzr,nelr,nelgr,istpr,ifiler,nfiler
+     $       ,nxo,nyo,nzo,nrg
+     $       ,wdsizr,wdsizo
+     $       ,nfileo,nproc_o,nfldr
+     $       ,er(lelr),nelB,nelBr
+
+      common /cmfi_i/ nxr,nyr,nzr,nelr,nelgr,istpr,ifiler,nfiler
+     $              , nxo,nyo,nzo,nrg
+     $              , wdsizr,wdsizo
+     $              , nfileo,nproc_o,nfldr
+     $              , er,nelB,nelBr
+
+      real timer
+      common /cmfi_r/ timer
+
+      character*3  ihdr
+      character*10 rdcode
+      character*80 mfi_fname
+      common /cmfi_c/ ihdr,rdcode,mfi_fname
+
+      character*1  rdcode1(10)
+      equivalence (rdcode,rdcode1)
+
+      logical ifgetx ,ifgetu ,ifgetp ,ifgett ,ifgtps (ldimt1),ifgtim
+     $       ,ifgetxr,ifgetur,ifgetpr,ifgettr,ifgtpsr(ldimt1),ifgtimr
+     $       ,if_byte_sw,ifgetz,ifgetw,ifdiro,ifsplit
+      common /cmfi_l/ ifgetx,ifgetu,ifgetp,ifgett,ifgtps,ifgtim
+     $       ,ifgetxr,ifgetur,ifgetpr,ifgettr,ifgtpsr,ifgtimr
+     $       ,if_byte_sw,ifgetz,ifgetw,ifdiro
+
+      integer         fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00
+      common /cmfi_p/ fid0,fid0r,pid0,pid1,pid0r,pid1r,pid00 
+
+      integer          ifh_mbyte
+      common /i4mpiio/ ifh_mbyte
+
+c
+c     Communication information
+c     NOTE: NID is stored in 'SIZE' for greater accessibility
+      integer        node,pid,np,nullpid,node0
+      common /cube1/ node,pid,np,nullpid,node0
+c
+c     Maximum number of elements (limited to 2**31/12, at least for now)
+
+      integer nelgt_max
+      parameter(nelgt_max = 178956970)
+
+      integer*8 nvtot
+      integer nelg(0:ldimt1)
+     $       ,lglel(lelt)
+     $       ,gllel(lelg)
+     $       ,gllnid(lelg)
+     $       ,nelgv,nelgt
+
+      common /hcglb/ nvtot,nelg,lglel,gllel,gllnid,nelgv,nelgt
+
+      logical         ifgprnt
+      common /diagl/  ifgprnt
+
+      integer        wdsize,isize,isize8,lsize,csize,wdsizi
+      common/precsn/ wdsize,isize,isize8,lsize,csize,wdsizi
+
+      integer cr_h,gsh,gsh_fld(0:ldimt3),xxth(ldimt3)
+      common /comm_handles/ cr_h,gsh,gsh_fld,xxth
+
+      logical ifgsh_fld_same
+      common /lcomm_handles/ ifgsh_fld_same
+
+      integer            dg_hndlx,ndg_facex
+      common /xcdg_ints/ dg_hndlx,ndg_facex
+
+c     multisession
+      integer nid_global, idsess_neighbor, intracomm, intercomm
+     $      , iglobalcomm, npsess(0:nsessmax-1), np_neighbor, np_global
+      common /nekmpi_global/ nid_global, idsess_neighbor
+     $                     , intracomm, intercomm, iglobalcomm
+     $                     , npsess,np_neighbor,np_global
+
+      integer               nsessions
+      common /session_info/ nsessions
