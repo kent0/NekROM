@@ -51,7 +51,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-		logical function if_byte_swap_test(a,ierr)
+		logical function if_byte_swap_test(a,ierr) ! TODO: implement
 
 		real a(1)
 
