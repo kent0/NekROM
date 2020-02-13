@@ -559,11 +559,8 @@ C
       csize = sizeof(ctest)
 
       call setupcomm
-      write (6,*) 'wp 1'
       nekcomm  = intracomm
-      write (6,*) 'wp 2'
       comm_out = nekcomm
-      write (6,*) 'wp 3'
       call iniproc
 c     igeom = 2
 c     call genwz           ! Compute GLL points, weights, etc.
