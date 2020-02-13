@@ -8,13 +8,7 @@ c-----------------------------------------------------------------------
 
         call offline_init(icomm)
 
-        call blank(fname,132)
-        fname='/Users/kaneko/Developer/MOR/offline/r0.f00001 '
-        call chcopy(fnames(1),fname,132)
-
-        call blank(fname,132)
-        fname='/Users/kaneko/Developer/MOR/offline/r0.f00002 '
-        call chcopy(fnames(2),fname,132)
+        call loadflist(fnames,nsg)
 
         call setindxr(indxr,ldimt)
 

@@ -353,3 +353,31 @@ c     call exitt0
       return
       end
 c-----------------------------------------------------------------------
+      subroutine loadflist(fnames,ns)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      character*132 fnames(ns)
+
+      if (mid.eq.0) open (unit=10,file='file.list')
+      ms=1
+
+      do is=1,ns
+          call blank(fnames(is),132)
+          fnames(is)='done '
+          if (mid.eq.0) read (10,'(a132)',end=100) fnames(is)
+          write (6,*) fnames(is),'fnames'
+  100     call bcast(fnames(is),132)
+          if (indx1(fnames(is),'done ',5).eq.0) then
+             ms=is
+          else
+             goto 200
+          endif
+      enddo
+
+  200 ns=ms
+      if (mid.eq.0) close (unit=10)
+
+      return
+      end
+c-----------------------------------------------------------------------
