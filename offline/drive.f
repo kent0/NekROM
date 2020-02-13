@@ -10,11 +10,15 @@ c-----------------------------------------------------------------------
 
         call blank(fname,132)
         fname='/Users/kaneko/Developer/MOR/offline/r0.f00001 '
+        call chcopy(fnames(1),fname,132)
 
         nel=1
 
         ieg(1)=1
         ieg(2)=nel
+        call blank(fname,132)
+        fname='/Users/kaneko/Developer/MOR/offline/r0.f00002 '
+        call chcopy(fnames(2),fname,132)
 
         call setindxr(indxr,ldimt)
         write (6,*) 'buf(1)',buf(1)

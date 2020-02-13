@@ -12,3 +12,7 @@
 
       logical ifread
       common /lvec/ ifread(7+ldimt)
+
+      character*132 fnames
+      common /lchr/ fnames(lsg)
+
