@@ -1,5 +1,5 @@
-      common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*lel*lgld*lel*lsl),
-     $              buf(lxyz*(ldim+ldim+1+ldimt)*lel*lsl),
+      common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
+     $              buf(lxyz*leb*lfld)
      $              ga(lsg*lsl*lgld),gb(lsg*lsl*lgld),
      $              gc(lsg*lsg*lsl*lgld)
 
@@ -7,13 +7,13 @@
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
      $               geom(lxyz*lel*(ldim-1)*3),rx(lxyzd*ldim*ldim*lel)
 
-      common /ivec/ ieg(lel*4),indxr(3+ldimt),
-     $              ibuf(lxyz*(ldim+ldim+1+ldimt)*lel*lsl)
+      common /ivec/ ieg(leb*lfld*4),indxr(lfld+1),
+     $              ibuf(lxyz*leb*lfld)
 
-      integer*8 iorder
-      common /ivec8/ ibuf8(lxyz*(ldim+ldim+1+ldimt)*lel*lsl)
+      integer*8 ibuf8
+      common /ivec8/ ibuf8(lxyz*leb*lfld)
 
-      common /isca/ nel,neg,nsl,nsg
+      common /isca/ nel,nep,neg,nsl,nsg
 
       logical ifread
       common /lvec/ ifread(7+ldimt)
