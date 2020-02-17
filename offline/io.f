@@ -109,10 +109,11 @@ c-----------------------------------------------------------------------
       call esort(ieg,mel)
 
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
-     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr,is)
+     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr,is,n)
 
       ieg(1)=ieg0
       ieg(2)=ieg1
+      ieg(3)=n
 
       write (6,*) 'ending rxupt_read'
 
@@ -303,7 +304,8 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_read_helper(xupt,wk,ibuf,ibuf8,i2,i3,i4,indxr,is)
+      subroutine rxupt_read_helper(xupt,wk,ibuf,ibuf8,i2,i3,i4,
+     $   indxr,is,n)
 
       include 'LVAR'
       include 'IO'
@@ -319,6 +321,12 @@ c-----------------------------------------------------------------------
 
       ner=0
       i=1
+      n=0
+
+      if (is.le.0) then
+         js=is
+         is=1
+      endif
 
       write (6,*) 'wp 6.1'
       do while (i3(i).ne.0)
@@ -400,11 +408,14 @@ c-----------------------------------------------------------------------
             do k=1,ner
             do j=1,nfld
             do i=1,lxyz
-               ibuf8(1+(jfld-1)*lxyz*ner+1+i+(j-1)*lxyz+(k-1)*lxyz*ner)=
-     $            i+(k-1)*lxyz+is*lxyz*ner+(j+ifldt-2)*lxyz*ner*nfldt
+               ill=i+(j-1)*lxyz+(k-1)*lxyz*nfld
+               ibuf8(ill)=
+     $            i+(k-1)*lxyz+(is-1)*lxyz*ner+(j+ifldt-2)*lxyz*ner*lsg
+               write (6,*) i,j,k,ill,ibuf8(ill),'ibuf8'
             enddo
             enddo
             enddo
+            n=n+lxyz*nfld*ner
             ! TODO: fill ibuf correctly
             call izero(ibuf(1+(jfld-1)*lxyz*ner),ner*nfld*lxyz)
             indxr(ifld)=indx
@@ -415,7 +426,9 @@ c-----------------------------------------------------------------------
          ifld=ifld+1
       enddo
 
-      if (is.eq.0) then
+      if (is.le.0) then
+         is=js
+         is=1
       endif
 
       return
