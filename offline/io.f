@@ -10,12 +10,14 @@ c-----------------------------------------------------------------------
       character*132 fnames
       common /lchr/ fnames(lsg)
 
+      common /comm_handles/ ih
+
       real xupt(1)
       integer ieg(1),indxr(1)
 
-      call loadflist(fnames,nsg)
-
       write (6,*) 'starting load_snap'
+
+      call loadflist(fnames,nsg)
 
       iloc=1
       do is=1,nsg
@@ -25,6 +27,10 @@ c-----------------------------------------------------------------------
         call rxupt_close
         iloc=iloc+ieg(3)
       enddo
+
+      nmax=lxyz*leb*lfld
+      call fgslib_crystal_tuple_transfer(ih,n,nmax,ibuf,1,ibuf8,1,buf,1)
+      call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
 
       write (6,*) 'ending load_snap'
 
@@ -424,6 +430,9 @@ c-----------------------------------------------------------------------
          ifldt=ifldt+mdim
          ifld=ifld+1
       enddo
+
+      if (js.le.1) call
+     $   fgslib_crystal_tuple_sort(cr_h,n,ibuf,1,ibuf8,1,buf,1,2,1)
 
       if (is.le.0) then
          is=js
