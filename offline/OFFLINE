@@ -7,11 +7,11 @@
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
      $               geom(lxyz*lel*(ldim-1)*3),rx(lxyzd*ldim*ldim*lel)
 
-      common /ivec/ ieg(leb*lfld*4),indxr(lfld+1),
-     $              ibuf(lxyz*leb*lfld)
+      common /ivec/ ieg(leb*lfld*4),indxr(3+ldimt)
 
       integer*8 ibuf8
-      common /ivec8/ ibuf8(lxyz*leb*lfld)
+      common /iread8/ ibuf8(lxyz*leb*lfld)
+      common /iread/ ibuf(lxyz*leb*lfld)
 
       common /isca/ nel,nep,neg,nsl,nsg
 
