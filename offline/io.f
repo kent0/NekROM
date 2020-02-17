@@ -20,12 +20,14 @@ c-----------------------------------------------------------------------
       call loadflist(fnames,nsg)
 
       iloc=1
+      n=0
       do is=1,nsg
         ieg(4)=is
         call rxupt_open(fnames(is))
         call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
         call rxupt_close
         iloc=iloc+ieg(3)
+        n=n+ieg(3)
       enddo
 
       nmax=lxyz*leb*lfld
