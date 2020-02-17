@@ -38,7 +38,7 @@ PPS_F = $(patsubst %,$(PPPO)-D%,$(PPS))
 PPS_C = $(patsubst %,-D%,$(PPS))
 
 # CORE##########################################################################
-CORE = byte.o byte_mpi.o chelpers.o
+CORE = byte.o byte_mpi.o chelpers.o speclib.o
 ################################################################################
 # MXM 
 MXM=mxm_std.o
@@ -142,6 +142,7 @@ $(OBJDIR)/dprocmap.o    :$S/dprocmap.f $S/DPROCMAP;     $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/comm_mpi.o	:$(MOR_DIR)/offline/comm_mpi.f;	$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mpi_dummy.o	:$S/mpi_dummy.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/byte_mpi.o	:$S/byte_mpi.f;			$(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/speclib.o	:$S/speclib.f;			$(FC) -c $(FL2) $< -o $@
 
 # MXM       ####################################################################
 $(OBJDIR)/mxm_wrapper.o	  :$S/mxm_wrapper.f;		$(FC) -c $(FL2) $< -o $@
