@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
         ieg(4)=is
         call rxupt_open(fnames(is))
         call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
-        call rxupt_close(fnames(is))
+        call rxupt_close
         iloc=iloc+ieg(3)
       enddo
 
@@ -120,9 +120,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_close(ifcread)
-
-      logical ifcread
+      subroutine rxupt_close
 
       write (6,*) 'starting rxupt_close'
       call byte_close(ierr)
