@@ -1,14 +1,55 @@
 c-----------------------------------------------------------------------
+      subroutine loadsnaps(xupt,ieg,indxr,nsg)
+
+      include 'LVAR'
+
+      integer*8 ibuf8
+      common /iread8/ ibuf8(lxyz*leb*lfld)
+      common /iread/ ibuf(lxyz*leb*lfld)
+
+      character*132 fnames
+      common /lchr/ fnames(lsg)
+
+      real xupt(1)
+      integer ieg(1),indxr(1)
+
+      call loadflist(fnames,nsg)
+
+      write (6,*) 'starting load_snap'
+
+      iloc=1
+      do is=1,nsg
+        ieg(4)=is
+        call rxupt_open(fnames(is))
+        call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
+        call rxupt_close(fnames(is))
+        iloc=iloc+ieg(3)
+      enddo
+
+      write (6,*) 'ending load_snap'
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine rxupt(xupt,ieg,indxr,fname)
+
+      include 'LVAR'
 
       real xupt(1)
       integer ieg(1),indxr(1)
       character*132 fname
 
+      integer*8 ibuf8
+      common /iread8/ ibuf8(lxyz*leb*lfld)
+      common /iread/ ibuf(lxyz*leb*lfld)
+
       write (6,*) 'starting rxupt'
+
+      ieg(4)=0
       call rxupt_open(fname)
-      call rxupt_read(xupt,ieg,indxr)
+      call rxupt_read(xupt,ibuf,ibuf8,ieg,indxr)
       call rxupt_close(fname)
+
       write (6,*) 'ending rxupt'
 
       return
@@ -26,15 +67,16 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_read(xupt,ieg,indxr)
+      subroutine rxupt_read(xupt,ibuf,ibuf8,ieg,indxr)
 
       include 'LVAR'
       include 'IO'
 
-      real xupt(1)
-      integer ieg(1),indxr(1)
-
       common /scrread/ wk(lxyz*ldim*lel)
+
+      real xupt(1)
+      integer ieg(1),indxr(1),ibuf(1)
+      integer*8 ibuf8(1)
 
       write (6,*) 'starting rxupt_read'
 
@@ -42,6 +84,7 @@ c-----------------------------------------------------------------------
 
       ieg0=ieg(1)
       ieg1=ieg(2)
+      is=ieg(4)
 
       ic=1
       ie=1
@@ -65,8 +108,8 @@ c-----------------------------------------------------------------------
 
       call esort(ieg,mel)
 
-      call rxupt_read_helper1(xupt,wk,
-     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr)
+      call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
+     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr,is)
 
       ieg(1)=ieg0
       ieg(2)=ieg1
@@ -83,15 +126,6 @@ c-----------------------------------------------------------------------
       write (6,*) 'starting rxupt_close'
       call byte_close(ierr)
       write (6,*) 'ending rxupt_close'
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine mfi_getw(wk,n)
-
-      real wk(1)
-
-      call byte_read(wk,n,ierr)
 
       return
       end
@@ -257,97 +291,131 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setindxr(indxr,ndimt)
+      subroutine setindxr(indxr)
 
-      integer indxr(3+ndimt)
+      integer indxr(1)
 
-      ! U only
-
-      indxr(1)=2
-      indxr(2)=0
-
-      return
-      end
-c-----------------------------------------------------------------------
-      subroutine rxupt_read_helper1(xupt,wk,i2,i3,i4,indxr)
-
-      include 'LVAR'
-
-      real xupt(1),wk(1)
-      integer i2(1),i3(1),i4(1),indxr(1)
-
-      ner=0
-      i=1
-      do while (i3(i).ne.0)
-         ner=ner+i4(i)
-         i=i+1
-      enddo
-
-      i=1
-      jdim=1
-      do while (indxr(i).ne.0)
-         call rxupt_read_helper2(wk,ner,i3,i4,indxr(i))
-         ndim=1
-         if (indxr(i).le.2) ndim=ldim
-         do idim=1,ndim
-            do ie=1,ner
-               call copy(xupt(1+(i2(ie)-1)*lxyz+lxyz*ner*(jdim-1)),
-     $            wk(1+(idim-1)*lxyz+(ie-1)*lxyz*ndim),lxyz)
-            enddo
-            jdim=jdim+1
-         enddo
-         i=i+1
-      enddo
+      indxr(1)=0  ! no xyz
+      indxr(2)=7  ! all uvw
+      indxr(3)=0  ! no p
+      indxr(4)=-1 ! no thermal end
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine rxupt_read_helper2(wk,ner,i3,i4,ifld)
+      subroutine rxupt_read_helper(xupt,wk,ibuf,ibuf8,i2,i3,i4,indxr,is)
 
       include 'LVAR'
       include 'IO'
 
-      real wk(1)
-      integer i3(1),i4(1)
-      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8
-
-      iofldsr=0
-
-      if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ldim
-      if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ldim
-      if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1
+      real xupt(1),wk(1)
+      integer i2(1),i3(1),i4(1),indxr(1),ibuf(1)
+      integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8,ibuf8(1)
 
       offs0   = iHeadersize + 4 + isize*nelgr
       nxyzr8  = nxr*nyr*nzr
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      iloc=1
-      ig=1
-      do while (i4(ig).ne.0)
-         ie=i3(ig)
-         nep=i4(ig)
-         nwk=nep*ldim*nxyzr8
-         if (wdsizr.eq.8) nwk=nwk*2
-         offs = offs0 + iofldsr*stride + !ldim*strideB +
-     $      ldim*(ie-1)*nxyzr8*wdsizr
-         call byte_seek(offs/4,ierr)
-         call mfi_getw(wk(iloc),nwk)
+      ner=0
+      i=1
 
-c        write (6,*) ig,i3(ig),i4(ig),'i3/i4'
-         iloc=iloc+nwk
-         ig=ig+1
+      write (6,*) 'wp 6.1'
+      do while (i3(i).ne.0)
+         ner=ner+i4(i)
+         i=i+1
       enddo
-c     call exitt0
 
-      nwk=ner*ldim*nxyzr8
-
-      if (if_byte_sw) then
-      if (wdsizr.eq.8) then
-         call byte_reverse8(wk,nwk*2,ierr)
+      if (nzr.eq.1) then
+         ndim=2
       else
-         call byte_reverse(wk,nwk,ierr)
+         ndim=3
       endif
+
+      nfldt=7+ldimt
+      nfld=1
+
+      ifld=1
+      ifldt=1
+      jfld=1
+      write (6,*) 'wp 6.2'
+      do while (indxr(ifld).ne.-1)
+         write (6,*) 'wp 6.9',ifld,ifldt
+         if (ifld.le.2) then
+             mdim=ndim
+         else
+             mdim=1
+         endif
+         indx=indxr(ifld)
+         if (indx.ne.0) then
+            nfld=1
+
+            iofldsr=0
+            if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ndim
+            if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ndim
+            if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1+(ifld-4)
+            write (6,*) 'wp 6.3',ifld
+
+            if (ifld.le.2) then
+               if (ndim.eq.2) then
+                  indx=min(indx,3)
+               else
+                  indx=min(indx,7)
+               endif
+               if (indx.eq.3.or.indx.eq.5.or.indx.eq.6) then
+                  nfld=2
+               else
+                  nfld=3
+               endif
+            else
+               indx=1
+            endif
+            write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
+            iloc=1
+            ig=1
+            do while (i4(ig).ne.0) ! for now, read mdim stuff instead of nfld
+                ie=i3(ig)
+                nep=i4(ig)
+                nwk=nep*mdim*nxyzr8
+                if (wdsizr.eq.8) nwk=nwk*2
+                offs=offs0+iofldsr*stride+mdim*(ie-1)*nxyzr8*wdsizr
+                call byte_seek(offs/4,ierr)
+                call byte_read(wk(iloc),nwk,ierr)
+                iloc=iloc+nwk
+                ig=ig+1
+            enddo
+            write (6,*) 'wp 6.5',ig,ng
+
+            nwk=ner*ldim*nxyzr8
+
+            if (if_byte_sw) then
+            if (wdsizr.eq.8) then
+                call byte_reverse8(wk,nwk*2,ierr)
+            else
+                call byte_reverse(wk,nwk,ierr)
+            endif
+            endif
+            ! TODO; correctly copy in case nfld != mdim
+            call copy(xupt(jfld*lxyz*ner+1),wk,lxyz*nfld*ner)
+            do k=1,ner
+            do j=1,nfld
+            do i=1,lxyz
+               ibuf8(1+(jfld-1)*lxyz*ner+1+i+(j-1)*lxyz+(k-1)*lxyz*ner)=
+     $            i+(k-1)*lxyz+is*lxyz*ner+(j+ifldt-2)*lxyz*ner*nfldt
+            enddo
+            enddo
+            enddo
+            ! TODO: fill ibuf correctly
+            call izero(ibuf(1+(jfld-1)*lxyz*ner),ner*nfld*lxyz)
+            indxr(ifld)=indx
+            jfld=jfld+nfld
+            write (6,*) 'wp 6.8'
+         endif
+         ifldt=ifldt+mdim
+         ifld=ifld+1
+      enddo
+
+      if (is.eq.0) then
       endif
 
       return
