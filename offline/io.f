@@ -308,6 +308,8 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'IO'
 
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
       real xupt(1),wk(1)
       integer i2(1),i3(1),i4(1),indxr(1),ibuf(1)
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8,ibuf8(1)
@@ -410,12 +412,11 @@ c-----------------------------------------------------------------------
                ibuf8(ill)=
      $            i+(k-1)*lxyz+(is-1)*lxyz*ner+(j+ifldt-2)*lxyz*ner*lsg
                write (6,*) i,j,k,ill,ibuf8(ill),'ibuf8'
+               ibuf(ill)=mod(k,mp)
             enddo
             enddo
             enddo
             n=n+lxyz*nfld*ner
-            ! TODO: fill ibuf correctly
-            call izero(ibuf(1+(jfld-1)*lxyz*ner),ner*nfld*lxyz)
             indxr(ifld)=indx
             jfld=jfld+nfld
             write (6,*) 'wp 6.8'
