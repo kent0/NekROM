@@ -1,34 +1,41 @@
 c-----------------------------------------------------------------------
-      subroutine setxsnap(nsg)
+      subroutine setxsnap(ixmin,fnames,nsl)
 
       include 'LVAR'
       include 'IO'
 
-      character*132 fnames
-      common /lchr/ fnames(lsg)
+      character*132 fnames(1)
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       write (6,*) 'starting setxsnap'
 
-      call loadflist(fnames,nsg)
+      nslmax=iglmax(nsl,1)
+      ixmin=nslmax*mp+1
 
-      ixmin=nsg+1
-
-      do is=1,nsg
+      do is=1,nsl
         call rxupt_open(fnames(is))
         call rxupt_close
         if (ifgetxr) then
-           ixmin=is
-           write (6,*) 'ending setxsnap'
-           return
+           ixmin=is+mid*nslmax
+           exit
         endif
       enddo
 
-      call exitti('could not find any geometry, exiting$',ixmin)
+      jxmin=iglmin(ixmin,1)
+
+      if (jxmin.eq.(nslmax*mp+1))
+     $   call exitti('could not find any geometry, exiting$',jxmin)
+
+      if (jxmin.eq.ixmin) then
+         ixmin=jxmin-mid*nslmax
+      else
+         ixmin=0
+      endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine loadsnaps(xupt,ieg,indxr,nsg)
+      subroutine loadsnaps(xupt,ieg,indxr,nsmax)
 
       include 'LVAR'
 
@@ -39,6 +46,8 @@ c-----------------------------------------------------------------------
       character*132 fnames
       common /lchr/ fnames(lsg)
 
+      common /isca/ nel,nep,neg,nsl,nsg,ixmin
+
       common /comm_handles/ ih
 
       real xupt(1)
@@ -46,12 +55,18 @@ c-----------------------------------------------------------------------
 
       write (6,*) 'starting load_snap'
 
-      call loadflist(fnames,nsg)
+      nsg=min(nsmax,lsg)
+
+      if (ieg(1).eq.1) then
+        call loadflist(fnames,nsg,nsl)
+        call setxsnap(ixmin,fnames,nsl)
+      endif
 
       iloc=1
       n=0
-      do is=1,nsg
+      do is=1,nsl
         ieg(4)=is
+        if (is.eq.ixmin) indxr(1)=7
         call rxupt_open(fnames(is))
         call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
         call rxupt_close
@@ -472,29 +487,34 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine loadflist(fnames,ns)
+      subroutine loadflist(fnames,nsg,nsl)
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      character*132 fnames(ns)
+      character*132 fnames(ns),fname
 
       if (mid.eq.0) open (unit=10,file='file.list')
       ms=1
 
-      do is=1,ns
-          call blank(fnames(is),132)
-          fnames(is)='done '
-          if (mid.eq.0) read (10,'(a132)',end=100) fnames(is)
-          write (6,*) fnames(is),'fnames'
-  100     call bcast(fnames(is),132)
-          if (indx1(fnames(is),'done ',5).eq.0) then
-             ms=is
+      nsl=0
+      do isg=1,nsg
+          call blank(fname,132)
+          fname='done '
+          if (mid.eq.0) read (10,'(a132)',end=100) fname
+          write (6,*) fname,'fname'
+  100     call bcast(fname,132)
+          if (indx1(fname,'done ',5).eq.0) then
+             ms=isg
+             if (mod(isg,mp).eq.mid) then
+                nsl=nsl+1
+                call chcopy(fnames(nsl),fname,132)
+             endif
           else
              goto 200
           endif
       enddo
 
-  200 ns=ms
+  200 nsg=ms
       if (mid.eq.0) close (unit=10)
 
       return
