@@ -60,8 +60,8 @@ c-----------------------------------------------------------------------
       enddo
 
       nmax=lxyz*leb*lfld
-      call fgslib_crystal_tuple_transfer(ih,n,nmax,ibuf,1,ibuf8,1,buf,1)
-      call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
+c     call fgslib_crystal_tuple_transfer(ih,n,nmax,ibuf,1,ibuf8,1,buf,1)
+c     call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
 
       write (6,*) 'ending load_snap'
 
@@ -448,7 +448,6 @@ c-----------------------------------------------------------------------
                ill=i+(j-1)*lxyz+(k-1)*lxyz*nfld
                ibuf8(ill)=
      $            i+(k-1)*lxyz+(is-1)*lxyz*ner+(j+ifldt-2)*lxyz*ner*lsg
-               write (6,*) i,j,k,ill,ibuf8(ill),'ibuf8'
                ibuf(ill)=mod(k,mp)
             enddo
             enddo
