@@ -2,7 +2,7 @@ c-----------------------------------------------------------------------
       subroutine setupcomm
 
       include 'mpif.h'
-      include 'OFFLINE'
+      include 'LVAR'
       include 'IO'
 
       character*132   session,path,re2fle,parfle
@@ -77,7 +77,7 @@ c---------------------------------------------------------------------
       subroutine iniproc
 
       include 'mpif.h'
-      include 'OFFLINE'
+      include 'LVAR'
       include 'IO'
 
       common /nekmpi/ nid_,np_,nekcomm,nekgroup,nekreal
