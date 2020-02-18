@@ -1529,3 +1529,25 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
+      function vlsc3(x,y,b,n)
+
+c     local inner product, with weight
+
+      real x(1),y(1),b(1)
+
+      vlsc3=0.
+
+      do i=1,n
+         vlsc3=vlsc3+x(i)*y(i)*b(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine rone(a,n)
+      DIMENSION A(1)
+      DO 100 I = 1, N
+ 100     A(I ) = 1.0
+      return
+      END
+c-----------------------------------------------------------------------
