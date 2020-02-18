@@ -79,8 +79,17 @@ c-----------------------------------------------------------------------
       enddo
 
       m=lxyz*leb*lfld
+      do i=1,n
+         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'pre'
+      enddo
       call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,xupt,1,1)
+      do i=1,n
+         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'mid'
+      enddo
       call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
+      do i=1,n
+         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'post'
+      enddo
 
       write (6,*) 'ending load_snap'
 
