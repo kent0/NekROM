@@ -13,11 +13,10 @@
       common /iread8/ ibuf8(lxyz*leb*lfld)
       common /iread/ ibuf(lxyz*leb*lfld)
 
-      common /isca/ nel,nep,neg,nsl,nsg
+      common /isca/ nel,nep,neg,nsl,nsg,ixmin
 
       logical ifread
       common /lvec/ ifread(7+ldimt)
 
       character*132 fnames
       common /lchr/ fnames(lsg)
-
