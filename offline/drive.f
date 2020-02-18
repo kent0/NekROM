@@ -8,43 +8,56 @@ c-----------------------------------------------------------------------
 
         call offline_init(icomm)
 
-        nsg=lsg
+        nsg=64
+        neg=512
         nel=512
+        nep=512
+
         call loadflist(fnames,nsg)
 
         call setindxr(indxr,ldimt)
 
-        do is=1,nsg
+        do is=1,3
            write (6,'(a132)') fnames(is)
         enddo
 
         ns=1
-
-        mel=nel
-        ng=1
-
-        mel=nel/16
-        ng=16
 
         call rzero(gb,ns*ns)
 
         iloc=1
 
         is0=1
-        is1=nsg
+        is1=2
 
-        do ig=1,ng
-        do is=is0,is1
-           ieg(1)=mel*(ig-1)+1
-           ieg(2)=mel*ig
-           call rxupt(buf(iloc),ieg,indxr,fnames(is))
-           j=1
-           nloc=0
+        ng=neg/nep
+        ng=1
+        mel=1
+        nel=mel
+
+c       do ig=1,ng
+c       do is=is0,is1
+c          ieg(1)=nel*(ig-1)+1
+c          ieg(2)=nel*ig
+c          call rxupt(buf(iloc),ieg,indxr,fnames(is))
+c       enddo
+c       enddo
+
+        nsg=lsg
+        ieg(1)=1
+        ieg(2)=1
+        call loadsnaps(buf,ieg,indxr,nsg)
+
+        do i=1,lxyz*4
+            write (6,*) is,i,ibuf(i),ibuf8(i),'ibuf'
         enddo
-        enddo
 
-        call setb(gb,buf,buf,ns,mel*lxyz*ldim)
-        write (6,*) ig,gb(1),buf(1),'wp deb'
+c       ieg(1)=1
+c       ieg(2)=1
 
+c       call blank(fname,132)
+c       call rxupt(buf,ieg,indxr,fname)
+
+        return
         end
 c-----------------------------------------------------------------------
