@@ -447,7 +447,7 @@ c-----------------------------------------------------------------------
             write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
             iloc=1
             ig=1
-            do while (i4(ig).ne.0) ! for now, read mdim stuff instead of nfld
+            do while (i3(ig).ne.0) ! for now, read mdim stuff instead of nfld
                 ie=i3(ig)
                 nep=i4(ig)
                 nwk=nep*mdim*nxyzr8
