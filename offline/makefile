@@ -19,7 +19,7 @@ LDFLAGS=
 PPPO=
 PPS= MPI UNDERSCORE TIMER
 
-USR=aux.o io.o integ.o
+USR=aux.o io.o integ.o geom.o
 USR_LFLAGS=-mcmodel=medium -L/Users/kaneko/Developer/Nek5000/3rd_party/gslib/lib -lgs
 
 MPI=1
@@ -171,6 +171,7 @@ $(OBJDIR)/dictionary.o :$S/3rd_party/dictionary.c;  $(CC)  -c $(cFL2) $(JL) $< -
 
 # My Files #####
 
-$(OBJDIR)/aux.o :$(MOR_DIR)/offline/aux.f IO OFFLINE; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/io.o  :$(MOR_DIR)/offline/io.f  IO OFFLINE; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/integ.o  :$(MOR_DIR)/offline/integ.f  IO OFFLINE; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/aux.o :$(MOR_DIR)/offline/aux.f LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/io.o  :$(MOR_DIR)/offline/io.f  LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/integ.o  :$(MOR_DIR)/offline/integ.f  LVAR IO OFFLINE INTEG; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/geom.o  :$(MOR_DIR)/offline/geom.f  LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
