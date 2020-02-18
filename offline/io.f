@@ -66,7 +66,11 @@ c-----------------------------------------------------------------------
       n=0
       do is=1,nsl
         ieg(4)=is
-        if (is.eq.ixmin) indxr(1)=7
+        if (is.eq.ixmin) then
+           indxr(1)=7
+        else
+           indxr(1)=0
+        endif
         call rxupt_open(fnames(is))
         call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
         call rxupt_close
