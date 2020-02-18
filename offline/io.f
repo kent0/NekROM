@@ -35,7 +35,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine loadsnaps(xupt,ieg,indxr,nsmax)
+      subroutine loadsnaps(buf,ieg,indxr,nsmax)
 
       include 'LVAR'
 
@@ -50,7 +50,7 @@ c-----------------------------------------------------------------------
 
       common /comm_handles/ ih
 
-      real xupt(1)
+      real buf(1)
       integer ieg(1),indxr(1)
 
       write (6,*) 'starting load_snap'
@@ -60,6 +60,7 @@ c-----------------------------------------------------------------------
       if (ieg(1).eq.1) then
         call loadflist(fnames,nsg,nsl)
         call setxsnap(ixmin,fnames,nsl)
+        call setindxr(indxr)
       endif
 
       iloc=1
@@ -72,7 +73,7 @@ c-----------------------------------------------------------------------
            indxr(1)=0
         endif
         call rxupt_open(fnames(is))
-        call rxupt_read(xupt(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
+        call rxupt_read(buf(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
         call rxupt_close
         iloc=iloc+ieg(3)
         n=n+ieg(3)
@@ -80,15 +81,15 @@ c-----------------------------------------------------------------------
 
       m=lxyz*leb*lfld
       do i=1,n
-         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'pre'
+c        write (6,*) i,ibuf(i),ibuf8(i),buf(i),'pre'
       enddo
-      call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,xupt,1,1)
+      call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,buf,1,1)
       do i=1,n
-         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'mid'
+c        write (6,*) i,ibuf(i),ibuf8(i),buf(i),'mid'
       enddo
-      call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
+      call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
       do i=1,n
-         write (6,*) i,ibuf(i),ibuf8(i),xupt(i),'post'
+c        write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
       write (6,*) 'ending load_snap'
@@ -125,9 +126,8 @@ c-----------------------------------------------------------------------
       character*132 fname
       integer ieg(1)
 
-      write (6,*) 'starting rxupt_open'
+      write (6,*) 'reading ',fname
       call my_mfi_prepare(fname)
-      write (6,*) 'ending rxupt_open'
 
       return
       end
@@ -395,7 +395,6 @@ c-----------------------------------------------------------------------
          is=1
       endif
 
-      write (6,*) 'wp 6.1'
       do while (i3(i).ne.0)
          ner=ner+i4(i)
          i=i+1
