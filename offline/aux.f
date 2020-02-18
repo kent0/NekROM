@@ -256,6 +256,32 @@ C
       return
       END
 c-----------------------------------------------------------------------
+      function iglmin(a,n)
+      integer a(1),tmin
+      integer tmp(1),work(1)
+      tmin=  999999999
+      do i=1,n
+         tmin=min(tmin,a(i))
+      enddo
+      tmp(1)=tmin
+      call igop(tmp,work,'m  ',1)
+      iglmin=tmp(1)
+      return
+      end
+c-----------------------------------------------------------------------
+      function iglmax(a,n)
+      integer a(1),tmax
+      integer tmp(1),work(1)
+      tmax= -999999999
+      do i=1,n
+         tmax=max(tmax,a(i))
+      enddo
+      tmp(1)=tmax
+      call igop(tmp,work,'M  ',1)
+      iglmax=tmp(1)
+      return
+      end
+c-----------------------------------------------------------------------
       function iglsum(a,n)
       integer a(1),tsum
       integer tmp(1),work(1)
