@@ -150,31 +150,32 @@ c-----------------------------------------------------------------------
       ieg0=ieg(1)
       ieg1=ieg(2)
       is=ieg(4)
+      jeg=1
+      iel=1
 
-      ic=1
-      ie=1
+      nel=ieg1-ieg0+1
 
-      mel=ieg1-ieg0+1
-
-      do while (ic.le.mel)
-         nel=min(lel,mel-ic+1)
-         call byte_read(er,nel,ierr)! get element mapping
-         if (if_byte_sw) call byte_reverse(er,nel,ierr)
-         jc=1
-         do while (ie.le.nel)
+      do while (iel.lt.nel)
+         mel=min(lel,nelgr-jeg+1)
+         call byte_read(er,mel,ierr) ! get element mapping
+         if (if_byte_sw) call byte_reverse(er,mel,ierr)
+         do ie=1,mel
             if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
-               ieg(er(ie)-ieg0+1)=ie
-               jc=jc+1
+               ieg(er(ie)-ieg0+1)=jeg
+               iel=iel+1
             endif
-            ie=ie+1
+            jeg=jeg+1
          enddo
-         ic=ic+nel
       enddo
 
-      call esort(ieg,mel)
+      call esort(ieg,nel)
+
+      do i=1,nel
+         write (6,*) ieg(i),ieg(nel+i),ieg(2*nel+i),ieg(3*nel+i),'ieg'
+      enddo
 
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
-     $   ieg(mel+1),ieg(2*mel+1),ieg(3*mel+1),indxr,is,n)
+     $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n)
 
       ieg(1)=ieg0
       ieg(2)=ieg1
