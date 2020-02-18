@@ -1,13 +1,37 @@
 c-----------------------------------------------------------------------
-      subroutine setb(b,u,v,nb,n)
+      subroutine setops(a,b,c,u,nel,nb,ndim)
+
+      real a(1),b(1),c(1),u(1)
+
+      call bip(b,u,u,nel,nb,ndim)
+
+      do j=1,nb
+      do i=1,nb
+         write (6,*) i,j,b(i+(j-1)*nb),'b'
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine bip(b,u,v,nel,nb,ndim)
+
+      include 'LVAR'
+      include 'INTEG'
 
       real b(nb,nb)
-      real u(n,nb),v(n,nb)
+      real u(lxyz,nel,nb,ndim),v(lxyz,nel,nb,ndim)
 
+      call rone(bm1,nel*lxyz)
+
+      write (6,*) nel,nb,nb,ndim,'bip1'
+      do l=1,ndim
       do k=1,nb
       do j=1,nb
-      do i=1,n
-         b(j,k)=b(j,k)+u(i,k)*v(i,j)
+      do i=1,nel
+         b(j,k)=b(j,k)+vlsc3(u(1,i,k,l),v(1,i,j,l),bm1(1,1,1,i),lxyz)
+         write (6,*) i,j,k,l,u(1,i,k,l),'bip'
+      enddo
       enddo
       enddo
       enddo
@@ -15,7 +39,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine seta(a,u,v,nb,n)
+      subroutine aip(a,u,v,nb,n)
 
       real a(nb,nb)
       real u(n,nb),v(n,nb)
@@ -31,7 +55,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setc(c,u,v,w,nb,n)
+      subroutine cip(c,u,v,w,nb,n)
 
       real c(nb,nb,nb)
       real u(n,nb),v(n,nb),w(n,nb)

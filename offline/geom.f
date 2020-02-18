@@ -1,15 +1,16 @@
 c-----------------------------------------------------------------------
-      subroutine setgeom
+      subroutine setgeom(xyz,nel)
 
       include 'LVAR'
-      include 'OFFLINE'
       include 'INTEG'
+
+      real xyz(1)
 
       n=lxyz*nel
 
-      call copy(xm1,xupt,n)
-      call copy(ym1,xupt(n+1),n)
-      if (ldim.eq.3) call copy(zm1,xupt(n*2+1),n)
+      call copy(xm1,xyz,n)
+      call copy(ym1,xyz(n+1),n)
+      if (ldim.eq.3) call copy(zm1,xyz(n*2+1),n)
 
       call geodat1
 
