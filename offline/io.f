@@ -78,9 +78,9 @@ c-----------------------------------------------------------------------
         n=n+ieg(3)
       enddo
 
-      nmax=lxyz*leb*lfld
-c     call fgslib_crystal_tuple_transfer(ih,n,nmax,ibuf,1,ibuf8,1,buf,1)
-c     call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
+      m=lxyz*leb*lfld
+      call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,xupt,1,1)
+      call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
 
       write (6,*) 'ending load_snap'
 
@@ -364,6 +364,8 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'IO'
 
+      common /comm_handles/ ih
+
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       real xupt(1),wk(1)
@@ -460,11 +462,11 @@ c-----------------------------------------------------------------------
             endif
             endif
             ! TODO; correctly copy in case nfld != mdim
-            call copy(xupt(jfld*lxyz*ner+1),wk,lxyz*nfld*ner)
+            call copy(xupt(n+1),wk,lxyz*nfld*ner)
             do k=1,ner
             do j=1,nfld
             do i=1,lxyz
-               ill=i+(j-1)*lxyz+(k-1)*lxyz*nfld
+               ill=n+i+(j-1)*lxyz+(k-1)*lxyz*nfld
                ibuf8(ill)=
      $            i+(k-1)*lxyz+(is-1)*lxyz*ner+(j+ifldt-2)*lxyz*ner*lsg
                ibuf(ill)=mod(k,mp)
@@ -480,8 +482,8 @@ c-----------------------------------------------------------------------
          ifld=ifld+1
       enddo
 
-      if (js.le.1) call
-     $   fgslib_crystal_tuple_sort(cr_h,n,ibuf,1,ibuf8,1,buf,1,2,1)
+      if (js.lt.1) call
+     $   fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
 
       if (is.le.0) then
          is=js
