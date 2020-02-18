@@ -13,7 +13,7 @@ c-----------------------------------------------------------------------
         nel=512
         nep=512
 
-        call loadflist(fnames,nsg)
+        call loadflist(fnames,nsg,nsl)
 
         call setindxr(indxr,ldimt)
 
