@@ -1,4 +1,33 @@
 c-----------------------------------------------------------------------
+      subroutine setxsnap(nsg)
+
+      include 'LVAR'
+      include 'IO'
+
+      character*132 fnames
+      common /lchr/ fnames(lsg)
+
+      write (6,*) 'starting setxsnap'
+
+      call loadflist(fnames,nsg)
+
+      ixmin=nsg+1
+
+      do is=1,nsg
+        call rxupt_open(fnames(is))
+        call rxupt_close
+        if (ifgetxr) then
+           ixmin=is
+           write (6,*) 'ending setxsnap'
+           return
+        endif
+      enddo
+
+      call exitti('could not find any geometry, exiting$',ixmin)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine loadsnaps(xupt,ieg,indxr,nsg)
 
       include 'LVAR'
