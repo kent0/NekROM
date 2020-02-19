@@ -65,23 +65,30 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'INTEG'
 
+      logical ifuf,ifcf
+
       common /tinteg/ tmp(lxyz,lel,ldim),dw(lxyzd,lel,ldim)
 
       real c(nb,nb,nb)
       real u(lxyz,nel,nb,mdim),v(lxyz,nel,nb,mdim),w(lxyz,nel,nb,ndim)
 
-      do l=1,ndim
+      ifuf=.false.
+      ifcf=.true.
+
       do k=1,nb
          call set_convect_new_part(dw,dw(1,1,2),dw(1,1,ndim),
      $      w(1,1,k,1),w(1,1,k,2),w(1,1,k,ndim),nel)
          do j=1,nb
-            call conv(tmp,u(1,1,j,1),.false.,
-     $         dw,dw(1,1,2),dw(1,1,ndim),.true.,nel)
+            call conv(tmp,u(1,1,j,1),ifuf,
+     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
+            call conv(tmp(1,1,2),u(1,1,j,2),ifuf,
+     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
+            if (ndim.eq.3) call conv(tmp(1,1,ndim),u(1,1,j,ndim),ifuf,
+     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
             do i=1,nb
-                c(i,j,k)=c(i,j,k)+vlsc2(tmp,v(1,1,j,l),lxyz*nel)
+               c(i,j,k)=c(i,j,k)+vlsc2(tmp,v(1,1,i,1),lxyz*nel*ndim)
             enddo
          enddo
-      enddo
       enddo
 
       return
