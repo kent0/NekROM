@@ -30,7 +30,6 @@ c-----------------------------------------------------------------------
       do j=1,nb
       do i=1,nel
          b(j,k)=b(j,k)+vlsc3(u(1,i,k,l),v(1,i,j,l),bm1(1,1,1,i),lxyz)
-         write (6,*) i,j,k,l,u(1,i,k,l),'bip'
       enddo
       enddo
       enddo
