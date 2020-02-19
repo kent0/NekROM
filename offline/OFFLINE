@@ -1,7 +1,8 @@
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
      $              buf(lxyz*leb*lfld),
      $              ga(lsg*lsl*lgld),gb(lsg*lsl*lgld),
-     $              gc(lsg*lsg*lsl*lgld)
+     $              gc(lsg*lsg*lsl*lgld),
+     $              gt(lsg*lsg*lsl*lgld)
 
       real mass
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
