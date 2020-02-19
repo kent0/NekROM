@@ -12,7 +12,8 @@ c-----------------------------------------------------------------------
       call copy(ym1,xyz(n+1),n)
       if (ldim.eq.3) call copy(zm1,xyz(n*2+1),n)
 
-      call geodat1
+      call glmapm1(nel)
+      call geodat1(nel)
 
       return
       end
