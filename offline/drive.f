@@ -15,6 +15,7 @@ c-----------------------------------------------------------------------
 
         call loadsnaps(buf,ieg,indxr,nsg)
         call setgeom(buf,nel)
+        call geom_check(nel)
         call setops(ga,gb,gc,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
 
         return

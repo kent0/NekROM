@@ -18,3 +18,19 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine geom_check(nel)
+
+      include 'LVAR'
+      include 'INTEG'
+
+      write (6,*) 'inside geom_check',nel,lxyz
+
+      do ie=1,nel
+      do i=1,lxyz
+c        write (6,*) i,ie,bm1(i,1,1,ie),'bm1'
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
