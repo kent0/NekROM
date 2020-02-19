@@ -1548,3 +1548,372 @@ c-----------------------------------------------------------------------
       return
       END
 c-----------------------------------------------------------------------
+      subroutine glmapm1(nel)
+C-----------------------------------------------------------------------
+C
+C     Routine to generate mapping data based on mesh 1
+C     (Gauss-Legendre Lobatto meshes).
+C
+C         XRM1,  YRM1,  ZRM1   -   dx/dr, dy/dr, dz/dr
+C         XSM1,  YSM1,  ZSM1   -   dx/ds, dy/ds, dz/ds
+C         XTM1,  YTM1,  ZTM1   -   dx/dt, dy/dt, dz/dt
+C         RXM1,  RYM1,  RZM1   -   dr/dx, dr/dy, dr/dz
+C         SXM1,  SYM1,  SZM1   -   ds/dx, ds/dy, ds/dz
+C         TXM1,  TYM1,  TZM1   -   dt/dx, dt/dy, dt/dz
+C         JACM1                -   Jacobian
+C
+C-----------------------------------------------------------------------
+      include 'LVAR'
+      include 'INTEG'
+C
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
+C           share the same array structure in Scratch Common /SCRNS/.
+C
+      COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
+     $ ,             YRM1(LX1,LY1,LZ1,LELT)
+     $ ,             XSM1(LX1,LY1,LZ1,LELT)
+     $ ,             YSM1(LX1,LY1,LZ1,LELT)
+     $ ,             XTM1(LX1,LY1,LZ1,LELT)
+     $ ,             YTM1(LX1,LY1,LZ1,LELT)
+     $ ,             ZRM1(LX1,LY1,LZ1,LELT)
+      COMMON /CTMP1/ ZSM1(LX1,LY1,LZ1,LELT)
+     $ ,             ZTM1(LX1,LY1,LZ1,LELT)
+C
+      logical ifaxis
+      ifaxis=.false.
+
+      NXY1  = lx1*ly1
+      NYZ1  = ly1*lz1
+      NXYZ1 = lx1*ly1*lz1
+      NTOT1 = NXYZ1*NEL
+C
+      CALL XYZRST (XRM1,YRM1,ZRM1,XSM1,YSM1,ZSM1,XTM1,YTM1,ZTM1,
+     $             IFAXIS,nel)
+C
+      IF (ldim.EQ.2) THEN
+         CALL RZERO   (JACM1,NTOT1)
+         CALL ADDCOL3 (JACM1,XRM1,YSM1,NTOT1)
+         CALL SUBCOL3 (JACM1,XSM1,YRM1,NTOT1)
+         CALL COPY    (RXM1,YSM1,NTOT1)
+         CALL COPY    (RYM1,XSM1,NTOT1)
+         CALL CHSIGN  (RYM1,NTOT1)
+         CALL COPY    (SXM1,YRM1,NTOT1)
+         CALL CHSIGN  (SXM1,NTOT1)
+         CALL COPY    (SYM1,XRM1,NTOT1)
+         CALL RZERO   (RZM1,NTOT1)
+         CALL RZERO   (SZM1,NTOT1)
+         CALL RONE    (TZM1,NTOT1)
+      ELSE
+         CALL RZERO   (JACM1,NTOT1)
+         CALL ADDCOL4 (JACM1,XRM1,YSM1,ZTM1,NTOT1)
+         CALL ADDCOL4 (JACM1,XTM1,YRM1,ZSM1,NTOT1)
+         CALL ADDCOL4 (JACM1,XSM1,YTM1,ZRM1,NTOT1)
+         CALL SUBCOL4 (JACM1,XRM1,YTM1,ZSM1,NTOT1)
+         CALL SUBCOL4 (JACM1,XSM1,YRM1,ZTM1,NTOT1)
+         CALL SUBCOL4 (JACM1,XTM1,YSM1,ZRM1,NTOT1)
+         CALL ASCOL5  (RXM1,YSM1,ZTM1,YTM1,ZSM1,NTOT1)
+         CALL ASCOL5  (RYM1,XTM1,ZSM1,XSM1,ZTM1,NTOT1)
+         CALL ASCOL5  (RZM1,XSM1,YTM1,XTM1,YSM1,NTOT1)
+         CALL ASCOL5  (SXM1,YTM1,ZRM1,YRM1,ZTM1,NTOT1)
+         CALL ASCOL5  (SYM1,XRM1,ZTM1,XTM1,ZRM1,NTOT1)
+         CALL ASCOL5  (SZM1,XTM1,YRM1,XRM1,YTM1,NTOT1)
+         CALL ASCOL5  (TXM1,YRM1,ZSM1,YSM1,ZRM1,NTOT1)
+         CALL ASCOL5  (TYM1,XSM1,ZRM1,XRM1,ZSM1,NTOT1)
+         CALL ASCOL5  (TZM1,XRM1,YSM1,XSM1,YRM1,NTOT1)
+      ENDIF
+C
+      kerr = 0
+      DO 500 ie=1,NEL
+         CALL CHKJAC(JACM1(1,1,1,ie),NXYZ1,ie,xm1(1,1,1,ie),
+     $ ym1(1,1,1,ie),zm1(1,1,1,ie),ldim,ierr)
+         if (ierr.ne.0) kerr = kerr+1
+  500 CONTINUE
+      kerr = iglsum(kerr,1)
+      if (kerr.gt.0) then
+         if (nid.eq.0) write(6,*) 'Jac error 1, setting p66=4, ifxyo=t'
+         call exitt
+      endif
+
+      call invers2(jacmi,jacm1,ntot1)
+
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      subroutine addcol3(a,b,c,n)
+
+      real a(1),b(1),c(1)
+
+      do i=1,n
+         a(i)=a(i)+b(i)*c(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine chkjac(jac,n,iel,X,Y,Z,ND,IERR)
+c
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+C
+C     Check the array JAC for a change in sign.
+C
+      REAL JAC(N),x(1),y(1),z(1)
+c
+      ierr = 1
+      SIGN = JAC(1)
+      DO 100 I=2,N
+         IF (SIGN*JAC(I).LE.0.0) THEN
+            WRITE(6,101) mid,I,iel
+            write(6,*) jac(i-1),jac(i)
+            if (ldim.eq.3) then
+               write(6,7) mid,x(i-1),y(i-1),z(i-1)
+               write(6,7) mid,x(i),y(i),z(i)
+            else
+               write(6,7) mid,x(i-1),y(i-1)
+               write(6,7) mid,x(i),y(i)
+            endif
+    7       format(i5,' xyz:',1p3e14.5)
+            return
+         ENDIF
+  100 CONTINUE
+  101 FORMAT(//,i5,2x
+     $ ,'ERROR:  Vanishing Jacobian near',i7,'th node of element'
+     $ ,I10,'.')
+c
+c
+      ierr = 0
+      RETURN
+      END
+c-----------------------------------------------------------------------
+      subroutine subcol3(a,b,c,n)
+      REAL A(1),B(1),C(1)
+C
+      DO 100 I=1,N
+         A(I)=A(I)-B(I)*C(I)
+  100 CONTINUE
+      return
+      END
+c-----------------------------------------------------------------------
+      SUBROUTINE FACEXV (A1,A2,A3,B1,B2,B3,IFACE1,IOP)
+C
+C     IOP = 0
+C     Extract vector (A1,A2,A3) from (B1,B2,B3) on face IFACE1.
+C
+C     IOP = 1
+C     Extract vector (B1,B2,B3) from (A1,A2,A3) on face IFACE1.
+C
+C     A1, A2, A3 have the (NX,NY,NFACE) data structure
+C     B1, B2, B3 have the (NX,NY,NZ)    data structure
+C     IFACE1 is in the preprocessor notation
+C     IFACE  is the dssum notation.
+C
+      include 'LVAR'
+      include 'INTEG'
+C
+      DIMENSION A1(LX1,LY1),A2(LX1,LY1),A3(LX1,LY1),
+     $          B1(LX1,LY1,LZ1),B2(LX1,LY1,LZ1),B3(LX1,LY1,LZ1)
+C
+      CALL DSSET(lx1,ly1,lz1)
+      IFACE  = EFACE1(IFACE1)
+      JS1    = SKPDAT(1,IFACE)
+      JF1    = SKPDAT(2,IFACE)
+      JSKIP1 = SKPDAT(3,IFACE)
+      JS2    = SKPDAT(4,IFACE)
+      JF2    = SKPDAT(5,IFACE)
+      JSKIP2 = SKPDAT(6,IFACE)
+      I = 0
+C
+      IF (IOP.EQ.0) THEN
+         DO 100 J2=JS2,JF2,JSKIP2
+         DO 100 J1=JS1,JF1,JSKIP1
+            I = I+1
+            A1(I,1) = B1(J1,J2,1)
+            A2(I,1) = B2(J1,J2,1)
+            A3(I,1) = B3(J1,J2,1)
+  100    CONTINUE
+      ELSE
+         DO 150 J2=JS2,JF2,JSKIP2
+         DO 150 J1=JS1,JF1,JSKIP1
+            I = I+1
+            B1(J1,J2,1) = A1(I,1)
+            B2(J1,J2,1) = A2(I,1)
+            B3(J1,J2,1) = A3(I,1)
+  150    CONTINUE
+      ENDIF
+C
+      RETURN
+      END
+C-----------------------------------------------------------------------
+      subroutine col3(a,b,c,n)
+
+      real a(1),b(1),c(1)
+
+      do i=1,n
+         a(i)=b(i)*c(i)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dsset(nx,ny,nz)
+C
+C     Set up arrays IXCN,ESKIP,SKPDAT,NEDG,NOFFST for new NX,NY,NZ
+C
+      include 'LVAR'
+      include 'INTEG'
+
+      INTEGER NXO,NYO,NZO
+      SAVE    NXO,NYO,NZO
+      DATA    NXO,NYO,NZO /3*0/
+C
+C     Check if element surface counters are already set from last call...
+C
+      IF (NXO.EQ.NX.AND.NYO.EQ.NY.AND.NZO.EQ.NZ) RETURN
+C
+C     else, proceed....
+C
+      NXO = NX
+      NYO = NY
+      NZO = NZ
+C
+C     Establish corner to elemental node number mappings
+C
+      IC=0
+      DO 10 ICZ=0,1
+      DO 10 ICY=0,1
+      DO 10 ICX=0,1
+C       Supress vectorization to
+c        IF(ICX.EQ.0)DUMMY=0
+c        IF(ICX.EQ.1)DUMMY=1
+c        DUMMY2=DUMMY2+DUMMY
+        IC=IC+1
+        IXCN(IC)= 1 + (NX-1)*ICX + NX*(NY-1)*ICY + NX*NY*(NZ-1)*ICZ
+   10   CONTINUE
+C
+C     Assign indices for direct stiffness summation of arbitrary faces.
+C
+C
+C     Y-Z Planes (Faces 1 and 2)
+C
+      SKPDAT(1,1)=1
+      SKPDAT(2,1)=NX*(NY-1)+1
+      SKPDAT(3,1)=NX
+      SKPDAT(4,1)=1
+      SKPDAT(5,1)=NY*(NZ-1)+1
+      SKPDAT(6,1)=NY
+C
+      SKPDAT(1,2)=1             + (NX-1)
+      SKPDAT(2,2)=NX*(NY-1)+1   + (NX-1)
+      SKPDAT(3,2)=NX
+      SKPDAT(4,2)=1
+      SKPDAT(5,2)=NY*(NZ-1)+1
+      SKPDAT(6,2)=NY
+C
+C     X-Z Planes (Faces 3 and 4)
+C
+      SKPDAT(1,3)=1
+      SKPDAT(2,3)=NX
+      SKPDAT(3,3)=1
+      SKPDAT(4,3)=1
+      SKPDAT(5,3)=NY*(NZ-1)+1
+      SKPDAT(6,3)=NY
+C
+      SKPDAT(1,4)=1           + NX*(NY-1)
+      SKPDAT(2,4)=NX          + NX*(NY-1)
+      SKPDAT(3,4)=1
+      SKPDAT(4,4)=1
+      SKPDAT(5,4)=NY*(NZ-1)+1
+      SKPDAT(6,4)=NY
+C
+C     X-Y Planes (Faces 5 and 6)
+C
+      SKPDAT(1,5)=1
+      SKPDAT(2,5)=NX
+      SKPDAT(3,5)=1
+      SKPDAT(4,5)=1
+      SKPDAT(5,5)=NY
+      SKPDAT(6,5)=1
+C
+      SKPDAT(1,6)=1           + NX*NY*(NZ-1)
+      SKPDAT(2,6)=NX          + NX*NY*(NZ-1)
+      SKPDAT(3,6)=1
+      SKPDAT(4,6)=1
+      SKPDAT(5,6)=NY
+      SKPDAT(6,6)=1
+C
+C     Set up skip indices for each of the 12 edges
+C
+C         Note that NXY = NX*NY even for 2-D since
+C         this branch does not apply to the 2D case anyway.
+C
+C     ESKIP(*,1) = start location
+C     ESKIP(*,2) = end
+C     ESKIP(*,3) = stride
+C
+      NXY=NX*NY
+      ESKIP( 1,1) = IXCN(1) + 1
+      ESKIP( 1,2) = IXCN(2) - 1
+      ESKIP( 1,3) = 1
+      ESKIP( 2,1) = IXCN(3) + 1
+      ESKIP( 2,2) = IXCN(4) - 1
+      ESKIP( 2,3) = 1
+      ESKIP( 3,1) = IXCN(5) + 1
+      ESKIP( 3,2) = IXCN(6) - 1
+      ESKIP( 3,3) = 1
+      ESKIP( 4,1) = IXCN(7) + 1
+      ESKIP( 4,2) = IXCN(8) - 1
+      ESKIP( 4,3) = 1
+      ESKIP( 5,1) = IXCN(1) + NX
+      ESKIP( 5,2) = IXCN(3) - NX
+      ESKIP( 5,3) = NX
+      ESKIP( 6,1) = IXCN(2) + NX
+      ESKIP( 6,2) = IXCN(4) - NX
+      ESKIP( 6,3) = NX
+      ESKIP( 7,1) = IXCN(5) + NX
+      ESKIP( 7,2) = IXCN(7) - NX
+      ESKIP( 7,3) = NX
+      ESKIP( 8,1) = IXCN(6) + NX
+      ESKIP( 8,2) = IXCN(8) - NX
+      ESKIP( 8,3) = NX
+      ESKIP( 9,1) = IXCN(1) + NXY
+      ESKIP( 9,2) = IXCN(5) - NXY
+      ESKIP( 9,3) = NXY
+      ESKIP(10,1) = IXCN(2) + NXY
+      ESKIP(10,2) = IXCN(6) - NXY
+      ESKIP(10,3) = NXY
+      ESKIP(11,1) = IXCN(3) + NXY
+      ESKIP(11,2) = IXCN(7) - NXY
+      ESKIP(11,3) = NXY
+      ESKIP(12,1) = IXCN(4) + NXY
+      ESKIP(12,2) = IXCN(8) - NXY
+      ESKIP(12,3) = NXY
+C
+C     Load reverse direction edge arrays for reverse mappings...
+C
+      DO 20 IED=1,12
+      IEDM=-IED
+      ESKIP(IEDM,1) =  ESKIP(IED,2)
+      ESKIP(IEDM,2) =  ESKIP(IED,1)
+      ESKIP(IEDM,3) = -ESKIP(IED,3)
+   20 CONTINUE
+C
+C     Compute offset for global edge vector given current element
+C     dimensions.....
+C
+C     NGSPED(ITE,ICMP) = number of global (ie, distinct) special edges
+C                        of type ITE (1,2, or 3)  for field ICMP.
+C
+C                        ITE = 1 implies an "X" edge
+C                        ITE = 2 implies an "Y" edge
+C                        ITE = 3 implies an "Z" edge
+C
+C     Set up number of nodes along each of the 3 types of edges
+C     (endpoints excluded).
+C
+      NEDG(1)=NX-2
+      NEDG(2)=NY-2
+      NEDG(3)=NZ-2
+C
+C
+      RETURN
+      END
+c-----------------------------------------------------------------------
