@@ -455,10 +455,9 @@ c-----------------------------------------------------------------------
                 ie=i3(ig)
                 nep=i4(ig)
                 nwk=nep*mdim*nxyzr8
-                if (wdsizr.eq.8) nwk=nwk*2
                 offs=offs0+iofldsr*stride+mdim*(ie-1)*nxyzr8*wdsizr
                 call byte_seek(offs/4,ierr)
-                call byte_read(wk(iloc),nwk,ierr)
+                call byte_read(wk(iloc),nwk*(wdsizr/4),ierr)
                 iloc=iloc+nwk
                 ig=ig+1
             enddo
