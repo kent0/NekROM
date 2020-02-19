@@ -4,6 +4,8 @@ c-----------------------------------------------------------------------
       real a(1),b(1),c(1),u(1)
 
       call bip(b,u,u,nel,nb,ndim)
+      call aip(a,u,u,nel,nb,ndim)
+      call cip(a,u,u,u,nel,nb,ndim,ndim)
 
       do j=1,nb
       do i=1,nb
