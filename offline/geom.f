@@ -14,6 +14,7 @@ c-----------------------------------------------------------------------
 
       call glmapm1(nel)
       call geodat1(nel)
+      call setrxp(rx,nel)
 
       return
       end

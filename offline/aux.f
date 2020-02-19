@@ -1929,3 +1929,376 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine add2(a,b,n)
+      real a(1),b(1)
+      do i=1,n
+         a(i)=a(i)+b(i)
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine intp_rstd(ju,u,mx,md,if3d,idir) ! GLL->GL interpolation
+
+c     GLL interpolation from mx to md.
+
+c     If idir ^= 0, then apply transpose operator  (md to mx)
+
+      include 'LVAR'
+
+      real    ju(1),u(1)
+      logical if3d
+
+      parameter (ldg=lxd**3,lwkd=4*lxd*lxd)
+      common /dgrad/ d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),jgt(ldg)
+     $             , wkd(lwkd)
+      real jgl,jgt
+
+      parameter (ld=2*lxd)
+      common /ctmp0/ w(ld**ldim,2)
+
+      call lim_chk(md,ld,'md   ','ld   ','grad_rstd ')
+      call lim_chk(mx,ld,'mx   ','ld   ','grad_rstd ')
+
+      ldw = 2*(ld**ldim)
+
+      call get_int_ptr (i,mx,md)
+c
+      if (idir.eq.0) then
+         call specmpn(ju,md,u,mx,jgl(i),jgt(i),if3d,w,ldw)
+      else
+         call specmpn(ju,mx,u,md,jgt(i),jgl(i),if3d,w,ldw)
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_int_ptr (ip,mx,md) ! GLL-->GL pointer
+
+c     Get pointer to jgl() for interpolation pair (mx,md)
+
+      include 'LVAR'
+
+      parameter (ldg=lxd**3,lwkd=4*lxd*lxd)
+      common /dgrad/ d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),jgt(ldg)
+     $             , wkd(lwkd)
+      real jgl,jgt
+c
+      parameter (ld=2*lxd)
+      common /igrad/ pd    (0:ld*ld)
+     $             , pdg   (0:ld*ld)
+     $             , pjgl  (0:ld*ld)
+      integer pd , pdg , pjgl
+c
+      ij = md + ld*(mx-1)
+      ip = pjgl(ij)
+c
+      if (ip.eq.0) then
+c
+         nstore   = pjgl(0)
+         pjgl(ij) = nstore+1
+         nstore   = nstore + md*mx
+         pjgl(0)  = nstore
+         ip       = pjgl(ij)
+c
+         nwrkd = mx + md
+         call lim_chk(nstore,ldg ,'jgl  ','ldg  ','get_int_pt')
+         call lim_chk(nwrkd ,lwkd,'wkd  ','lwkd ','get_int_pt')
+c
+         call gen_int(jgl(ip),jgt(ip),md,mx,wkd)
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine get_dgl_ptr (ip,mx,md)
+c
+c     Get pointer to GL-GL interpolation dgl() for pair (mx,md)
+c
+      include 'LVAR'
+c
+      parameter (ldg=lxd**3,lwkd=4*lxd*lxd)
+      common /dgrad/ d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),jgt(ldg)
+     $             , wkd(lwkd)
+      real jgl,jgt
+c
+      parameter (ld=2*lxd)
+      common /jgrad/ pd    (0:ld*ld)
+     $             , pdg   (0:ld*ld)
+     $             , pjgl  (0:ld*ld)
+      integer pd , pdg , pjgl
+c
+      ij = md + ld*(mx-1)
+      ip = pdg (ij)
+
+      if (ip.eq.0) then
+
+         nstore   = pdg (0)
+         pdg (ij) = nstore+1
+         nstore   = nstore + md*mx
+         pdg (0)  = nstore
+         ip       = pdg (ij)
+c
+         nwrkd = mx + md
+         call lim_chk(nstore,ldg ,'dg   ','ldg  ','get_dgl_pt')
+         call lim_chk(nwrkd ,lwkd,'wkd  ','lwkd ','get_dgl_pt')
+c
+         call gen_dgl(dg (ip),dgt(ip),md,mx,wkd)
+      endif
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine grad_rst(ur,us,ut,u,md,if3d) ! Gauss-->Gauss grad
+
+      include 'LVAR'
+      include 'INTEG'
+
+      real    ur(1),us(1),ut(1),u(1)
+      logical if3d
+
+      parameter (ldg=lxd**3,lwkd=4*lxd*lxd)
+      common /dgrad/ d(ldg),dt(ldg),dg(ldg),dgt(ldg),jgl(ldg),jgt(ldg)
+     $             , wkd(lwkd)
+      real jgl,jgt
+
+      m0 = md-1
+      call get_dgl_ptr (ip,md,md)
+      if (if3d) then
+         call local_grad3(ur,us,ut,u,m0,1,dg(ip),dgt(ip))
+      else
+         call local_grad2(ur,us   ,u,m0,1,dg(ip),dgt(ip))
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gen_dgl(dgl,dgt,mp,np,w)
+c
+c     Generate derivative from np GL points onto mp GL points
+c
+c        dgl  = interpolation matrix, mapping from velocity nodes to pressure
+c        dgt  = transpose of interpolation matrix
+c        w    = work array of size (3*np+mp)
+c
+c        np   = number of points on GLL grid
+c        mp   = number of points on GL  grid
+c
+c
+c
+      real dgl(mp,np),dgt(np*mp),w(1)
+c
+c
+      iz = 1
+      id = iz + np
+c
+      call zwgl  (w(iz),dgt,np)  ! GL points
+      call zwgl  (w(id),dgt,mp)  ! GL points
+c
+      ndgt = 2*np
+      ldgt = mp*np
+      call lim_chk(ndgt,ldgt,'ldgt ','dgt  ','gen_dgl   ')
+c
+      n  = np-1
+      do i=1,mp
+         call fd_weights_full(w(id+i-1),w(iz),n,1,dgt) ! 1=1st deriv.
+         do j=1,np
+            dgl(i,j) = dgt(np+j)                       ! Derivative matrix
+         enddo
+      enddo
+c
+      call transpose(dgt,np,dgl,mp)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine local_grad3(ur,us,ut,u,N,e,D,Dt)
+c     Output: ur,us,ut         Input:u,N,e,D,Dt
+      real ur(0:N,0:N,0:N),us(0:N,0:N,0:N),ut(0:N,0:N,0:N)
+      real u (0:N,0:N,0:N,1)
+      real D (0:N,0:N),Dt(0:N,0:N)
+      integer e
+c
+      m1 = N+1
+      m2 = m1*m1
+c
+      call mxm(D ,m1,u(0,0,0,e),m1,ur,m2)
+      do k=0,N
+         call mxm(u(0,0,k,e),m1,Dt,m1,us(0,0,k),m1)
+      enddo
+      call mxm(u(0,0,0,e),m2,Dt,m1,ut,m1)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine local_grad2(ur,us,u,N,e,D,Dt)
+c     Output: ur,us         Input:u,N,e,D,Dt
+      real ur(0:N,0:N),us(0:N,0:N)
+      real u (0:N,0:N,1)
+      real D (0:N,0:N),Dt(0:N,0:N)
+      integer e
+c
+      m1 = N+1
+c
+      call mxm(D ,m1,u(0,0,e),m1,ur,m1)
+      call mxm(u(0,0,e),m1,Dt,m1,us,m1)
+c
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine lim_chk(n,m,avar5,lvar5,sub_name10)
+      include 'SIZE'            ! need nid
+      character*5  avar5,lvar5
+      character*10 sub_name10
+
+      if (n.gt.m) then
+         write(6,1) nid,n,m,avar5,lvar5,sub_name10
+    1    format(i8,' ERROR: :',2i12,2(1x,a5),1x,a10)
+         call exitti('lim_chk problem. $',n)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine fd_weights_full(xx,x,n,m,c)
+c
+c     This routine evaluates the derivative based on all points
+c     in the stencils.  It is more memory efficient than "fd_weights"
+c
+c     This set of routines comes from the appendix of 
+c     A Practical Guide to Pseudospectral Methods, B. Fornberg
+c     Cambridge Univ. Press, 1996.   (pff)
+c
+c     Input parameters:
+c       xx -- point at wich the approximations are to be accurate
+c       x  -- array of x-ordinates:   x(0:n)
+c       n  -- polynomial degree of interpolant (# of points := n+1)
+c       m  -- highest order of derivative to be approxxmated at xi
+c
+c     Output:
+c       c  -- set of coefficients c(0:n,0:m).
+c             c(j,k) is to be applied at x(j) when
+c             the kth derivative is approxxmated by a 
+c             stencil extending over x(0),x(1),...x(n).
+c
+c
+      real x(0:n),c(0:n,0:m)
+c
+      c1       = 1.
+      c4       = x(0) - xx
+c
+      do k=0,m
+      do j=0,n
+         c(j,k) = 0.
+      enddo
+      enddo
+      c(0,0) = 1.
+c
+      do i=1,n
+         mn = min(i,m)
+         c2 = 1.
+         c5 = c4
+         c4 = x(i)-xx
+         do j=0,i-1
+            c3 = x(i)-x(j)
+            c2 = c2*c3
+            do k=mn,1,-1
+               c(i,k) = c1*(k*c(i-1,k-1)-c5*c(i-1,k))/c2
+            enddo
+            c(i,0) = -c1*c5*c(i-1,0)/c2
+            do k=mn,1,-1
+               c(j,k) = (c4*c(j,k)-k*c(j,k-1))/c3
+            enddo
+            c(j,0) = c4*c(j,0)/c3
+         enddo
+         c1 = c2
+      enddo
+c     call outmat(c,n+1,m+1,'fdw',n)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine specmpn(b,nb,a,na,ba,ab,if3d,w,ldw)
+C
+C     -  Spectral interpolation from A to B via tensor products
+C     -  scratch arrays: w(na*na*nb + nb*nb*na)
+C
+C     5/3/00  -- this routine replaces specmp in navier1.f, which
+c                has a potential memory problem
+C
+C
+      logical if3d
+c
+      real b(nb,nb,nb),a(na,na,na)
+      real w(ldw)
+c
+      ltest = na*nb
+      if (if3d) ltest = na*na*nb + nb*na*na
+      if (ldw.lt.ltest) then
+         write(6,*) 'ERROR specmp:',ldw,ltest,if3d
+         call exitt
+      endif
+c
+      if (if3d) then
+         nab = na*nb
+         nbb = nb*nb
+         call mxm(ba,nb,a,na,w,na*na)
+         k=1
+         l=na*na*nb + 1
+         do iz=1,na
+            call mxm(w(k),nb,ab,na,w(l),nb)
+            k=k+nab
+            l=l+nbb
+         enddo
+         l=na*na*nb + 1
+         call mxm(w(l),nbb,ab,na,b,nb)
+      else
+         call mxm(ba,nb,a,na,w,na)
+         call mxm(w,nb,ab,na,b,nb)
+      endif
+      return
+      end
+c
+c-----------------------------------------------------------------------
+      subroutine transpose(a,lda,b,ldb)
+      real a(lda,1),b(ldb,1)
+c
+      do j=1,ldb
+         do i=1,lda
+            a(i,j) = b(j,i)
+         enddo
+      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gen_int(jgl,jgt,mp,np,w)
+c
+c     Generate interpolation from np GLL points to mp GL points
+c
+c        jgl  = interpolation matrix, mapping from velocity nodes to pressure
+c        jgt  = transpose of interpolation matrix
+c        w    = work array of size (np+mp)
+c
+c        np   = number of points on GLL grid
+c        mp   = number of points on GL  grid
+c
+c
+      real jgl(mp,np),jgt(np*mp),w(1)
+c
+      iz = 1
+      id = iz + np
+c
+      call zwgll (w(iz),jgt,np)
+      call zwgl  (w(id),jgt,mp)
+c
+      n  = np-1
+      do i=1,mp
+         call fd_weights_full(w(id+i-1),w(iz),n,0,jgt)
+         do j=1,np
+            jgl(i,j) = jgt(j)                  !  Interpolation matrix
+         enddo
+      enddo
+c
+      call transpose(jgt,np,jgl,mp)
+c
+      return
+      end
+c-----------------------------------------------------------------------

@@ -58,17 +58,33 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cip(c,u,v,w,nb,n)
+      subroutine cip(c,u,v,w,nel,nb,mdim,ndim)
+
+      include 'LVAR'
+      include 'INTEG'
+
+      common /tinteg/ tmp(lxyz,lel,ldim),dw(lxyzd,lel,ldim)
 
       real c(nb,nb,nb)
-      real u(n,nb),v(n,nb),w(n,nb)
+      real u(lxyz,nel,nb,mdim),v(lxyz,nel,nb,mdim),w(lxyz,nel,nb,ndim)
 
-      do l=1,nb
+      do l=1,ndim
       do k=1,nb
-      do j=1,nb
-      do i=1,n
-         c(j,k,l)=c(j,k,l)+u(i,l)*v(i,j)*w(i,k)
+         call set_convect_new_part(dw,dw(1,1,2),dw(1,1,ndim),
+     $      w(1,1,k,1),w(1,1,k,2),w(1,1,k,ndim),nel)
+         do j=1,nb
+            call conv(tmp,u(1,1,j,1),.false.,
+     $         dw,dw(1,1,2),dw(1,1,ndim),.true.,nel)
+            do i=1,nb
+                c(i,j,k)=c(i,j,k)+vlsc2(tmp,v(1,1,j,l),lxyz*nel)
+            enddo
+         enddo
       enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine aop(au,u,mel)
 C------------------------------------------------------------------
 C
@@ -241,8 +257,215 @@ c    $                          + visc(i,j,1,ie)*(term1+term2)
       return
       end
 c-----------------------------------------------------------------------
+      subroutine set_convect_new_part(cr,cs,ct,ux,uy,uz,mel)
+C
+C     Put vxd,vyd,vzd into rst form on fine mesh
+C
+C     For rst form, see eq. (4.8.5) in Deville, Fischer, Mund (2002).
+C
+      include 'LVAR'
+      include 'INTEG'
+
+      logical if3d
+
+      parameter (lxy=lx1*ly1*lz1,ltd=lxd*lyd*lzd)
+
+      real cr(ltd,1),cs(ltd,1),ct(ltd,1)
+      real ux(lxy,1),uy(lxy,1),uz(lxy,1)
+
+      common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
+     $             , ur(ltd),us(ltd),ut(ltd)
+     $             , tr(ltd,3),uf(ltd)
+
+      integer e
+      if3d=ldim.eq.3
+
+      nxyz1 = lx1*ly1*lz1
+      nxyzd = lxd*lyd*lzd
+
+      ic = 1    ! pointer to vector field C
+
+      do e=1,mel
+
+c        Map coarse velocity to fine mesh (C-->F)
+
+         call intp_rstd(fx,ux(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+         call intp_rstd(fy,uy(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+         if (if3d) call intp_rstd(fz,uz(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+
+c        Convert convector F to r-s-t coordinates
+
+         if (if3d) then
+
+           do i=1,nxyzd
+              cr(i,e)=rx(i,1,e)*fx(i)+rx(i,2,e)*fy(i)+rx(i,3,e)*fz(i)
+              cs(i,e)=rx(i,4,e)*fx(i)+rx(i,5,e)*fy(i)+rx(i,6,e)*fz(i)
+              ct(i,e)=rx(i,7,e)*fx(i)+rx(i,8,e)*fy(i)+rx(i,9,e)*fz(i)
+           enddo
+
+         else
+
+           do i=1,nxyzd
+              cr(i,e)=rx(i,1,e)*fx(i)+rx(i,2,e)*fy(i)
+              cs(i,e)=rx(i,3,e)*fx(i)+rx(i,4,e)*fy(i)
+           enddo
+
+         endif
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine conv(bdu,u,ifuf,cx,cy,cz,ifcf,mel)
+
+c     Compute dealiased form:  J^T Bf *JC .grad Ju w/ correct Jacobians
+c
+      include 'LVAR'
+      include 'INTEG'
+
+      real bdu(1),u(1),cx(1),cy(1),cz(1)
+      logical ifuf,ifcf,if3d            ! u and/or c already on fine mesh?
+
+      parameter (lxy=lx1*ly1*lz1,ltd=lxd*lyd*lzd)
+      common /iconv/ icc
+      common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
+     $             , ur(ltd),us(ltd),ut(ltd)
+     $             , tr(ltd,3),uf(ltd)
+
+      integer e
+      if3d=ldim.eq.3
+
+      icc=icc+1
+      nxyz1=lx1*ly1*lz1
+      nxyzd=lxd*lyd*lzd
+
+      nxyzu=nxyz1
+      if (ifuf) nxyzu=nxyzd
+
+      nxyzc = nxyz1
+      if (ifcf) nxyzc=nxyzd
+
+      iu=1 ! pointer to scalar field u
+      ic=1 ! pointer to vector field C
+      ib=1 ! pointer to scalar field Bdu
+
+      do e=1,mel
+         if (ifcf) then
+            call copy(tr(1,1),cx(ic),nxyzd)  ! already in rst form
+            call copy(tr(1,2),cy(ic),nxyzd)
+            if (if3d) call copy(tr(1,3),cz(ic),nxyzd)
+         else  ! map coarse velocity to fine mesh (C-->F)
+            call intp_rstd(fx,cx(ic),lx1,lxd,if3d,0)
+            call intp_rstd(fy,cy(ic),lx1,lxd,if3d,0)
+            if (if3d) call intp_rstd(fz,cz(ic),lx1,lxd,if3d,0)
+
+            if (if3d) then  ! Convert convector F to r-s-t coordinates
+               do i=1,nxyzd
+                  tr(i,1)=rx(i,1,e)*fx(i)+
+     $                    rx(i,2,e)*fy(i)+
+     $                    rx(i,3,e)*fz(i)
+                  tr(i,2)=rx(i,4,e)*fx(i)+
+     $                    rx(i,5,e)*fy(i)+
+     $                    rx(i,6,e)*fz(i)
+                  tr(i,3)=rx(i,7,e)*fx(i)+
+     $                    rx(i,8,e)*fy(i)+
+     $                    rx(i,9,e)*fz(i)
+               enddo
+            else
+               do i=1,nxyzd
+                  tr(i,1)=rx(i,1,e)*fx(i)+rx(i,2,e)*fy(i)
+                  tr(i,2)=rx(i,3,e)*fx(i)+rx(i,4,e)*fy(i)
+               enddo
+           endif
+         endif
+
+         if (ifuf) then
+            call grad_rst(ur,us,ut,u(iu),lxd,if3d)
+         else
+            call intp_rstd(uf,u(iu),lx1,lxd,if3d,0)
+            call grad_rst(ur,us,ut,uf,lxd,if3d)
+         endif
+
+         if (if3d) then
+            do i=1,nxyzd ! mass matrix included, per DFM (4.8.5)
+               uf(i)=tr(i,1)*ur(i)+tr(i,2)*us(i)+tr(i,3)*ut(i)
+            enddo
+         else
+            do i=1,nxyzd ! mass matrix included, per DFM (4.8.5)
+               uf(i)=tr(i,1)*ur(i)+tr(i,2)*us(i)
+            enddo
+         endif
+
+         call intp_rstd(bdu(ib),uf,lx1,lxd,if3d,1)
+
+         ic=ic+nxyzc
+         iu=iu+nxyzu
+         ib=ib+nxyz1
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setrxp(nel)
+c
+c     Eulerian scheme, add convection term to forcing function
+c     at current time step.
+c
+      include 'LVAR'
+      include 'INTEG'
+
+      common /dealias1/ zd(lxd),wd(lxd)
+      logical if3d
+
+      nxyz1=lx1*ly1*lz1
+      nxyzd=lxd*lyd*lzd
+
+      call zwgl(zd,wd,lxd)  ! zwgl -- NOT zwgll!
+
+      if3d=ldim.eq.3
+
+      if (if3d) then
+         do ie=1,nel
+            call intp_rstd(rx(1,1,ie),rxm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,2,ie),rym1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,3,ie),rzm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,4,ie),sxm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,5,ie),sym1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,6,ie),szm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,7,ie),txm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,8,ie),tym1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,9,ie),tzm1(1,1,1,ie),lx1,lxd,if3d,0)
+            l=0
+            do k=1,lzd
+            do j=1,lyd
+            do i=1,lxd
+               l=l+1
+               w=wd(i)*wd(j)*wd(k)
+               do ii=1,9
+                  rx(l,ii,ie)=w*rx(l,ii,ie)
+               enddo
+            enddo
+            enddo
+            enddo
+         enddo
+      else ! 2D
+         do ie=1,nel
+            call intp_rstd(rx(1,1,ie),rxm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,2,ie),rym1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,3,ie),sxm1(1,1,1,ie),lx1,lxd,if3d,0)
+            call intp_rstd(rx(1,4,ie),sym1(1,1,1,ie),lx1,lxd,if3d,0)
+            l=0
+            do j=1,lyd
+            do i=1,lxd
+               l=l+1
+               w=wd(i)*wd(j)
+               do ii=1,4
+                  rx(l,ii,ie)=w*rx(l,ii,ie)
+               enddo
+            enddo
+            enddo
+         enddo
+      endif
 
       return
       end
