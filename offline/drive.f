@@ -13,6 +13,7 @@ c-----------------------------------------------------------------------
         ieg(2)=512
         nel=ieg(2)-ieg(1)+1
 
+        nsg=1
         call loadsnaps(buf,ieg,indxr,nsg)
         call setgeom(buf,nel)
         call geom_check(nel)
