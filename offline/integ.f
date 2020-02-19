@@ -7,7 +7,7 @@ c-----------------------------------------------------------------------
 
       do j=1,nb
       do i=1,nb
-         write (6,*) i,j,b(i+(j-1)*nb),'b'
+c        write (6,*) i,j,b(i+(j-1)*nb),'b'
       enddo
       enddo
 
@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
       real b(nb,nb)
       real u(lxyz,nel,nb,ndim),v(lxyz,nel,nb,ndim)
 
-      write (6,*) nel,nb,nb,ndim,'bip1'
+c     write (6,*) nel,nb,nb,ndim,'bip1'
       do l=1,ndim
       do k=1,nb
       do j=1,nb

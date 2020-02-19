@@ -55,7 +55,7 @@ c-----------------------------------------------------------------------
       real buf(1)
       integer ieg(1),indxr(1)
 
-      write (6,*) 'starting load_snap'
+c     write (6,*) 'starting load_snap'
 
       nsg=min(nsmax,lsg)
 
@@ -95,7 +95,7 @@ c-----------------------------------------------------------------------
          if (mid.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
-      write (6,*) 'ending load_snap'
+c     write (6,*) 'ending load_snap'
 
       return
       end
@@ -112,14 +112,14 @@ c-----------------------------------------------------------------------
       common /iread8/ ibuf8(lxyz*leb*lfld)
       common /iread/ ibuf(lxyz*leb*lfld)
 
-      write (6,*) 'starting rxupt'
+c     write (6,*) 'starting rxupt'
 
       ieg(4)=0
       call rxupt_open(fname)
       call rxupt_read(xupt,ibuf,ibuf8,ieg,indxr)
       call rxupt_close(fname)
 
-      write (6,*) 'ending rxupt'
+c     write (6,*) 'ending rxupt'
 
       return
       end
@@ -129,7 +129,7 @@ c-----------------------------------------------------------------------
       character*132 fname
       integer ieg(1)
 
-      write (6,*) 'reading ',fname
+c     write (6,*) 'reading ',fname
       call my_mfi_prepare(fname)
 
       return
@@ -145,8 +145,6 @@ c-----------------------------------------------------------------------
       real xupt(1)
       integer ieg(1),indxr(1),ibuf(1)
       integer*8 ibuf8(1)
-
-      write (6,*) 'starting rxupt_read'
 
       ieg(2)=min(ieg(2),nelgr)
 
@@ -173,10 +171,6 @@ c-----------------------------------------------------------------------
 
       call esort(ieg,nel)
 
-      do i=1,nel
-         write (6,*) ieg(i),ieg(nel+i),ieg(2*nel+i),ieg(3*nel+i),'ieg'
-      enddo
-
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
      $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n)
 
@@ -184,16 +178,12 @@ c-----------------------------------------------------------------------
       ieg(2)=ieg1
       ieg(3)=n
 
-      write (6,*) 'ending rxupt_read'
-
       return
       end
 c-----------------------------------------------------------------------
       subroutine rxupt_close
 
-      write (6,*) 'starting rxupt_close'
       call byte_close(ierr)
-      write (6,*) 'ending rxupt_close'
 
       return
       end
@@ -416,9 +406,9 @@ c-----------------------------------------------------------------------
       ifld=1
       ifldt=1
       jfld=1
-      write (6,*) 'wp 6.2'
+c     write (6,*) 'wp 6.2'
       do while (indxr(ifld).ne.-1)
-         write (6,*) 'wp 6.9',ifld,ifldt
+c        write (6,*) 'wp 6.9',ifld,ifldt
          if (ifld.le.2) then
              mdim=ndim
          else
@@ -432,7 +422,7 @@ c-----------------------------------------------------------------------
             if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ndim
             if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ndim
             if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1+(ifld-4)
-            write (6,*) 'wp 6.3',ifld
+c           write (6,*) 'wp 6.3',ifld
 
             if (ifld.le.2) then
                if (ndim.eq.2) then
@@ -448,7 +438,7 @@ c-----------------------------------------------------------------------
             else
                indx=1
             endif
-            write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
+c           write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
             iloc=1
             ig=1
             do while (i3(ig).ne.0) ! for now, read mdim stuff instead of nfld
@@ -461,7 +451,7 @@ c-----------------------------------------------------------------------
                 iloc=iloc+nwk
                 ig=ig+1
             enddo
-            write (6,*) 'wp 6.5',ig,ng
+c           write (6,*) 'wp 6.5',ig,ng
 
             nwk=ner*ldim*nxyzr8
 
@@ -487,7 +477,7 @@ c-----------------------------------------------------------------------
             n=n+lxyz*nfld*ner
             indxr(ifld)=indx
             jfld=jfld+nfld
-            write (6,*) 'wp 6.8'
+c           write (6,*) 'wp 6.8'
          endif
          ifldt=ifldt+mdim
          ifld=ifld+1
