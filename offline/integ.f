@@ -22,8 +22,6 @@ c-----------------------------------------------------------------------
       real b(nb,nb)
       real u(lxyz,nel,nb,ndim),v(lxyz,nel,nb,ndim)
 
-      call rone(bm1,nel*lxyz)
-
       write (6,*) nel,nb,nb,ndim,'bip1'
       do l=1,ndim
       do k=1,nb
