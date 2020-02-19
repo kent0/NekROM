@@ -39,6 +39,22 @@ c-----------------------------------------------------------------------
         enddo
         enddo
 
+        write (6,*) ' '
+
+        do j=1,nsg
+        do i=1,nsg
+           write (6,*) i,j,ga(i+(j-1)*nsg),'ga'
+        enddo
+        enddo
+
+        write (6,*) ' '
+
+        do j=1,nsg
+        do i=1,nsg
+           write (6,*) i,j,ga(i+(j-1)*nsg),'gc'
+        enddo
+        enddo
+
         return
         end
 c-----------------------------------------------------------------------
