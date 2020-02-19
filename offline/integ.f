@@ -5,7 +5,7 @@ c-----------------------------------------------------------------------
 
       call bip(b,u,u,nel,nb,ndim)
       call aip(a,u,u,nel,nb,ndim)
-      call cip(a,u,u,u,nel,nb,ndim,ndim)
+      call cip(c,u,u,u,nel,nb,ndim,ndim)
 
       do j=1,nb
       do i=1,nb

@@ -49,9 +49,11 @@ c-----------------------------------------------------------------------
 
         write (6,*) ' '
 
+        do k=1,nsg
         do j=1,nsg
         do i=1,nsg
-           write (6,*) i,j,ga(i+(j-1)*nsg),'gc'
+           write (6,*) i,j,gc(i+(j-1)*nsg+(k-1)*nsg*nsg),'gc'
+        enddo
         enddo
         enddo
 
