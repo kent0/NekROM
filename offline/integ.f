@@ -19,17 +19,17 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'INTEG'
 
+      common /tinteg/ tmp(lxyz,lel,ldim)
+
       real b(nb,nb)
       real u(lxyz,nel,nb,ndim),v(lxyz,nel,nb,ndim)
 
-c     write (6,*) nel,nb,nb,ndim,'bip1'
       do l=1,ndim
       do k=1,nb
-      do j=1,nb
-      do i=1,nel
-         b(j,k)=b(j,k)+vlsc3(u(1,i,k,l),v(1,i,j,l),bm1(1,1,1,i),lxyz)
-      enddo
-      enddo
+         call col3(tmp,u(1,1,k,l),bm1,lxyz*nel)
+         do j=1,nb
+            b(j,k)=b(j,k)+vlsc2(tmp,v(1,1,j,l),lxyz*nel)
+         enddo
       enddo
       enddo
 
