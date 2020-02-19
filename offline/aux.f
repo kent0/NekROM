@@ -139,17 +139,17 @@ c      ifgtim  = .true.  ! always get time
 
   50  if (NPS.lt.NPSR) then
          if (nid.eq.0) then 
-           write(*,'(A,/,A)') 
-     &      'WARNING: restart file has a NSPCAL > LDIMT',
-     &      'read only part of the fld-data!'
+c          write(*,'(A,/,A)')
+c    &      'WARNING: restart file has a NSPCAL > LDIMT',
+c    &      'read only part of the fld-data!'
          endif
       endif
 
       if (NPS.lt.NPSCAL) then
          if (nid.eq.0) then 
-           write(*,'(A,/,A)') 
-     &      'WARNING: NPSCAL read from restart file differs from ',
-     &      'currently used NPSCAL!'
+c          write(*,'(A,/,A)')
+c    &      'WARNING: NPSCAL read from restart file differs from ',
+c    &      'currently used NPSCAL!'
          endif
       endif
 
