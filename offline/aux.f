@@ -955,7 +955,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine geodat1
+      subroutine geodat1(nel)
 C-----------------------------------------------------------------------
 C
 C     Routine to generate elemental geometric matrices on mesh 1
@@ -983,18 +983,14 @@ C
       logical ifaxis
 
       ifaxis=.false.
-C
-      NXYZ1 = lx1*ly1*lz1
-      NTOT1 = NXYZ1*NELT
-C
-      IF (IFGMSH3 .AND. ISTEP.EQ.0)
-     $   CALL XYZRST (XRM1,YRM1,ZRM1,XSM1,YSM1,ZSM1,XTM1,YTM1,ZTM1,
-     $                IFAXIS)
-C
+
+      NXYZ1 = lxyz
+      NTOT1 = lxyz*NEL
+
       IF (.NOT.IFAXIS) THEN
          CALL INVERS2 (WJ,JACM1,NTOT1)
       ELSE
-         DO 500 IEL=1,NELT
+         DO 500 IEL=1,NEL
            IF (IFRZER(IEL)) THEN
               DO 510 J=1,ly1
               DO 510 I=1,lx1
@@ -1042,7 +1038,7 @@ C
 C     Multiply the geometric factors GiM1,i=1,5 with the
 C     weights on mesh M1.
 C
-      DO 580 IEL=1,NELT
+      DO 580 IEL=1,NEL
          IF (IFAXIS) CALL SETAXW1 ( IFRZER(IEL) )
             CALL COL2 (G1M1(1,1,1,IEL),W3M1,NXYZ1)
             CALL COL2 (G2M1(1,1,1,IEL),W3M1,NXYZ1)
@@ -1056,7 +1052,7 @@ C
 C
 C     Compute the mass matrix on mesh M1.
 C
-      DO 700 IEL=1,NELT
+      DO 700 IEL=1,NEL
          IF (IFAXIS) CALL SETAXW1 ( IFRZER(IEL) )
             CALL COL3 (BM1  (1,1,1,IEL),JACM1(1,1,1,IEL),W3M1,NXYZ1)
          IF (IFAXIS) THEN 
@@ -1084,7 +1080,7 @@ C
  700  CONTINUE
 
       IF(IFAXIS) THEN
-        DO IEL=1,NELT
+        DO IEL=1,NEL
           IF(IFRZER(IEL)) THEN
             DO J=1,ly1
             DO I=1,lx1
@@ -1100,12 +1096,12 @@ C
           ENDIF
         ENDDO
       ELSE
-        CALL CFILL(YINVM1,1.0D0,NXYZ1*NELT)
+        CALL CFILL(YINVM1,1.0D0,NXYZ1*NEL)
       ENDIF
 C
 C     Compute normals, tangents, and areas on elemental surfaces
 C
-      CALL SETAREA
+      CALL SETAREA(nel)
 C
       RETURN
       END
@@ -1147,7 +1143,7 @@ C
       return
       END
 c-----------------------------------------------------------------------
-      subroutine setarea
+      subroutine setarea(nel)
 c
 c     Compute surface data: areas, normals and tangents
 c
@@ -1162,15 +1158,15 @@ c
       call rzero3 (t2x,t2y,t2z,nsrf)      
 
       if (ldim.eq.2) then
-         call area2
+         call area2(nel)
       else
-         call area3
+         call area3(nel)
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine area2
+      subroutine area2(nel)
 C--------------------------------------------------------------------
 C
 C     Compute areas, normals and tangents (2D and Axisymmetric geom.)
@@ -1191,11 +1187,11 @@ C
      $ ,             WGTR3(LX1,LELT)
      $ ,             WGTR4(LY1,LELT)
 C
-      CALL SETWGTR (WGTR1,WGTR2,WGTR3,WGTR4)
+      CALL SETWGTR(WGTR1,WGTR2,WGTR3,WGTR4,nel)
 C
 C     "R"
 C
-      DO 100 IEL=1,NELT
+      DO 100 IEL=1,NEL
       DO 100 IY=1,ly1
          XS2  = XSM1(lx1,IY,1,IEL)
          YS2  = YSM1(lx1,IY,1,IEL)
@@ -1217,7 +1213,7 @@ C
 C
 C     "S"
 C
-      DO 200 IEL=1,NELT
+      DO 200 IEL=1,NEL
       DO 200 IX=1,lx1
          XR1  = XRM1(IX,  1,1,IEL)
          YR1  = YRM1(IX,  1,1,IEL)
@@ -1240,7 +1236,7 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
-      subroutine area3
+      subroutine area3(nel)
 C--------------------------------------------------------------------
 C
 C     Compute areas, normals and tangents (3D geom.)
@@ -1268,15 +1264,15 @@ C
 C
       NXY1  = lx1*ly1
       NFACE = 2*ldim
-      NTOT  = lx1*ly1*lz1*NELT
-      NSRF  = 6*lx1*ly1*NELT
+      NTOT  = lx1*ly1*lz1*NEL
+      NSRF  = 6*lx1*ly1*NEL
 C
 C        "R"
 C
       CALL VCROSS(A,B,C,XSM1,YSM1,ZSM1,XTM1,YTM1,ZTM1,NTOT)
       CALL VDOT3 (DOT,A,B,C,A,B,C,NTOT)
 C
-      DO 100 IEL=1,NELT
+      DO 100 IEL=1,NEL
       DO 100 IZ=1,lz1
       DO 100 IY=1,ly1
          WEIGHT = WYM1(IY)*WZM1(IZ)
@@ -1294,7 +1290,7 @@ C        "S"
 C
       CALL VCROSS(A,B,C,XRM1,YRM1,ZRM1,XTM1,YTM1,ZTM1,NTOT)
       CALL VDOT3 (DOT,A,B,C,A,B,C,NTOT)
-      DO 200 IEL=1,NELT
+      DO 200 IEL=1,NEL
       DO 200 IZ=1,lz1
       DO 200 IX=1,lx1
          WEIGHT=WXM1(IX)*WZM1(IZ)
@@ -1312,7 +1308,7 @@ C        "T"
 C
       CALL VCROSS(A,B,C,XRM1,YRM1,ZRM1,XSM1,YSM1,ZSM1,NTOT)
       CALL VDOT3 (DOT,A,B,C,A,B,C,NTOT)
-      DO 300 IEL=1,NELT
+      DO 300 IEL=1,NEL
       DO 300 IX=1,lx1
       DO 300 IY=1,ly1
          WEIGHT=WXM1(IX)*WYM1(IY)
@@ -1330,7 +1326,7 @@ C
 C
 C     COMPUTE UNIT TANGENT T1
 C
-      DO 600 IEL=1,NELT
+      DO 600 IEL=1,NEL
       DO 600 IFC=1,NFACE
       IF (IFC.EQ.1 .OR. IFC.EQ.6) THEN
          CALL FACEXV (T1X(1,1,IFC,IEL),T1Y(1,1,IFC,IEL),
@@ -1354,7 +1350,7 @@ C
 C
 C     COMPUTE UNIT TANGENT T2  ( T2 = Normal X T1 )
 C
-      DO 700 IEL=1,NELT
+      DO 700 IEL=1,NEL
       DO 700 IFC=1,NFACE
          CALL VCROSS (T2X(1,1,IFC,IEL),T2Y(1,1,IFC,IEL),
      $                T2Z(1,1,IFC,IEL),
@@ -1399,7 +1395,7 @@ C
       return
       END
 c-----------------------------------------------------------------------
-      subroutine setwgtr (wgtr1,wgtr2,wgtr3,wgtr4)
+      subroutine setwgtr (wgtr1,wgtr2,wgtr3,wgtr4,nel)
 C
       INCLUDE 'LVAR'
       INCLUDE 'INTEG'
@@ -1422,7 +1418,7 @@ C
       ifaxis=.false.
 C
       IF (IFAXIS) THEN
-         DO 100 IEL=1,NELT
+         DO 100 IEL=1,NEL
             DO 120 IX=1,lx1
                WGTR1(IX,IEL) = YM1(IX,  1,1,IEL) * WXM1(IX)
                WGTR3(IX,IEL) = YM1(IX,ly1,1,IEL) * WXM1(IX)
@@ -1444,7 +1440,7 @@ C
             ENDIF
   100    CONTINUE
       ELSE
-         DO 200 IEL=1,NELT
+         DO 200 IEL=1,NEL
             CALL COPY (WGTR1(1,IEL),WXM1,lx1)
             CALL COPY (WGTR2(1,IEL),WYM1,ly1)
             CALL COPY (WGTR3(1,IEL),WXM1,lx1)
@@ -1479,7 +1475,7 @@ c-----------------------------------------------------------------------
       END
 c-----------------------------------------------------------------------
       subroutine xyzrst (xrm1,yrm1,zrm1,xsm1,ysm1,zsm1,
-     $                   XTM1,YTM1,ZTM1,IFAXIS)
+     $                   XTM1,YTM1,ZTM1,IFAXIS,nel)
 C-----------------------------------------------------------------------
 C
 C     Compute global-to-local derivatives on mesh 1.
@@ -1500,9 +1496,10 @@ C
       NXY1=lx1*ly1
       NYZ1=ly1*lz1
 C
-      DO 100 IEL=1,NELT
+      DO 100 IEL=1,NEL
 C
-      IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
+c     IF (IFAXIS) CALL SETAXDY ( IFRZER(IEL) )
+
 C
       CALL MXM (DXM1,lx1,XM1(1,1,1,IEL),lx1,XRM1(1,1,1,IEL),NYZ1)
       CALL MXM (DXM1,lx1,YM1(1,1,1,IEL),lx1,YRM1(1,1,1,IEL),NYZ1)
