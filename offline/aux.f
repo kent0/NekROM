@@ -2309,6 +2309,7 @@ c-----------------------------------------------------------------------
       character*128 fname
       character*128 fntrunc
 
+      write (6,*) 'nid',nid
       if (nid.eq.0) then
          call blank(fntrunc,128)
 
@@ -2328,6 +2329,7 @@ c-----------------------------------------------------------------------
       character*128 fname
 
       open (unit=12,file=fname)
+      write (6,*) 'writing to ',fname
 
       do i=1,n
          write (12,1) a(i)
@@ -2335,6 +2337,209 @@ c-----------------------------------------------------------------------
 
       close (unit=12)
     1 format(1pe24.16)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setg(gram,gub,gram0,nsg,ifavg0)
+
+      real gram(nsg,nsg),gub(nsg,1),gram0(nsg)
+      integer ilgls(nsg)
+      logical ifavg0
+
+      call copy(gram,gub,nsg*nsg)
+
+      if (ifavg0) then
+         call rzero(gram0,nsg)
+
+         do i=1,nsg
+            call add2(gram0,gram(1,i),nsg)
+         enddo
+
+         s=1./real(nsg)
+
+         call cmult(gram0,s,nsg)
+         gram00=s*vlsum(gram0,nsg)
+
+         do i=1,nsg
+            call sub2(gram(1,i),gram0,nsg)
+         enddo
+
+         call cadd(gram0,-gram00,nsg)
+
+         do i=1,nsg
+            s=-gram0(i)
+            call cadd(gram(1,i),s,nsg)
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setq(qu,elam,gram,nsg,ifavg0)
+
+      logical ifavg0
+      real qu(nsg,nsg+1),elam(nsg),gram(nsg,nsg)
+
+      call genevec(qu(1,2),elam,gram,nsg,1)
+
+      do i=1,nsg
+         s=1./sqrt(elam(i))
+         call cmult(qu(1,i+1),s,nsg)
+      enddo
+
+      if (ifavg0) then
+         s=1./nsg
+         call cfill(qu,s,nsg)
+         do i=1,nsg
+            s=-(1./nsg)*vlsum(qu(1,i+1),nsg)
+            call cadd(qu(1,i+1),s,nsg)
+         enddo
+      else
+         call rzero(qu,nsg)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine cadd(a,const,n)
+      REAL A(1)
+C
+      include 'OPCTR'
+C
+      DO 100 I=1,N
+         A(I)=A(I)+CONST
+ 100  CONTINUE
+      return
+      END
+c-----------------------------------------------------------------------
+      subroutine cmult(a,const,n)
+      REAL A(1)
+C
+      include 'OPCTR'
+C
+      DO 100 I=1,N
+         A(I)=A(I)*CONST
+ 100  CONTINUE
+      return
+      END
+c-----------------------------------------------------------------------
+      real function vlsum(vec,n)
+      REAL VEC(1)
+      include 'OPCTR'
+C
+      SUM = 0.
+C
+      DO 100 I=1,N
+         SUM=SUM+VEC(I)
+ 100  CONTINUE
+      VLSUM = SUM
+      return
+      END
+c-----------------------------------------------------------------------
+      subroutine sub2(a,b,n)
+      REAL A(1),B(1)
+C
+      include 'OPCTR'
+C
+      DO 100 I=1,N
+         A(I)=A(I)-B(I)
+ 100  CONTINUE
+      return
+      END
+c-----------------------------------------------------------------------
+      subroutine genevec(vec,val,gram,nsg,ifld)
+
+      include 'LVAR'
+
+      common /scrgvec/ gc(lsg*lsg),wk(lsg*lsg)
+
+      real gram(nsg,nsg),vec(nsg,nsg),val(nsg)
+
+      if (nio.eq.0) write (6,*) 'inside genevec'
+
+      call copy(gc,gram,nsg*nsg)
+
+      call regularev(gc,val,nsg,wk)
+
+      do l=1,nsg
+         call copy(vec(1,l),gc(1+(nsg-l)*nsg),nsg)
+      enddo
+
+      do l=1,nsg/2
+         tmp=val(l)
+         val(l)=val(nsg-l+1)
+         val(nsg-l+1)=tmp
+      enddo
+
+      do i=1,nsg
+         if (nio.eq.0) write (6,'(i5,1p1e16.6,3x,a,i1)')
+     $      i,val(i),'eval',ifld
+      enddo
+
+      if (nio.eq.0) write (6,*) 'exiting genevec'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine regularev(a,lam,n,wk)
+c
+c     Solve the eigenvalue problem  A x = lam x
+c
+c     A -- symmetric matrix
+c
+c     "SIZE" is included here only to deduce WDSIZE, the working
+c     precision, in bytes, so as to know whether dsygv or ssygv
+c     should be called.
+
+      include 'LVAR'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      real a(n,n),lam(n),wk(n,n)
+      real aa(100)
+
+      call dsyev('V','U',n,a,n,lam,wk,n*n,info)
+
+      if (info.ne.0) then
+         if (mid.eq.0) then
+            call outmat2(a  ,n,n,n,'Aeig')
+            call outmat2(lam,1,n,n,'Deig')
+         endif
+
+         ninf = n-info
+         write(6,*) 'Error in regularev, info=',info,n,ninf
+         call exitt
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine outmat2(a,m,n,k,name)
+      include 'SIZE'
+      real a(m,n)
+      character*4 name
+c
+      n2 = min(n,8)
+      write(6,2) nid,name,m,n,k
+      do i=1,m
+         write(6,1) nid,name,(a(i,j),j=1,n2)
+      enddo
+c   1 format(i3,1x,a4,16f6.2)
+    1 format(i3,1x,a4,1p8e14.5)
+    2 format(/,'Matrix: ',i3,1x,a4,3i8)
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine settranspose(at,a,m,n)
+
+      real a(m,n),at(n,m)
+
+      do j=1,n
+         do i=1,m
+            at(j,i)=a(i,j)
+         enddo
+      enddo
 
       return
       end

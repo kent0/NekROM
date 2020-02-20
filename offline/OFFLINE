@@ -1,6 +1,8 @@
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
      $              buf(lxyz*leb*lfld),
      $              ga(lsg*lsg*lgld),gb(lsg*lsg*lgld),
+     $              gg(lsg*lsg),gvec((lsg+1)*lsg),
+     $              gvect((lsg+1)*lsg),gval(lsg),
      $              gc(lsg*lsg*lsl*lgld),
      $              gt(lsg*lsg*lsl*lgld)
 
