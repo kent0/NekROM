@@ -7,7 +7,7 @@
       parameter (lpmin=1)
 
       parameter (lfld=ldimt+ldim*2)
-      parameter (lsl=lsg/lpmin+1)
+      parameter (lsl=(lsg-1)/lpmin+1)
       parameter (lel=leg/lpmin+1)
       parameter (ly1=lx1)
       parameter (lz1=(lx1-1)*(ldim-2)+1)
