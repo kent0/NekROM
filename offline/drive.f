@@ -25,13 +25,13 @@ c-----------------------------------------------------------------------
 
            call loadsnaps(buf,ieg,indxr,nsg)
            call setgeom(buf,nel)
-           call setops(ga,gb,gc,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
+           call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
            ie=ie+mel
         enddo
 
         call gop(ga,gt,'+  ',nsg*nsg)
         call gop(gb,gt,'+  ',nsg*nsg)
-        call gop(gc,gt,'+  ',nsg*nsg*nsg)
+c       call gop(gc,gt,'+  ',nsg*nsg*nsg)
 
         do j=1,nsg
         do i=1,nsg

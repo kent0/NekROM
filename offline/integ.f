@@ -1,11 +1,11 @@
 c-----------------------------------------------------------------------
-      subroutine setops(a,b,c,u,nel,nb,ndim)
+      subroutine setops(a,b,c,wk,u,nel,nb,ndim)
 
       real a(1),b(1),c(1),u(1)
 
       call bip(b,u,u,nel,nb,ndim)
       call aip(a,u,u,nel,nb,ndim)
-      call cip(c,u,u,u,nel,nb,ndim,ndim)
+      call cip(c,wk,u,u,u,nel,nb,ndim,ndim)
 
       do j=1,nb
       do i=1,nb
@@ -60,7 +60,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cip(c,u,v,w,nel,nb,mdim,ndim)
+      subroutine cip(c,wk,u,v,w,nel,nb,mdim,ndim)
 
       include 'LVAR'
       include 'INTEG'
@@ -69,7 +69,7 @@ c-----------------------------------------------------------------------
 
       common /tinteg/ tmp(lxyz,lel,ldim),dw(lxyzd,lel,ldim)
 
-      real c(nb,nb,nb)
+      real c(nb,nb,nb),wk(nb,nb,2)
       real u(lxyz,nel,nb,mdim),v(lxyz,nel,nb,mdim),w(lxyz,nel,nb,ndim)
 
       ifuf=.false.
@@ -87,9 +87,35 @@ c-----------------------------------------------------------------------
      $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
             do i=1,nb
                c(i,j,k)=c(i,j,k)+vlsc2(tmp,v(1,1,i,1),lxyz*nel*ndim)
+               wk(i,j,1)=vlsc2(tmp,v(1,1,i,1),lxyz*nel*ndim)
             enddo
          enddo
+         call gop(wk,wk(1,1,2),'+  ',nb*nb)
+         call updatec(c,wk,nb,k)
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine updatec(c,wk,nb,k)
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+
+      real c(nb,nb,1),wk(nb,nb)
+
+      integer iloc
+      save iloc
+
+      if (k.eq.1) iloc=1
+      jloc=1
+
+      do j=1,nb
+      if (mod(j,mp).eq.mid) then
+         jloc=j/mp
+         call add2(c(1,iloc+jloc,1),wk(1,j),nb)
+      endif
+      enddo
+      iloc=iloc+jloc+1
 
       return
       end
