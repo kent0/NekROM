@@ -5,13 +5,7 @@ c-----------------------------------------------------------------------
 
       call bip(b,u,u,nel,nb,ndim)
       call aip(a,u,u,nel,nb,ndim)
-      call cip(c,wk,u,u,u,nel,nb,ndim,ndim)
-
-      do j=1,nb
-      do i=1,nb
-c        write (6,*) i,j,b(i+(j-1)*nb),'b'
-      enddo
-      enddo
+      call cip(c,u,u,u,nel,nb,ndim,ndim)
 
       return
       end
@@ -60,37 +54,44 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine cip(c,wk,u,v,w,nel,nb,mdim,ndim)
+      subroutine cip(c,u,v,w,nel,nb,mdim,ndim)
 
       include 'LVAR'
       include 'INTEG'
 
       logical ifuf,ifcf
 
-      common /tinteg/ tmp(lxyz,lel,ldim),dw(lxyzd,lel,ldim)
+      common /tinteg/ tmp(lxyz*lel*ldim),dw(lxyzd,lel,ldim),
+     $                ud(lxyzd*lel*lsg*ldim),cd(lxyz*lel*lsg*ldim),
+     $                wk(lsg*lsg,2)
 
-      real c(nb,nb,nb),wk(nb,nb,2)
+
+      real c(nb,nb,nb)
       real u(lxyz,nel,nb,mdim),v(lxyz,nel,nb,mdim),w(lxyz,nel,nb,ndim)
 
       ifuf=.false.
       ifcf=.true.
 
+      call intp_rstd_all2(ud,u,nel,nb,mdim)
+
       do k=1,nb
          call set_convect_new_part(dw,dw(1,1,2),dw(1,1,ndim),
      $      w(1,1,k,1),w(1,1,k,2),w(1,1,k,ndim),nel)
+         call rzero(wk,nb*nb)
          do j=1,nb
-            call conv(tmp,u(1,1,j,1),ifuf,
-     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
-            call conv(tmp(1,1,2),u(1,1,j,2),ifuf,
-     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
-            if (ndim.eq.3) call conv(tmp(1,1,ndim),u(1,1,j,ndim),ifuf,
-     $         dw,dw(1,1,2),dw(1,1,ndim),ifcf,nel)
+            do idim=1,mdim
+               call conv(tmp(1+(idim-1)*lxyz*nel),
+     $            ud(1+(j-1)*lxyzd*nel+(idim-1)*lxyzd*nel*nb),.true.,
+     $            dw(1,1,1),dw(1,1,2),dw(1,1,ndim),.true.,nel)
+            enddo
+            do idim=1,mdim
             do i=1,nb
-               c(i,j,k)=c(i,j,k)+vlsc2(tmp,v(1,1,i,1),lxyz*nel*ndim)
-               wk(i,j,1)=vlsc2(tmp,v(1,1,i,1),lxyz*nel*ndim)
+               wk(i+(j-1)*nb,1)=wk(i+(j-1)*nb,1)+
+     $            vlsc2(tmp(1+(idim-1)*lxyz*nel),v(1,1,i,idim),lxyz*nel)
+            enddo
             enddo
          enddo
-         call gop(wk,wk(1,1,2),'+  ',nb*nb)
+         call gop(wk,wk(1,2),'+  ',nb*nb)
          call updatec(c,wk,nb,k)
       enddo
 
@@ -110,8 +111,8 @@ c-----------------------------------------------------------------------
       jloc=1
 
       do j=1,nb
-      if (mod(j,mp).eq.mid) then
-         jloc=j/mp
+      if (mod(j-1,mp).eq.mid) then
+         jloc=(j-1)/mp
          call add2(c(1,iloc+jloc,1),wk(1,j),nb)
       endif
       enddo
@@ -292,7 +293,7 @@ c    $                          + visc(i,j,1,ie)*(term1+term2)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_convect_new_part(cr,cs,ct,ux,uy,uz,mel)
+      subroutine set_convect_new_part(cr,cs,ct,ux,uy,uz,mel)!,nb,k)
 C
 C     Put vxd,vyd,vzd into rst form on fine mesh
 C
@@ -307,6 +308,7 @@ C
 
       real cr(ltd,1),cs(ltd,1),ct(ltd,1)
       real ux(lxy,1),uy(lxy,1),uz(lxy,1)
+c     real uxyz(lxy,mel,nb,ldim)
 
       common /scrcv/ fx(ltd),fy(ltd),fz(ltd)
      $             , ur(ltd),us(ltd),ut(ltd)
@@ -327,6 +329,10 @@ c        Map coarse velocity to fine mesh (C-->F)
          call intp_rstd(fx,ux(1,e),lx1,lxd,if3d,0) ! 0 --> forward
          call intp_rstd(fy,uy(1,e),lx1,lxd,if3d,0) ! 0 --> forward
          if (if3d) call intp_rstd(fz,uz(1,e),lx1,lxd,if3d,0) ! 0 --> forward
+
+c        call intp_rstd(fx,uxyz(1,e,k,1),lx1,lxd,if3d,0)
+c        call intp_rstd(fy,uxyz(1,e,k,2),lx1,lxd,if3d,0)
+c        if (if3d) call intp_rstd(fz,uxyz(1,e,k,ldim),lx1,lxd,if3d,0)
 
 c        Convert convector F to r-s-t coordinates
 

@@ -2544,3 +2544,33 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine intp_rstd_all(uf,u,nel)
+
+      include 'LVAR'
+
+      parameter (lxyz1=lxyz)
+
+      real uf(lxyzd,lelt), u(lxyz1,lelt)
+
+      do i=1,nel
+         call intp_rstd(uf(1,i),u(1,i),lx1,lxd,ldim.eq.3,0)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine intp_rstd_all2(ud,u,nel,nb,mdim)
+
+      include 'LVAR'
+
+      real ud(lxyzd,nel,nb,mdim),u(lxyz,nel,nb,mdim)
+
+      do idim=1,mdim
+      do ib=1,nb
+         call intp_rstd_all(ud(1,1,ib,idim),u(1,1,ib,idim),nel)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
