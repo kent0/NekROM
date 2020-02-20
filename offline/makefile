@@ -40,7 +40,7 @@ PPS_C = $(patsubst %,-D%,$(PPS))
 # CORE##########################################################################
 CORE = byte.o byte_mpi.o chelpers.o speclib.o
 ################################################################################
-# MXM 
+# MXM
 MXM=mxm_std.o
 ################################################################################
 # BLAS
@@ -62,14 +62,14 @@ endif
 
 ifneq ($(VISIT),0)
   VISITNEK_INCLUDES:=-I$S/3rd_party
-  VISITO := visit.o 
+  VISITO := visit.o
   USR_LFLAGS := ${USR_LFLAGS} $(VISIT_LFLAGS)
 endif
 
 ifeq ($(MPI),0)
-	DUMMY:= $(shell cp $S/mpi_dummy.h $S/mpif.h) 
+	DUMMY:= $(shell cp $S/mpi_dummy.h $S/mpif.h)
 else
-	DUMMY:= $(shell rm -rf $S/mpif.h) 
+	DUMMY:= $(shell rm -rf $S/mpif.h)
 endif
 
 TMP1 = $(CORE) $(MXM) $(USR) $(COMM_MPI) $(VISITO) $(BLAS)
@@ -87,7 +87,7 @@ L0 = $(G) -O0
 L2 = $(G) -O2
 L3 = $(G) -O3
 
-FL0   = $(L0) $(FFLAGS) $(PPS_F) -I$(CASEDIR) -I$S -I$(OPT_INCDIR) 
+FL0   = $(L0) $(FFLAGS) $(PPS_F) -I$(CASEDIR) -I$S -I$(OPT_INCDIR)
 FL2   = $(L2) $(FFLAGS) $(PPS_F) -I$(CASEDIR) -I$S -I$(OPT_INCDIR)
 FL3   = $(L3) $(FFLAGS) $(PPS_F) -I$(CASEDIR) -I$S -I$(OPT_INCDIR)
 
@@ -98,8 +98,8 @@ cFL3   = $(L3) $(CFLAGS) $(PPS_C) -I$S -I$(OPT_INCDIR)
 ################################################################################
 all : nek5000
 
-objdir: 
-	@mkdir $(OBJDIR) 2>/dev/null; cat /dev/null 
+objdir:
+	@mkdir $(OBJDIR) 2>/dev/null; cat /dev/null
 
 usrfile:
 	@env CASENAME=$(CASENAME) PPS="$(PPS)" $S/mkuserfile
@@ -120,7 +120,7 @@ nek5000: lib usrfile
 	echo -e "\033[0m"; \
 	fi
 	@rm -f *.i
-ifeq ($(MPI),0) 
+ifeq ($(MPI),0)
 	@rm -rf $S/mpif.h
 endif
 
@@ -131,7 +131,7 @@ lib:	objdir $(NOBJS)
 clean:
 	@echo "cleaning Nek5000 ..."
 	@rm -rf ${CASENAME}.f obj ${BINNAME}
-ifeq ($(MPI),0) 
+ifeq ($(MPI),0)
 	@rm -rf $S/mpif.h
 endif
 
