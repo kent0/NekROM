@@ -82,17 +82,19 @@ c     write (6,*) 'starting load_snap'
       enddo
 
       m=lxyz*leb*lfld
-      mid=1
+      mio=mid
+      mio=-1
+
       do i=1,n
-         if (mid.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'pre'
+         if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'pre'
       enddo
       call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,buf,1,1)
       do i=1,n
-         if (mid.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'mid'
+         if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'mid'
       enddo
       call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
       do i=1,n
-         if (mid.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
+         if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
 c     write (6,*) 'ending load_snap'
