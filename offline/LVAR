@@ -1,5 +1,5 @@
       parameter (lsg=200)
-      parameter (leg=1024)
+      parameter (leg=2024)
       parameter (leb=leg) ! maximum number of element groups for reading
       parameter (ldim=2)
       parameter (lx1=8)
