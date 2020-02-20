@@ -4,6 +4,7 @@ c-----------------------------------------------------------------------
         include 'LVAR'
         include 'OFFLINE'
 
+        common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
         character*132 fname
 
         call offline_init(icomm)
@@ -13,9 +14,10 @@ c-----------------------------------------------------------------------
 
         ie=1
 
-        neg=512
-        mel=8
+        nel=2
+        mel=1
         ng=neg/mel
+        ng=1
 
         do i=1,ng
            write (6,*) i,'offline'
@@ -31,31 +33,9 @@ c-----------------------------------------------------------------------
 
         call gop(ga,gt,'+  ',nsg*nsg)
         call gop(gb,gt,'+  ',nsg*nsg)
-c       call gop(gc,gt,'+  ',nsg*nsg*nsg)
 
-        do j=1,nsg
-        do i=1,nsg
-           write (6,*) i,j,gb(i+(j-1)*nsg),'gb'
-        enddo
-        enddo
-
-        write (6,*) ' '
-
-        do j=1,nsg
-        do i=1,nsg
-           write (6,*) i,j,ga(i+(j-1)*nsg),'ga'
-        enddo
-        enddo
-
-        write (6,*) ' '
-
-        do k=1,nsg
-        do j=1,nsg
-        do i=1,nsg
-           write (6,*) i,j,k,gc(i+(j-1)*nsg+(k-1)*nsg*nsg),'gc'
-        enddo
-        enddo
-        enddo
+        call dump_serial(ga,nsg*nsg,'ga ',mid)
+        call dump_serial(gb,nsg*nsg,'gb ',mid)
 
         return
         end
