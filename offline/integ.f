@@ -163,7 +163,7 @@ C------------------------------------------------------------------
       call rzero (au,ntot)
 
       do ie=1,mel
- 
+
         if (ifaxis) call setaxdy ( ifrzer(ie) )
 
         if (ldim.eq.2) then
@@ -272,7 +272,7 @@ c     If axisymmetric, add a diagonal term in the radial direction (ISD=2)
                 if (ym1(i,j,1,ie).ne.0.) then
                   if (ifrzer(ie)) then
                      term1 = 0.0
-                     if(j.ne.1) 
+                     if(j.ne.1)
      $             term1 = bm1(i,j,1,ie)*u(i,j,1,ie)/ym1(i,j,1,ie)**2
                      term2 =  wxm1(i)*wam1(1)*dam1(1,j)*duax(i)
      $                       *jacm1(i,1,1,ie)/ysm1(i)

@@ -143,7 +143,7 @@ c
      $    ,dlam
       common /gsurf/ unr,uns,unt,unx,uny,unz,t1x,t1y,t1z,t2x,t2y,t2z
      $             ,area,etalph,dlam
-      
+
       real vnx(lx1m,ly1m,lz1m,lelt)
      $    ,vny(lx1m,ly1m,lz1m,lelt)
      $    ,vnz(lx1m,ly1m,lz1m,lelt)

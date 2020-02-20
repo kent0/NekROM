@@ -32,7 +32,7 @@ c-----------------------------------------------------------------------
       ! set defaults
       nid         = nid_global
       nekcomm     = MPI_COMM_WORLD
-      iglobalcomm = MPI_COMM_WORLD 
+      iglobalcomm = MPI_COMM_WORLD
       ifneknek    = .false.
       ifneknekc   = .false. ! session are uncoupled
       ifneknekm   = .false. ! not moving
@@ -60,7 +60,7 @@ c-----------------------------------------------------------------------
          call bcast(path_mult(n),132*CSIZE)
       enddo
 
-      if (nsessions .gt. nsessmax) 
+      if (nsessions .gt. nsessmax)
      &   call exitti('nsessmax in SIZE too low!$',nsessmax)
 
       ifneknekc = .false.
@@ -93,7 +93,7 @@ c---------------------------------------------------------------------
 
       write (6,*) 'starting iniproc 1'
 
-      nio = -1             ! Default io flag 
+      nio = -1             ! Default io flag
       if (nid.eq.0) nio=0  ! Only node 0 writes
 
       if (nid.eq.nio) then
@@ -134,7 +134,7 @@ C     Test timer accuracy
       enddo
       edif = edif/10.
 
-      if (nid.eq.nio) then 
+      if (nid.eq.nio) then
          write(6,*) 'Number of processors:',np
          WRITE(6,*) 'REAL    wdsize      :',WDSIZE
          WRITE(6,*) 'INTEGER wdsize      :',ISIZE
@@ -273,7 +273,7 @@ C
       call mpi_recv (buf,len,mpi_byte
      $              ,jnid,mtype,nekcomm,status,ierr)
 c
-      if (len.gt.lenm) then 
+      if (len.gt.lenm) then
           write(6,*) nid,'long message in mpi_crecv:',len,lenm
           call exitt
       endif
@@ -292,7 +292,7 @@ C
       call mpi_recv (buf,len,mpi_byte
      $              ,jnid,mtype,nekcomm,status,ierr)
 c
-      if (len.gt.lenm) then 
+      if (len.gt.lenm) then
           write(6,*) nid,'long message in mpi_crecv:',len,lenm
           call exitt
       endif
@@ -313,7 +313,7 @@ C
      $            ,jnid,mtype,nekcomm,status,ierr)
       call mpi_get_count (status,mpi_byte,len,ierr)
 c
-      if (len.gt.lenm) then 
+      if (len.gt.lenm) then
           write(6,*) nid,'long message in mpi_crecv:',len,lenm
           call exitt
       endif
@@ -515,7 +515,7 @@ c     include 'TOTAL'
 c     include 'CTIMER'
 
       ierr = iglsum(ierr,1)
-      if(ierr.eq.0) return 
+      if(ierr.eq.0) return
 
       len = indx1(string,'$',1)
       call blank(ostring,132)
@@ -547,7 +547,7 @@ c-----------------------------------------------------------------------
 
 c      if (nid.eq.0) call close_files
       call print_runtime_info
-      call nek_die(0) 
+      call nek_die(0)
 
       return
       end
@@ -566,8 +566,8 @@ c-----------------------------------------------------------------------
 c      call print_stack()
 c      if (nid.eq.0) call close_files
 c      call print_runtime_info
-      call nek_die(1) 
- 
+      call nek_die(1)
+
       return
       end
 c-----------------------------------------------------------------------
@@ -588,7 +588,7 @@ c-----------------------------------------------------------------------
 
       dtmp4 = glsum(getmaxrss(),1)/1e9
 
-      if (nid.eq.0) then 
+      if (nid.eq.0) then
          dtmp1 = 0
          dtmp2 = 0
          if(istep.gt.0) then
@@ -596,21 +596,21 @@ c-----------------------------------------------------------------------
            dgp   = max(dgp,1.)*max(istep,1)
            dtmp0 = np*(ttime-tprep)
            dtmp1 = 0
-           if (dtmp0.gt.0) dtmp1 = dgp/dtmp0 
+           if (dtmp0.gt.0) dtmp1 = dgp/dtmp0
            dtmp2 = (ttime-tprep)/max(istep,1)
-         endif 
+         endif
          write(6,*) ' '
-         write(6,'(5(A,1p1e13.5,A,/))') 
+         write(6,'(5(A,1p1e13.5,A,/))')
      &       'total elapsed time             : ',ttotal, ' sec'
      &      ,'total solver time w/o IO       : ',tsol,   ' sec'
      &      ,'time/timestep                  : ',dtmp2 , ' sec'
      &      ,'avg throughput per timestep    : ',dtmp1 , ' gridpts/CPUs'
      &      ,'total max memory usage         : ',dtmp4 , ' GB'
 #ifdef PAPI
-         write(6,'(1(A,1p1e13.5,/))') 
+         write(6,'(1(A,1p1e13.5,/))')
      &      ,'total Gflops/s                 : ',gflops
 #endif
-      endif 
+      endif
       call flush_io
 
       return
@@ -622,7 +622,7 @@ c-----------------------------------------------------------------------
 
       call mpi_finalize (ierr_)
       call cexit(ierr)
- 
+
       return
       end
 c-----------------------------------------------------------------------
@@ -741,7 +741,7 @@ c-----------------------------------------------------------------------
          nloop = max(nloop,1)
 
          len   = 8*nwds
-     
+
          if (kk.eq.0)
      $      call ping_loop (t1,t0,len,nloop,nodea,nodeb,nid,x,y,x1,y1)
          if (kk.eq.1)
@@ -894,7 +894,7 @@ c-----------------------------------------------------------------------
 
       nwds  = min(1000,lt)
       nloop = 50
- 
+
       tmsg = 0.
       call gop(tmsg,t1,'+  ',1)
 
@@ -990,7 +990,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
          nwds = 1
          do itest=1,500
-            if (ivb.gt.0.or.itest.eq.1) 
+            if (ivb.gt.0.or.itest.eq.1)
      $         write(6,1) np,nwds,(times(k,itest),k=1,2)
     1       format(i12,i12,1p2e16.8,' gop')
             nwds = (nwds+1)*1.016
@@ -1043,7 +1043,7 @@ c-----------------------------------------------------------------------
       if (nid.eq.0) then
          nwds = 1
          do itest=1,500
-            if (ivb.gt.0.or.itest.eq.1) 
+            if (ivb.gt.0.or.itest.eq.1)
      $         write(6,1) np,nwds,(times(k,itest),k=1,2)
     1       format(i12,i12,1p2e16.8,' gp2')
             nwds = (nwds+1)*1.016
@@ -1092,7 +1092,7 @@ c     Std. fan-in/fan-out
       real x(n), w(n)
       character*3 op
 
-      integer bit, bytes, cnt, diff, spsize, i, 
+      integer bit, bytes, cnt, diff, spsize, i,
      *   parent, troot, xor, root, lnp, log2
       logical ifgot
 

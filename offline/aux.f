@@ -22,7 +22,7 @@ c-----------------------------------------------------------------------
       enddo
 
     1 format('(i',i1,'.',i1,')')
-      
+
       return
       end
 c-----------------------------------------------------------------------
@@ -118,7 +118,7 @@ c      ifgtim  = .true.  ! always get time
       enddo
 
       NPSR = 0
-      do i=1,10 
+      do i=1,10
          if (rdcode1(i).eq.'X') ifgetxr = .true.
          if (rdcode1(i).eq.'U') ifgetur = .true.
          if (rdcode1(i).eq.'P') ifgetpr = .true.
@@ -138,7 +138,7 @@ c      ifgtim  = .true.  ! always get time
       enddo
 
   50  if (NPS.lt.NPSR) then
-         if (nid.eq.0) then 
+         if (nid.eq.0) then
 c          write(*,'(A,/,A)')
 c    &      'WARNING: restart file has a NSPCAL > LDIMT',
 c    &      'read only part of the fld-data!'
@@ -146,14 +146,14 @@ c    &      'read only part of the fld-data!'
       endif
 
       if (NPS.lt.NPSCAL) then
-         if (nid.eq.0) then 
+         if (nid.eq.0) then
 c          write(*,'(A,/,A)')
 c    &      'WARNING: NPSCAL read from restart file differs from ',
 c    &      'currently used NPSCAL!'
          endif
       endif
 
-      p0th = 1 
+      p0th = 1
       if (p0thr.gt.0) p0th = p0thr
 
       return
@@ -966,7 +966,7 @@ C-----------------------------------------------------------------------
 c     INCLUDE 'TSTEP'
       INCLUDE 'INTEG'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1055,7 +1055,7 @@ C
       DO 700 IEL=1,NEL
          IF (IFAXIS) CALL SETAXW1 ( IFRZER(IEL) )
             CALL COL3 (BM1  (1,1,1,IEL),JACM1(1,1,1,IEL),W3M1,NXYZ1)
-         IF (IFAXIS) THEN 
+         IF (IFAXIS) THEN
              CALL COL3(BAXM1(1,1,1,IEL),JACM1(1,1,1,IEL),W3M1,NXYZ1)
           IF (IFRZER(IEL)) THEN
             DO 600 J=1,ly1
@@ -1089,8 +1089,8 @@ C
               ELSE
                  YINVM1(I,J,1,IEL)=1.0D0/YM1 (I,J,1,IEL)
               ENDIF
-            ENDDO 
-            ENDDO 
+            ENDDO
+            ENDDO
           ELSE
             CALL INVERS2(YINVM1(1,1,1,IEL),YM1(1,1,1,IEL),NXYZ1)
           ENDIF
@@ -1120,7 +1120,7 @@ c-----------------------------------------------------------------------
       subroutine invers2(a,b,n)
 
       real a(1),b(1)
- 
+
       do i=1,n
          a(i)=1./b(i)
       enddo
@@ -1138,7 +1138,7 @@ C
 C
 C
       DO 100 I=1,N
-         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I) 
+         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I)
   100 CONTINUE
       return
       END
@@ -1154,8 +1154,8 @@ c
 
       call rzero  (area,nsrf)
       call rzero3 (unx,uny,unz,nsrf)
-      call rzero3 (t1x,t1y,t1z,nsrf)      
-      call rzero3 (t2x,t2y,t2z,nsrf)      
+      call rzero3 (t1x,t1y,t1z,nsrf)
+      call rzero3 (t2x,t2y,t2z,nsrf)
 
       if (ldim.eq.2) then
          call area2(nel)
@@ -1175,7 +1175,7 @@ C--------------------------------------------------------------------
       INCLUDE 'LVAR'
       INCLUDE 'INTEG'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1245,7 +1245,7 @@ C--------------------------------------------------------------------
       include 'LVAR'
       include 'INTEG'
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -1402,7 +1402,7 @@ C
 
       logical ifaxis
 C
-C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3 
+C     Note: Subroutines GLMAPM1, GEODAT1, AREA2, SETWGTR and AREA3
 C           share the same array structure in Scratch Common /SCRNS/.
 C
       COMMON /SCRNS/ XRM1(LX1,LY1,LZ1,LELT)
@@ -2164,7 +2164,7 @@ c
 c     This routine evaluates the derivative based on all points
 c     in the stencils.  It is more memory efficient than "fd_weights"
 c
-c     This set of routines comes from the appendix of 
+c     This set of routines comes from the appendix of
 c     A Practical Guide to Pseudospectral Methods, B. Fornberg
 c     Cambridge Univ. Press, 1996.   (pff)
 c
@@ -2177,7 +2177,7 @@ c
 c     Output:
 c       c  -- set of coefficients c(0:n,0:m).
 c             c(j,k) is to be applied at x(j) when
-c             the kth derivative is approxxmated by a 
+c             the kth derivative is approxxmated by a
 c             stencil extending over x(0),x(1),...x(n).
 c
 c
