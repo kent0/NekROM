@@ -2302,3 +2302,40 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine dump_serial(a,n,fname,nid)
+
+      real a(n)
+
+      character*128 fname
+      character*128 fntrunc
+
+      if (nid.eq.0) then
+         call blank(fntrunc,128)
+
+         len=ltruncr(fname,128)
+         call chcopy(fntrunc,fname,len)
+
+         call dump_serial_helper(a,n,fntrunc)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_serial_helper(a,n,fname)
+
+      real a(n)
+
+      character*128 fname
+
+      open (unit=12,file=fname)
+
+      do i=1,n
+         write (12,1) a(i)
+      enddo
+
+      close (unit=12)
+    1 format(1pe24.16)
+
+      return
+      end
+c-----------------------------------------------------------------------
