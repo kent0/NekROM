@@ -415,7 +415,7 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setrxp(nel)
+      subroutine setrx(nel)
 c
 c     Eulerian scheme, add convection term to forcing function
 c     at current time step.
