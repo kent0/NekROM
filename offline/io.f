@@ -475,13 +475,13 @@ c           write (6,*) 'wp 6.5',ig,ng
             nel=0
             do k=1,ner
 c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
-               if (mod(k,mp).eq.mid) nel=nel+1
+               if (mod(k-1,mp).eq.mid) nel=nel+1
             do j=1,nfld
             do i=1,lxyz
                ill=n+i+(j-1)*lxyz+(k-1)*lxyz*nfld
                ibuf8(ill)=
      $            i+(k-1)*lxyz+(is-1)*lxyz*ner+(j+ifldt-2)*lxyz*ner*lsg
-               ibuf(ill)=mod(k,mp)
+               ibuf(ill)=mod(k-1,mp)
             enddo
             enddo
             enddo
@@ -522,7 +522,7 @@ c-----------------------------------------------------------------------
   100     call bcast(fname,132)
           if (indx1(fname,'done ',5).eq.0) then
              ms=isg
-             if (mod(isg,mp).eq.mid) then
+             if (mod(isg-1,mp).eq.mid) then
                 nsl=nsl+1
                 call chcopy(fnames(nsl),fname,132)
              endif
