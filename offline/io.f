@@ -179,12 +179,13 @@ c-----------------------------------------------------------------------
       write (6,*) 'wp 4'
 
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
-     $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n)
+     $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n,nel)
       write (6,*) 'wp 5'
 
       ieg(1)=ieg0
       ieg(2)=ieg1
       ieg(3)=n
+      ieg(4)=nel
 
       return
       end
@@ -389,7 +390,6 @@ c-----------------------------------------------------------------------
       stride  = nelgr* nxyzr8*wdsizr
 
       ner=0
-      nel=0
       i=1
       n=0
 
@@ -472,6 +472,7 @@ c           write (6,*) 'wp 6.5',ig,ng
             endif
             ! TODO; correctly copy in case nfld != mdim
             call copy(xupt(n+1),wk,lxyz*nfld*ner)
+            nel=0
             do k=1,ner
 c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
                if (mod(k,mp).eq.mid) nel=nel+1
