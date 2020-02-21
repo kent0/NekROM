@@ -364,7 +364,7 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine rxupt_read_helper(xupt,wk,ibuf,ibuf8,i2,i3,i4,
-     $   indxr,is,n)
+     $   indxr,is,n,nel)
 
       include 'LVAR'
       include 'IO'
@@ -383,6 +383,7 @@ c-----------------------------------------------------------------------
       stride  = nelgr* nxyzr8*wdsizr
 
       ner=0
+      nel=0
       i=1
       n=0
 
@@ -467,6 +468,7 @@ c           write (6,*) 'wp 6.5',ig,ng
             ! TODO; correctly copy in case nfld != mdim
             call copy(xupt(n+1),wk,lxyz*nfld*ner)
             do k=1,ner
+               if (mod(k,mp).eq.mid) nel=nel+1
             do j=1,nfld
             do i=1,lxyz
                ill=n+i+(j-1)*lxyz+(k-1)*lxyz*nfld
