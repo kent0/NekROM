@@ -55,7 +55,7 @@ c-----------------------------------------------------------------------
       real buf(1)
       integer ieg(1),indxr(1)
 
-c     write (6,*) 'starting load_snap'
+      write (6,*) 'starting load_snap'
 
       nsg=min(nsmax,lsg)
 
@@ -97,7 +97,7 @@ c     write (6,*) 'starting load_snap'
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
-c     write (6,*) 'ending load_snap'
+      write (6,*) 'ending load_snap'
 
       return
       end
@@ -158,10 +158,13 @@ c-----------------------------------------------------------------------
 
       nel=ieg1-ieg0+1
 
+      write (6,*) 'wp 0'
       do while (iel.lt.nel)
          mel=min(lel,nelgr-jeg+1)
          call byte_read(er,mel,ierr) ! get element mapping
+      write (6,*) 'wp 1'
          if (if_byte_sw) call byte_reverse(er,mel,ierr)
+      write (6,*) 'wp 2'
          do ie=1,mel
             if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
                ieg(er(ie)-ieg0+1)=jeg
@@ -170,11 +173,14 @@ c-----------------------------------------------------------------------
             jeg=jeg+1
          enddo
       enddo
+      write (6,*) 'wp 3'
 
       call esort(ieg,nel)
+      write (6,*) 'wp 4'
 
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
      $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n)
+      write (6,*) 'wp 5'
 
       ieg(1)=ieg0
       ieg(2)=ieg1
@@ -409,9 +415,8 @@ c-----------------------------------------------------------------------
       ifld=1
       ifldt=1
       jfld=1
-c     write (6,*) 'wp 6.2'
       do while (indxr(ifld).ne.-1)
-c        write (6,*) 'wp 6.9',ifld,ifldt
+c        write (6,*) 'wp 4.2',ifld,ifldt
          if (ifld.le.2) then
              mdim=ndim
          else
@@ -468,6 +473,7 @@ c           write (6,*) 'wp 6.5',ig,ng
             ! TODO; correctly copy in case nfld != mdim
             call copy(xupt(n+1),wk,lxyz*nfld*ner)
             do k=1,ner
+c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
                if (mod(k,mp).eq.mid) nel=nel+1
             do j=1,nfld
             do i=1,lxyz
@@ -481,7 +487,6 @@ c           write (6,*) 'wp 6.5',ig,ng
             n=n+lxyz*nfld*ner
             indxr(ifld)=indx
             jfld=jfld+nfld
-c           write (6,*) 'wp 6.8'
          endif
          ifldt=ifldt+mdim
          ifld=ifld+1
