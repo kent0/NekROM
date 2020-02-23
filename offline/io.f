@@ -68,7 +68,7 @@ c-----------------------------------------------------------------------
       iloc=1
       n=0
       do is=1,nsl
-        ieg(4)=is
+        ieg(4)=is+mid*((nsg-1)/mp+1)
         if (is.eq.ixmin) then
            indxr(1)=7
         else
