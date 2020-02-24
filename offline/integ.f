@@ -107,16 +107,21 @@ c-----------------------------------------------------------------------
       integer iloc
       save iloc
 
-      if (k.eq.1) iloc=1
-      jloc=1
+c     if (k.eq.1) iloc=1
+c     jloc=1
 
-      do j=1,nb
-      if (mod(j-1,mp).eq.mid) then
-         jloc=(j-1)/mp
-         call add2(c(1,iloc+jloc,1),wk(1,j),nb)
+c     do j=1,nb
+c     if (mod(j-1,mp).eq.mid) then
+c        jloc=(j-1)/mp
+c        call add2(c(1,iloc+jloc,1),wk(1,j),nb)
+c     endif
+c     enddo
+c     iloc=iloc+jloc+1
+
+      if (mod(k-1,mp).eq.mid) then
+         kloc=(k-1)/mp+1
+         call add2(c(1,1,kloc),wk,nb*nb)
       endif
-      enddo
-      iloc=iloc+jloc+1
 
       return
       end
