@@ -97,7 +97,29 @@ c-----------------------------------------------------------------------
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
+c     do id=0,mp-1
+c        if (id.eq.mid) then
+c     nel=ieg(4)
+c     nel=ieg(2)-ieg(1)+1
+c     do idim=1,(nsg+1)*ldim+1
+c     write (6,*) 'fld2',id,idim
+c     do iel=1,nel
+c     do j=1,lxyz
+c        write (6,11)
+c    $      j,iel,ibuf(j+(iel-1)*lxyz+(idim-1)*lxyz*nel),
+c    $            ibuf8(j+(iel-1)*lxyz+(idim-1)*lxyz*nel),
+c    $            buf(j+(iel-1)*lxyz+(idim-1)*lxyz*nel)
+c     enddo
+c     enddo
+c     enddo
+c     endif
+c        call nekgsync
+c     enddo
+c     call exitt0
+
  10   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld1')
+ 11   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld2')
+
       write (6,*) 'ending load_snap'
 
       return
@@ -389,6 +411,8 @@ c-----------------------------------------------------------------------
       nxyzr8  = nxr*nyr*nzr
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
+
+      write (6,*) 'wdsizr',wdsizr
 
       ner=0
       i=1
