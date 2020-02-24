@@ -35,7 +35,7 @@ c     write (6,*) 'starting setxsnap'
       return
       end
 c-----------------------------------------------------------------------
-      subroutine loadsnaps(buf,ieg,indxr,nsmax)
+      subroutine loadsnaps(buf,ieg,indxr,nsmax,iftherm)
 
       include 'LVAR'
 
@@ -62,7 +62,7 @@ c     write (6,*) 'starting load_snap'
       if (ieg(1).eq.1) then
         call loadflist(fnames,nsg,nsl)
         call setxsnap(ixmin,fnames,nsl)
-        call setindxr(indxr)
+        call setindxr(indxr,iftherm)
       endif
 
       iloc=1
@@ -375,14 +375,20 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setindxr(indxr)
+      subroutine setindxr(indxr,iftherm)
 
       integer indxr(1)
+      logical iftherm
 
       indxr(1)=0  ! no xyz
       indxr(2)=7  ! all uvw
       indxr(3)=0  ! no p
       indxr(4)=-1 ! no thermal end
+
+      if (iftherm) then
+         indxr(4)=1
+         indxr(5)=-1
+      endif
 
       return
       end

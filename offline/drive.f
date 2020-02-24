@@ -6,7 +6,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       character*132 fname
-      logical ifavg0
+      logical ifavg0,iftherm
 
       call offline_init(icomm)
 
@@ -14,9 +14,9 @@ c-----------------------------------------------------------------------
       neg=512
       mel=2
 
+      iftherm=.true.
       call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
-     $  nsg,mp,neg,mel,ldim,lxyz)
-
+     $  nsg,mp,neg,mel,ldim,lxyz,iftherm)
 
       ifavg0=.true.
       call write_ops(ga,gb,gc,nsg,mid,'  g',.true.)
@@ -34,29 +34,51 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine gengrams(ga,gb,gc,gt,buf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lxyz)
+     $   nsg,mp,neg,mel,ldim,lxyz,iftherm)
 
       integer ieg(1),indxr(1)
-      real ga(1),gb(1),gc(1),gt(1),buf(1)
+      real ga((nsg+1)**2,1),gb((nsg+1)**2,1)
+      real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
+      real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
+      real buf(1)
+
+      logical iftherm
 
       ie=1
 
       call rzero(ga,nsg*nsg)
       call rzero(gb,nsg*nsg)
-      call rzero(gc,nsg*nsg*((nsg-1)/mp))
+      call rzero(gc,nsg*nsg*((nsg-1)/mp+1))
+
+      if (iftherm) then
+         call rzero(ga(1,2),nsg*nsg)
+         call rzero(gb(1,2),nsg*nsg)
+         call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
+      endif
 
       do while (ie.le.neg)
          ieg(1)=ie
          ieg(2)=min(ie+mel*mp-1,neg)
-         call loadsnaps(buf,ieg,indxr,nsg)
+         call loadsnaps(buf,ieg,indxr,nsg,iftherm)
          nel=ieg(4)
          call setgeom(buf,nel)
-         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
+         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
+     $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
+         if (iftherm) then
+            call setops(ga(1,2),gb(1,2),gc(1,2),gt(1,2),
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
+     $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
+         endif
          ie=ieg(2)+1
       enddo
 
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
+
+      if (iftherm) then
+         call gop(ga(1,2),gt,'+  ',nsg*nsg)
+         call gop(gb(1,2),gt,'+  ',nsg*nsg)
+      endif
 
       return
       end

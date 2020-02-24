@@ -12,7 +12,7 @@
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
      $               geom(lxyz*lel*(ldim-1)*3),rx(lxyzd*ldim*ldim*lel)
 
-      common /ivec/ ieg(leb*lfld*4),indxr(3+ldimt)
+      common /ivec/ ieg(leb*lfld*4),indxr(ldim+ldimt+2)
 
       integer*8 ibuf8
       common /iread8/ ibuf8(lxyz*leb*lfld)
