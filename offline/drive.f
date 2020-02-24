@@ -78,7 +78,7 @@ c-----------------------------------------------------------------------
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
          if (iftherm) then
-            call setops(ga(1,2),gb(1,2),gc(1,2),gt(1,2),
+            call setops(ga(1,2),gb(1,2),gc(1,2),gt,
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
      $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
          endif
