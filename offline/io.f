@@ -560,7 +560,7 @@ c-----------------------------------------------------------------------
 
       real ga(nsg,nsg),gb(nsg,nsg),gc(nsg,nsg,nsg)
       logical ifc
-      character*1 pfx
+      character*3 pfx
 
       if (mid.eq.0) then
          do j=1,nsg

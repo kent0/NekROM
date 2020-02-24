@@ -17,9 +17,9 @@ c-----------------------------------------------------------------------
       call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
      $  nsg,mp,neg,mel,ldim,lxyz)
 
-      call write_ops(ga,gb,gc,nsg,mid,'g',.true.)
 
       ifavg0=.true.
+      call write_ops(ga,gb,gc,nsg,mid,'  g',.true.)
 
       call setg(gg,gb,gt,nsg,ifavg0)
       call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
