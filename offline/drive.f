@@ -20,7 +20,7 @@ c-----------------------------------------------------------------------
       call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
      $  nsg,mp,neg,mel,ldim,lxyz,iftherm)
 
-      call write_ops(ga,gb,gc,nsg,mid,'  g',.true.)
+      call write_ops(ga,gb,gc,nsg,mid,' gu',.true.)
 
       if (iftherm) call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
      $   gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg,mid,' gc',.true.)
