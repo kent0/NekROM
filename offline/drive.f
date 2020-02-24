@@ -32,7 +32,7 @@ c-----------------------------------------------------------------------
       call qop2(gb,gt,gvec,gvect,nsg,nsg1)
       call write_ops(ga,gb,gc,nsg1,mid,'  u',.false.)
 
-      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
+      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  u')
 
       if (iftherm) then
          call setg(gg,gb((nsg+1)**2+1),gt,nsg,ifavg0)
@@ -43,7 +43,7 @@ c-----------------------------------------------------------------------
          call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
      $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1,mid,'  t',.false.)
 
-         call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
+         call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  t')
       endif
 
       return
@@ -119,9 +119,10 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
+      subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,pfx)
 
       real gc(1),gt(1),gvec(1),gvect(1),gvecc(1)
+      character*3 pfx
 
       call mxm(gvect,nsg1,gc,nsg,gt,nsg*nsc)
 
@@ -136,7 +137,7 @@ c-----------------------------------------------------------------------
          do j=0,nsg1-1
          do i=0,nsg1-1
             if (mid.eq.0) write (6,*)
-     $         i,j,k-1,gt(1+i+j*(nsg1)),'cc'
+     $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
          enddo
          enddo
       enddo
