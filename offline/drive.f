@@ -35,6 +35,27 @@ c-----------------------------------------------------------------------
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
 
+      do j=0,nsg-1
+      do i=0,nsg-1
+         if (mid.eq.0) write (6,*) i,j,ga(1+i+j*(nsg)),'ga'
+      enddo
+      enddo
+
+      do j=0,nsg-1
+      do i=0,nsg-1
+         if (mid.eq.0) write (6,*) i,j,gb(1+i+j*(nsg)),'gb1'
+      enddo
+      enddo
+
+      do k=0,nsg-1
+      do j=0,nsg-1
+      do i=0,nsg-1
+         if (mid.eq.0)
+     $      write (6,*) i,j,k,gc(1+i+j*(nsg)+k*(nsg)**2),'gc'
+      enddo
+      enddo
+      enddo
+
       ifavg0=.true.
 
       call setg(gg,gb,gt,nsg,ifavg0)
@@ -62,9 +83,38 @@ c-----------------------------------------------------------------------
       do k=1,nsc
       do j=1,nsg
       do i=1,nsg
+         write (6,*) gc(i+(j-1)*(nsg)+(k-1)*(nsg)*(nsg)),'gc1'
       enddo
-      enddo 
       enddo
+      enddo
+
+      call mxm(gvect,nsg+1,gc,nsg,gt,nsg*nsc)
+      write (6,*) ' '
+
+      do k=1,nsc
+      do j=1,nsg
+      do i=1,nsg+1
+         write (6,*) gt(i+(j-1)*(nsg+1)+(k-1)*(nsg)*(nsg+1)),'gc2'
+      enddo
+      enddo
+      enddo
+
+      do i=1,nsc
+         call mxm(gt(1+(i-1)*(nsg+1)*nsg),nsg+1,
+     $        gvec,nsg,gc(1+(i-1)*(nsg+1)**2),nsg+1)
+      enddo
+      write (6,*) ' '
+
+      do k=1,nsc
+      do j=1,nsg+1
+      do i=1,nsg+1
+         write (6,*) gc(i+(j-1)*(nsg+1)+(k-1)*(nsg+1)**2),'gc3'
+      enddo
+      enddo
+      enddo
+
+      write (6,*) ' '
+
       do k=1,nsg
          call mxm(gc,(nsg+1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
          call gop(gt,gt((nsg+1)**2+1),'+  ',(nsg+1)**2)
@@ -78,16 +128,13 @@ c-----------------------------------------------------------------------
 
       do j=0,nsg-1
       do i=0,nsg-1
-         write (6,*) i,j,ga(1+i+j*(nsg+1)),'ga'
-         write (6,*) i,j,gb(1+i+j*(nsg+1)),'gb'
+         if (mid.eq.0) write (6,*) i,j,ga(1+i+j*(nsg+1)),'ga'
       enddo
       enddo
 
-      do k=0,nsg-1
       do j=0,nsg-1
       do i=0,nsg-1
-         write (6,*) i,j,k,gt(1+i+j*(nsg+1)+k*(nsg+1)**2),'gc'
-      enddo
+         if (mid.eq.0) write (6,*) i,j,gb(1+i+j*(nsg+1)),'gb2'
       enddo
       enddo
 
