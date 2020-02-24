@@ -2395,6 +2395,7 @@ c-----------------------------------------------------------------------
             s=-(1./nsg)*vlsum(qu(1,i+1),nsg)
             call cadd(qu(1,i+1),s,nsg)
          enddo
+         call rzero(qu(1,nsg+1),nsg)
       else
          call rzero(qu,nsg)
       endif
