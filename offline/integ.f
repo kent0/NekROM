@@ -3,8 +3,8 @@ c-----------------------------------------------------------------------
 
       real a(1),b(1),c(1),t(1),u(1)
 
-      call bip(b,t,u,nel,nb,ndim)
-      call aip(a,t,u,nel,nb,ndim)
+      call bip(b,t,t,nel,nb,ndim)
+      call aip(a,t,t,nel,nb,ndim)
       call cip(c,t,t,u,nel,nb,mdim,ndim)
 
       return
