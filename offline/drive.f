@@ -61,6 +61,16 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine qop1(g1,gt,gvec,nsg,nsg1)
+
+      real g1(1),gt(1),gvec(1)
+
+      call mxm(g1,1,gvec,nsg,gt,nsg1)
+      call copy(g1,gt,nsg1)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine qop2(ga,gt,gvec,gvect,nsg,nsg1)
 
       real ga(1),gt(1),gvec(1),gvect(1)
