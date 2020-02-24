@@ -30,7 +30,7 @@ c-----------------------------------------------------------------------
 
       call qop2(ga,gt,gvec,gvect,nsg,nsg1)
       call qop2(gb,gt,gvec,gvect,nsg,nsg1)
-      call write_ops(ga,gb,gc,nsg1,mid,' ',.false.)
+      call write_ops(ga,gb,gc,nsg1,mid,'  u',.false.)
 
       call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
 
@@ -41,7 +41,7 @@ c-----------------------------------------------------------------------
          call qop2(ga((nsg+1)**2+1),gt,gvec,gvect,nsg,nsg1)
          call qop2(gb((nsg+1)**2+1),gt,gvec,gvect,nsg,nsg1)
          call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
-     $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1,mid,' ',.false.)
+     $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1,mid,'  t',.false.)
 
          call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
       endif
