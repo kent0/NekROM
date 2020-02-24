@@ -518,8 +518,8 @@ c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
          ifld=ifld+1
       enddo
 
-      if (js.lt.1) call
-     $   fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
+c     if (js.lt.1) call
+c    $   fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,xupt,1,2,1)
 
       if (is.le.0) then
          is=js
