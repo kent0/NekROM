@@ -34,26 +34,7 @@ c-----------------------------------------------------------------------
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
 
-      do j=0,nsg-1
-      do i=0,nsg-1
-         if (mid.eq.0) write (6,*) i,j,ga(1+i+j*(nsg)),'ga'
-      enddo
-      enddo
-
-      do j=0,nsg-1
-      do i=0,nsg-1
-         if (mid.eq.0) write (6,*) i,j,gb(1+i+j*(nsg)),'gb'
-      enddo
-      enddo
-
-      do k=0,nsg-1
-      do j=0,nsg-1
-      do i=0,nsg-1
-         if (mid.eq.0)
-     $      write (6,*) i,j,k,gc(1+i+j*(nsg)+k*(nsg)**2),'gc'
-      enddo
-      enddo
-      enddo
+      call write_ops(ga,gb,gc,nsg,mid,'g',.true.)
 
       ifavg0=.true.
 
@@ -84,7 +65,8 @@ c-----------------------------------------------------------------------
          call mxm(gt(1+(i-1)*(nsg+1)*nsg),nsg+1,
      $        gvec,nsg,gc(1+(i-1)*(nsg+1)**2),nsg+1)
       enddo
-      write (6,*) ' '
+
+      call write_ops(ga,gb,gc,nsg,mid,' ',.false.)
 
       do k=1,nsg
          call mxm(gc,(nsg+1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
@@ -97,17 +79,7 @@ c-----------------------------------------------------------------------
          enddo
       enddo
 
-      do j=0,nsg-1
-      do i=0,nsg-1
-         if (mid.eq.0) write (6,*) i,j,ga(1+i+j*(nsg+1)),'a'
-      enddo
-      enddo
-
-      do j=0,nsg-1
-      do i=0,nsg-1
-         if (mid.eq.0) write (6,*) i,j,gb(1+i+j*(nsg+1)),'b'
-      enddo
-      enddo
+      if (mid.eq.0) write (6,*) ' '
 
       return
       end

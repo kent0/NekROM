@@ -556,3 +556,42 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine write_ops(ga,gb,gc,nsg,mid,pfx,ifc)
+
+      real ga(nsg,nsg),gb(nsg,nsg),gc(nsg,nsg,nsg)
+      logical ifc
+      character*1 pfx
+
+      if (mid.eq.0) then
+         do j=1,nsg
+         do i=1,nsg
+            write (6,*) i,j,ga(i,j),pfx,'a'
+         enddo
+         enddo
+
+         write (6,*) ' '
+
+         do j=1,nsg
+         do i=1,nsg
+            write (6,*) i,j,ga(i,j),pfx,'b'
+         enddo
+         enddo
+
+         write (6,*) ' '
+
+         if (ifc) then
+            do k=1,nsg
+            do j=1,nsg
+            do i=1,nsg
+               write (6,*) i,j,k,gc(i,j,k),pfx,'c'
+            enddo
+            enddo
+            enddo
+
+            write (6,*) ' '
+         endif
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
