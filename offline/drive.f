@@ -14,25 +14,21 @@ c-----------------------------------------------------------------------
       nsg=3
 
       ie=1
-
       neg=512
-
       mel=2
-      mel=neg
-      ng=1
 
       call rzero(ga,nsg*nsg)
       call rzero(gb,nsg*nsg)
       call rzero(gc,nsg*nsg*((nsg-1)/mp))
 
-      do i=1,ng
+      do while (ie.le.neg)
          ieg(1)=ie
-         ieg(2)=ie+mel-1
+         ieg(2)=min(ie+mel*mp-1,neg)
          call loadsnaps(buf,ieg,indxr,nsg)
          nel=ieg(4)
          call setgeom(buf,nel)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
-         ie=ie+mel
+         ie=ieg(2)+1
       enddo
 
       call gop(ga,gt,'+  ',nsg*nsg)
