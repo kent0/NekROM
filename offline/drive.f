@@ -15,10 +15,11 @@ c-----------------------------------------------------------------------
       mel=2
 
       iftherm=.true.
+      ifavg0=.true.
+
       call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
      $  nsg,mp,neg,mel,ldim,lxyz,iftherm)
 
-      ifavg0=.true.
       call write_ops(ga,gb,gc,nsg,mid,'  g',.true.)
 
       call setg(gg,gb,gt,nsg,ifavg0)

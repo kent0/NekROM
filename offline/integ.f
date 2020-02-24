@@ -1,11 +1,11 @@
 c-----------------------------------------------------------------------
-      subroutine setops(a,b,c,wk,u,nel,nb,ndim)
+      subroutine setops(a,b,c,wk,t,u,nel,nb,mdim,ndim)
 
-      real a(1),b(1),c(1),u(1)
+      real a(1),b(1),c(1),t(1),u(1)
 
-      call bip(b,u,u,nel,nb,ndim)
-      call aip(a,u,u,nel,nb,ndim)
-      call cip(c,u,u,u,nel,nb,ndim,ndim)
+      call bip(b,t,u,nel,nb,ndim)
+      call aip(a,t,u,nel,nb,ndim)
+      call cip(c,t,t,u,nel,nb,mdim,ndim)
 
       return
       end
