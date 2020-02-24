@@ -22,13 +22,10 @@ c-----------------------------------------------------------------------
       ifavg0=.true.
 
       call setg(gg,gb,gt,nsg,ifavg0)
-      call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0)
+      call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
 
-      call mxm(gvect,nsg+1,gb,nsg,gt,nsg)
-      call mxm(gt,nsg+1,gvec,nsg,gb,nsg+1)
-
-      call mxm(gvect,nsg+1,ga,nsg,gt,nsg)
-      call mxm(gt,nsg+1,gvec,nsg,ga,nsg+1)
+      call qop2(ga,gt,gvec,gvect,nsg,nsg1)
+      call qop2(gb,gt,gvec,gvect,nsg,nsg1)
 
       call mxm(gvect,nsg+1,gc,nsg,gt,nsg*nsc)
 
@@ -37,7 +34,7 @@ c-----------------------------------------------------------------------
      $        gvec,nsg,gc(1+(i-1)*(nsg+1)**2),nsg+1)
       enddo
 
-      call write_ops(ga,gb,gc,nsg,mid,' ',.false.)
+      call write_ops(ga,gb,gc,nsg1,mid,' ',.false.)
 
       do k=1,nsg
          call mxm(gc,(nsg+1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
@@ -79,6 +76,16 @@ c-----------------------------------------------------------------------
 
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine qop2(ga,gt,gvec,gvect,nsg,nsg1)
+
+      real ga(1),gt(1),gvec(1),gvect(1)
+
+      call mxm(gvect,nsg1,ga,nsg,gt,nsg)
+      call mxm(gt,nsg1,gvec,nsg,ga,nsg1)
 
       return
       end

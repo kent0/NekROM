@@ -2376,7 +2376,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setq(qu,qut,quc,elam,gram,nsg,nsc,mp,mid,ifavg0)
+      subroutine setq(qu,qut,quc,elam,gram,nsg,nsc,mp,mid,ifavg0,nsg1)
 
       logical ifavg0
       real qu(nsg,nsg+1),qut(nsg+1,nsg),quc(1)
@@ -2397,17 +2397,18 @@ c-----------------------------------------------------------------------
             call cadd(qu(1,i+1),s,nsg)
          enddo
          call rzero(qu(1,nsg+1),nsg)
-      else
-         call rzero(qu,nsg)
       endif
 
-      call settranspose(qut,qu,nsg,nsg+1)
+      nsg1=nsg+1
+      if (ifavg0) nsg1=nsg
+
+      call settranspose(qut,qu,nsg,nsg1)
 
       do i=1,nsg
          if (mod(i-1,mp).eq.mid) nsc=(i-1)/mp+1
       enddo
 
-      do j=1,nsg+1
+      do j=1,nsg1
       do i=1,nsc
          quc(i+(j-1)*nsc)=qu(1+(i-1)*mp+mid,j)
       enddo
