@@ -21,6 +21,10 @@ c-----------------------------------------------------------------------
       mel=neg
       ng=1
 
+      call rzero(ga,nsg*nsg)
+      call rzero(gb,nsg*nsg)
+      call rzero(gc,nsg*nsg*((nsg-1)/mp))
+
       do i=1,ng
          ieg(1)=ie
          ieg(2)=ie+mel-1
