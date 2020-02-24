@@ -24,9 +24,8 @@ c-----------------------------------------------------------------------
       do i=1,ng
          ieg(1)=ie
          ieg(2)=ie+mel-1
-         nel=ieg(2)-ieg(1)+1
-
          call loadsnaps(buf,ieg,indxr,nsg)
+         nel=ieg(4)
          call setgeom(buf,nel)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
          ie=ie+mel
