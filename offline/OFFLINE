@@ -1,12 +1,12 @@
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
      $              buf(lxyz*leb*lfld)
 
-      common /gram/ ga(lsg*lsg*lgld),gb(lsg*lsg*lgld),
-     $              gg(lsg*lsg),gvec((lsg+1)*lsg),
+      common /gram/ ga(lgld*(lsg+1)**2),gb(lgld*(lsg+1)**2),
+     $              gm(lgld*(lsg+1)**2),gg(lsg*lsg),gvec((lsg+1)*lsg),
      $              gvect((lsg+1)*lsg),gval(lsg),
      $              gvecc(((lsg-1)/lpmin+1)*lsg),
-     $              gc(lsg*lsg*lsl*lgld),
-     $              gt(lsg*lsg*lsl*lgld)
+     $              gc(((lsg+1)**2)*(lsl+1)*lgld),
+     $              gt(((lsg+1)**2)*(lsl+1)*lgld)
 
       real mass
       common /integ/ mass(lxyz*lel),visc(lxyz*lel),
