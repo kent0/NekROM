@@ -7,7 +7,7 @@ c-----------------------------------------------------------------------
       character*132 fnames(1)
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      write (6,*) 'starting setxsnap'
+c     write (6,*) 'starting setxsnap'
 
       nslmax=iglmax(nsl,1)
       ixmin=nslmax*mp+1
@@ -55,7 +55,7 @@ c-----------------------------------------------------------------------
       real buf(1)
       integer ieg(1),indxr(1)
 
-      write (6,*) 'starting load_snap'
+c     write (6,*) 'starting load_snap'
 
       nsg=min(nsmax,lsg)
 
@@ -120,7 +120,7 @@ c     call exitt0
  10   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld1')
  11   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld2')
 
-      write (6,*) 'ending load_snap'
+c     write (6,*) 'ending load_snap'
 
       return
       end
@@ -181,13 +181,10 @@ c-----------------------------------------------------------------------
 
       nel=ieg1-ieg0+1
 
-      write (6,*) 'wp 0'
       do while (iel.lt.nel)
          mel=min(lel,nelgr-jeg+1)
          call byte_read(er,mel,ierr) ! get element mapping
-      write (6,*) 'wp 1'
          if (if_byte_sw) call byte_reverse(er,mel,ierr)
-      write (6,*) 'wp 2'
          do ie=1,mel
             if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
                ieg(er(ie)-ieg0+1)=jeg
@@ -196,14 +193,11 @@ c-----------------------------------------------------------------------
             jeg=jeg+1
          enddo
       enddo
-      write (6,*) 'wp 3'
 
       call esort(ieg,nel)
-      write (6,*) 'wp 4'
 
       call rxupt_read_helper(xupt,wk,ibuf,ibuf8,
      $   ieg(nel+1),ieg(2*nel+1),ieg(3*nel+1),indxr,is,n,nel)
-      write (6,*) 'wp 5'
 
       ieg(1)=ieg0
       ieg(2)=ieg1
@@ -412,7 +406,7 @@ c-----------------------------------------------------------------------
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      write (6,*) 'wdsizr',wdsizr
+c     write (6,*) 'wdsizr',wdsizr
 
       ner=0
       i=1
@@ -543,7 +537,7 @@ c-----------------------------------------------------------------------
           call blank(fname,132)
           fname='done '
           if (mid.eq.0) read (10,'(a132)',end=100) fname
-          write (6,*) fname,'fname'
+          write (6,*) fname,mid,mp,'fname'
   100     call bcast(fname,132)
           if (indx1(fname,'done ',5).eq.0) then
              ms=isg
