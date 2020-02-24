@@ -22,19 +22,7 @@ c-----------------------------------------------------------------------
       ifavg0=.true.
 
       call setg(gg,gb,gt,nsg,ifavg0)
-      call setq(gvec,gval,gg,nsg,ifavg0)
-
-      call settranspose(gvect,gvec,nsg,nsg+1)
-
-      do i=1,nsg
-         if (mod(i-1,mp).eq.mid) nsc=(i-1)/mp+1
-      enddo
-
-      do j=1,nsg+1
-      do i=1,nsc
-         gvecc(i+(j-1)*nsc)=gvec(1+(i-1)*mp+mid+(j-1)*nsg)
-      enddo
-      enddo
+      call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0)
 
       call mxm(gvect,nsg+1,gb,nsg,gt,nsg)
       call mxm(gt,nsg+1,gvec,nsg,gb,nsg+1)
