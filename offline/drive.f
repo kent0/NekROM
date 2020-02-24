@@ -26,28 +26,9 @@ c-----------------------------------------------------------------------
 
       call qop2(ga,gt,gvec,gvect,nsg,nsg1)
       call qop2(gb,gt,gvec,gvect,nsg,nsg1)
-
-      call mxm(gvect,nsg+1,gc,nsg,gt,nsg*nsc)
-
-      do i=1,nsc
-         call mxm(gt(1+(i-1)*(nsg+1)*nsg),nsg+1,
-     $        gvec,nsg,gc(1+(i-1)*(nsg+1)**2),nsg+1)
-      enddo
-
       call write_ops(ga,gb,gc,nsg1,mid,' ',.false.)
 
-      do k=1,nsg
-         call mxm(gc,(nsg+1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
-         call gop(gt,gt((nsg+1)**2+1),'+  ',(nsg+1)**2)
-         do j=0,nsg-1
-         do i=0,nsg-1
-            if (mid.eq.0) write (6,*)
-     $         i,j,k-1,gt(1+i+j*(nsg+1)),'c'
-         enddo
-         enddo
-      enddo
-
-      if (mid.eq.0) write (6,*) ' '
+      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
 
       return
       end
@@ -86,6 +67,33 @@ c-----------------------------------------------------------------------
 
       call mxm(gvect,nsg1,ga,nsg,gt,nsg)
       call mxm(gt,nsg1,gvec,nsg,ga,nsg1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid)
+
+      real gc(1),gt(1),gvec(1),gvect(1),gvecc(1)
+
+      call mxm(gvect,nsg1,gc,nsg,gt,nsg*nsc)
+
+      do i=1,nsc
+         call mxm(gt(1+(i-1)*(nsg1)*nsg),nsg1,
+     $        gvec,nsg,gc(1+(i-1)*(nsg1)**2),nsg1)
+      enddo
+
+      do k=1,nsg
+         call mxm(gc,(nsg1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
+         call gop(gt,gt((nsg1)**2+1),'+  ',(nsg1)**2)
+         do j=0,nsg1-1
+         do i=0,nsg1-1
+            if (mid.eq.0) write (6,*)
+     $         i,j,k-1,gt(1+i+j*(nsg1)),'c'
+         enddo
+         enddo
+      enddo
+
+      if (mid.eq.0) write (6,*) ' '
 
       return
       end
