@@ -10,29 +10,12 @@ c-----------------------------------------------------------------------
 
       call offline_init(icomm)
 
-      nsg=lsg
       nsg=3
-
-      ie=1
       neg=512
       mel=2
 
-      call rzero(ga,nsg*nsg)
-      call rzero(gb,nsg*nsg)
-      call rzero(gc,nsg*nsg*((nsg-1)/mp))
-
-      do while (ie.le.neg)
-         ieg(1)=ie
-         ieg(2)=min(ie+mel*mp-1,neg)
-         call loadsnaps(buf,ieg,indxr,nsg)
-         nel=ieg(4)
-         call setgeom(buf,nel)
-         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
-         ie=ieg(2)+1
-      enddo
-
-      call gop(ga,gt,'+  ',nsg*nsg)
-      call gop(gb,gt,'+  ',nsg*nsg)
+      call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
+     $  nsg,mp,neg,mel,ldim,lxyz)
 
       call write_ops(ga,gb,gc,nsg,mid,'g',.true.)
 
@@ -80,6 +63,34 @@ c-----------------------------------------------------------------------
       enddo
 
       if (mid.eq.0) write (6,*) ' '
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gengrams(ga,gb,gc,gt,buf,ieg,indxr,
+     $   nsg,mp,neg,mel,ldim,lxyz)
+
+      integer ieg(1),indxr(1)
+      real ga(1),gb(1),gc(1),gt(1),buf(1)
+
+      ie=1
+
+      call rzero(ga,nsg*nsg)
+      call rzero(gb,nsg*nsg)
+      call rzero(gc,nsg*nsg*((nsg-1)/mp))
+
+      do while (ie.le.neg)
+         ieg(1)=ie
+         ieg(2)=min(ie+mel*mp-1,neg)
+         call loadsnaps(buf,ieg,indxr,nsg)
+         nel=ieg(4)
+         call setgeom(buf,nel)
+         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
+         ie=ieg(2)+1
+      enddo
+
+      call gop(ga,gt,'+  ',nsg*nsg)
+      call gop(gb,gt,'+  ',nsg*nsg)
 
       return
       end
