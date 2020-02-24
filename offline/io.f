@@ -97,6 +97,7 @@ c-----------------------------------------------------------------------
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
+ 10   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld1')
       write (6,*) 'ending load_snap'
 
       return
