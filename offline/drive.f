@@ -98,7 +98,7 @@ c-----------------------------------------------------------------------
          do j=0,nsg1-1
          do i=0,nsg1-1
             if (mid.eq.0) write (6,*)
-     $         i,j,k-1,gt(1+i+j*(nsg1)),'c'
+     $         i,j,k-1,gt(1+i+j*(nsg1)),'cc'
          enddo
          enddo
       enddo

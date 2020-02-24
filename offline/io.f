@@ -565,7 +565,7 @@ c-----------------------------------------------------------------------
       if (mid.eq.0) then
          do j=1,nsg
          do i=1,nsg
-            write (6,*) i,j,ga(i,j),pfx,'a'
+            write (6,*) i,j,ga(i,j),pfx,'aa'
          enddo
          enddo
 
@@ -573,7 +573,7 @@ c-----------------------------------------------------------------------
 
          do j=1,nsg
          do i=1,nsg
-            write (6,*) i,j,gb(i,j),pfx,'b'
+            write (6,*) i,j,gb(i,j),pfx,'bb'
          enddo
          enddo
 
@@ -583,7 +583,7 @@ c-----------------------------------------------------------------------
             do k=1,nsg
             do j=1,nsg
             do i=1,nsg
-               write (6,*) i,j,k,gc(i,j,k),pfx,'c'
+               write (6,*) i,j,k,gc(i,j,k),pfx,'cc'
             enddo
             enddo
             enddo
