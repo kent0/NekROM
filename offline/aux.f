@@ -51,12 +51,28 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-		logical function if_byte_swap_test(a,ierr) ! TODO: implement
+      logical function if_byte_swap_test(bytetest,ierr)
 
-		real a(1)
+      include 'LVAR'
 
-	   return
-	   end
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+ 
+      real*4 bytetest,test2
+      real*4 test_pattern
+      save   test_pattern
+ 
+      test_pattern = 6.54321
+      eps          = 0.00020
+      etest        = abs(test_pattern-bytetest)
+      if_byte_swap_test = .true.
+      if (etest.le.eps) if_byte_swap_test = .false.
+ 
+      test2 = bytetest
+      call byte_reverse(test2,1,ierr)
+      if (mid.eq.0 .and. loglevel.gt.2) 
+     $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
+      return
+      end
 c-----------------------------------------------------------------------
       subroutine mfi_parse_hdr(hdr,ierr)
 
