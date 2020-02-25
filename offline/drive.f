@@ -132,7 +132,7 @@ c-----------------------------------------------------------------------
      $        gvec,nsg,gc(1+(i-1)*(nsg1)**2),nsg1)
       enddo
 
-      do k=1,nsg
+      do k=1,nsg1
          call mxm(gc,(nsg1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
          call gop(gt,gt((nsg1)**2+1),'+  ',(nsg1)**2)
          do j=0,nsg1-1
