@@ -1,0 +1,4 @@
+      include 'LVAR1'
+
+      parameter (iHeaderSize=132)
+      parameter (nelgt_max=178956970)

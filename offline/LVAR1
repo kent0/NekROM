@@ -1,8 +1,8 @@
-      parameter (lsg=200)
-      parameter (leg=2024)
+      parameter (lsg=600)
+      parameter (leg=5000)
       parameter (leb=leg) ! maximum number of element groups for reading
-      parameter (ldim=2)
-      parameter (lx1=2)
+      parameter (ldim=3)
+      parameter (lx1=10)
       parameter (ldimt=1)
       parameter (lpmin=1)
 
@@ -33,8 +33,6 @@ c     parameter (lzd=(ldim-2)*lz1*3/2+1)
       parameter (lelg=leg)
       parameter (lelr=leg)
 
-      parameter (iHeaderSize=132)
       parameter (ldimt1=10)
       parameter (nsessmax=1)
       parameter (ldimt3=3+1)
-      parameter (nelgt_max=178956970)
