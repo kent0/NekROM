@@ -43,7 +43,8 @@ c-----------------------------------------------------------------------
          call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
      $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1,mid,'  t',.false.)
 
-         call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  t')
+         call qop3(gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
+     $        gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  t')
       endif
 
       return
