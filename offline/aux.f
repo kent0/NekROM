@@ -1728,6 +1728,7 @@ C
       DIMENSION A1(LX1,LY1),A2(LX1,LY1),A3(LX1,LY1),
      $          B1(LX1,LY1,LZ1),B2(LX1,LY1,LZ1),B3(LX1,LY1,LZ1)
 C
+      call initds
       CALL DSSET(lx1,ly1,lz1)
       IFACE  = EFACE1(IFACE1)
       JS1    = SKPDAT(1,IFACE)
@@ -2651,5 +2652,53 @@ C
          A(I)=A(I)-B(I)*C(I)*D(I)
   100 CONTINUE
       return
+      END
+c-----------------------------------------------------------------------
+      subroutine initds
+C
+C          -- Direct Stiffness Initialization Routine --
+C
+C     Set up required data for packing data on faces of spectral cubes.
+C
+      INCLUDE 'LVAR'
+      INCLUDE 'INTEG'
+C
+C     Nominal ordering for direct stiffness summation of faces
+C
+      J=0
+      DO 5 IDIM=1,ldim
+      DO 5 IFACE=1,2
+        J=J+1
+         NOMLIS(IFACE,IDIM)=J
+    5 CONTINUE
+C
+C     Assign Ed's numbering scheme to PF's scheme.
+C
+      EFACE(1)=4
+      EFACE(2)=2
+      EFACE(3)=1
+      EFACE(4)=3
+      EFACE(5)=5
+      EFACE(6)=6
+C
+C     Assign inverse of Ed's numbering scheme to PF's scheme.
+C
+      EFACE1(1)=3
+      EFACE1(2)=2
+      EFACE1(3)=4
+      EFACE1(4)=1
+      EFACE1(5)=5
+      EFACE1(6)=6
+C
+C     Assign group designation to each face to determine ordering of indices.
+C
+      GROUP(1)=0
+      GROUP(2)=1
+      GROUP(3)=1
+      GROUP(4)=0
+      GROUP(5)=0
+      GROUP(6)=1
+C
+      RETURN
       END
 c-----------------------------------------------------------------------
