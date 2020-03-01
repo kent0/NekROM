@@ -516,3 +516,220 @@ c
       return
       end
 c-----------------------------------------------------------------------
+      subroutine gengrams(ga,gb,gc,gt,buf,ieg,indxr,
+     $   nsg,mp,neg,mel,ldim,lxyz,iftherm)
+
+      integer ieg(1),indxr(1)
+      real ga((nsg+1)**2,1),gb((nsg+1)**2,1)
+      real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
+      real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
+      real buf(1)
+
+      logical iftherm
+
+      ie=1
+
+      call rzero(ga,nsg*nsg)
+      call rzero(gb,nsg*nsg)
+      call rzero(gc,nsg*nsg*((nsg-1)/mp+1))
+
+      if (iftherm) then
+         call rzero(ga(1,2),nsg*nsg)
+         call rzero(gb(1,2),nsg*nsg)
+         call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
+      endif
+
+      do while (ie.le.neg)
+         ieg(1)=ie
+         ieg(2)=min(ie+mel*mp-1,neg)
+         call loadsnaps(buf,ieg,indxr,nsg,iftherm)
+         write (6,*) 'ie',ieg(1),ieg(2)
+         call exitt0
+         nel=ieg(4)
+         open (unit=100,file='xyz')
+         do i=1,lxyz
+            write (100,*) buf(i),buf(i+lxyz),buf(i+lxyz*2)
+         enddo
+         close (unit=100)
+         open (unit=100,file='uvw')
+         do i=1,lxyz
+            write (100,*) buf(i+lxyz*3),buf(i+lxyz*4),buf(i+lxyz*5)
+         enddo
+         close (unit=100)
+         call exitt0
+         call setgeom(buf,nel)
+         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
+     $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
+         if (iftherm) then
+            call setops(ga(1,2),gb(1,2),gc(1,2),gt,
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
+     $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
+         endif
+         ie=ieg(2)+1
+      enddo
+
+      call gop(ga,gt,'+  ',nsg*nsg)
+      call gop(gb,gt,'+  ',nsg*nsg)
+
+      if (iftherm) then
+         call gop(ga(1,2),gt,'+  ',nsg*nsg)
+         call gop(gb(1,2),gt,'+  ',nsg*nsg)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine qop1(g1,gt,gvec,nsg,nsg1)
+
+      real g1(1),gt(1),gvec(1)
+
+      call mxm(g1,1,gvec,nsg,gt,nsg1)
+      call copy(g1,gt,nsg1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine qop2(ga,gt,gvec,gvect,nsg,nsg1)
+
+      real ga(1),gt(1),gvec(1),gvect(1)
+
+      call mxm(gvect,nsg1,ga,nsg,gt,nsg)
+      call mxm(gt,nsg1,gvec,nsg,ga,nsg1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,pfx)
+
+      real gc(1),gt(1),gvec(1),gvect(1),gvecc(1)
+      character*3 pfx
+
+      call mxm(gvect,nsg1,gc,nsg,gt,nsg*nsc)
+
+      do i=1,nsc
+         call mxm(gt(1+(i-1)*(nsg1)*nsg),nsg1,
+     $        gvec,nsg,gc(1+(i-1)*(nsg1)**2),nsg1)
+      enddo
+
+      do k=1,nsg1
+         call mxm(gc,(nsg1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
+         call gop(gt,gt((nsg1)**2+1),'+  ',(nsg1)**2)
+         do j=0,nsg1-1
+         do i=0,nsg1-1
+            if (mid.eq.0) write (6,*)
+     $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
+         enddo
+         enddo
+      enddo
+
+      if (mid.eq.0) write (6,*) ' '
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setg(gram,gub,gram0,nsg,ifavg0)
+
+      real gram(nsg,nsg),gub(nsg,1),gram0(nsg)
+      integer ilgls(nsg)
+      logical ifavg0
+
+      call copy(gram,gub,nsg*nsg)
+
+      if (ifavg0) then
+         call rzero(gram0,nsg)
+
+         do i=1,nsg
+            call add2(gram0,gram(1,i),nsg)
+         enddo
+
+         s=1./real(nsg)
+
+         call cmult(gram0,s,nsg)
+         gram00=s*vlsum(gram0,nsg)
+
+         do i=1,nsg
+            call sub2(gram(1,i),gram0,nsg)
+         enddo
+
+         call cadd(gram0,-gram00,nsg)
+
+         do i=1,nsg
+            s=-gram0(i)
+            call cadd(gram(1,i),s,nsg)
+         enddo
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setq(qu,qut,quc,elam,gram,nsg,nsc,mp,mid,ifavg0,nsg1)
+
+      logical ifavg0
+      real qu(nsg,nsg+1),qut(nsg+1,nsg),quc(1)
+      real elam(nsg),gram(nsg,nsg)
+
+      call genevec(qu(1,2),elam,gram,nsg,1)
+
+      do i=1,nsg
+         s=1./sqrt(elam(i))
+         call cmult(qu(1,i+1),s,nsg)
+      enddo
+
+      if (ifavg0) then
+         s=1./nsg
+         call cfill(qu,s,nsg)
+         do i=1,nsg
+            s=-(1./nsg)*vlsum(qu(1,i+1),nsg)
+            call cadd(qu(1,i+1),s,nsg)
+         enddo
+         call rzero(qu(1,nsg+1),nsg)
+      endif
+
+      nsg1=nsg+1
+      if (ifavg0) nsg1=nsg
+
+      call settranspose(qut,qu,nsg,nsg1)
+
+      do i=1,nsg
+         if (mod(i-1,mp).eq.mid) nsc=(i-1)/mp+1
+      enddo
+
+      do j=1,nsg1
+      do i=1,nsc
+         quc(i+(j-1)*nsc)=qu(1+(i-1)*mp+mid,j)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine intp_rstd_all(uf,u,nel)
+
+      include 'LVAR'
+
+      parameter (lxyz1=lxyz)
+
+      real uf(lxyzd,lelt), u(lxyz1,lelt)
+
+      do i=1,nel
+         call intp_rstd(uf(1,i),u(1,i),lx1,lxd,ldim.eq.3,0)
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine intp_rstd_all2(ud,u,nel,nb,mdim)
+
+      include 'LVAR'
+
+      real ud(lxyzd,nel,nb,mdim),u(lxyz,nel,nb,mdim)
+
+      do idim=1,mdim
+      do ib=1,nb
+         call intp_rstd_all(ud(1,1,ib,idim),u(1,1,ib,idim),nel)
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
