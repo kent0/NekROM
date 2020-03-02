@@ -417,7 +417,7 @@ c-----------------------------------------------------------------------
 
       ifdebug=.false.
 
-c     write (6,*) 'wdsizr',wdsizr
+      if (ifdebug) write (6,*) 'wdsizr',wdsizr
 
       ner=0
       mel=nel
