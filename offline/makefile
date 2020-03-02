@@ -136,7 +136,7 @@ ifeq ($(MPI),0)
 	@rm -rf $S/mpif.h
 endif
 
-$(NOBJS) : ./SIZE
+$(NOBJS) : $(OD)/SIZE
 
 # NEK CORE     #################################################################
 $(OBJDIR)/dprocmap.o    :$S/dprocmap.f $S/DPROCMAP;     $(FC) -c $(FL2) $< -o $@
