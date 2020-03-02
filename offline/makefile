@@ -1,11 +1,11 @@
 ### makefile automatically created by makenek 02/10/2020 16:59:58 ###
-MOR_DIR=/Users/kaneko/Developer/MOR
-OFF_DIR=$(MOR_DIR)/offline
+MD=/Users/kaneko/Developer/MOR
+OD=$(MD)/offline
 
 BINNAME=nek5000
 LIBNAME=libnek5000.a
 CASENAME:=h3d
-CASEDIR:=/Users/kaneko/Developer/Cases/hotbox
+CASEDIR:=$(OD)
 S=/Users/kaneko/Developer/Nek5000/core
 SCMT=/Users/kaneko/Developer/Nek5000/core/cmt
 OPT_INCDIR=./
@@ -140,7 +140,7 @@ $(NOBJS) : ./SIZE
 
 # NEK CORE     #################################################################
 $(OBJDIR)/dprocmap.o    :$S/dprocmap.f $S/DPROCMAP;     $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/comm_mpi.o	:$(MOR_DIR)/offline/comm_mpi.f;	$(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/comm_mpi.o	:$(OD)/comm_mpi.f;	$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/mpi_dummy.o	:$S/mpi_dummy.f;		$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/byte_mpi.o	:$S/byte_mpi.f;			$(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/speclib.o	:$S/speclib.f;			$(FC) -c $(FL2) $< -o $@
@@ -172,8 +172,8 @@ $(OBJDIR)/dictionary.o :$S/3rd_party/dictionary.c;  $(CC)  -c $(cFL2) $(JL) $< -
 
 # My Files #####
 
-$(OBJDIR)/io.o    :$(OFF_DIR)/io.f    LVAR1; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/integ.o :$(OFF_DIR)/integ.f LVAR1; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/geom.o  :$(OFF_DIR)/geom.f  LVAR1; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/util.o  :$(OFF_DIR)/util.f  LVAR1; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/misc.o  :$(OFF_DIR)/misc.f  LVAR1; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/io.o    :$(OD)/io.f    LVAR1; $(FC) -c -I$(OD)/ $(FL2) $< -o $@
+$(OBJDIR)/integ.o :$(OD)/integ.f LVAR1; $(FC) -c -I$(OD)/ $(FL2) $< -o $@
+$(OBJDIR)/geom.o  :$(OD)/geom.f  LVAR1; $(FC) -c -I$(OD)/ $(FL2) $< -o $@
+$(OBJDIR)/util.o  :$(OD)/util.f  LVAR1; $(FC) -c -I$(OD)/ $(FL2) $< -o $@
+$(OBJDIR)/misc.o  :$(OD)/misc.f  LVAR1; $(FC) -c -I$(OD)/ $(FL2) $< -o $@
