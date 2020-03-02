@@ -415,7 +415,7 @@ c-----------------------------------------------------------------------
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
 
-      ifdebug=.true.
+      ifdebug=.false.
 
 c     write (6,*) 'wdsizr',wdsizr
 
