@@ -565,7 +565,7 @@ c-----------------------------------------------------------------------
             endif
             close (unit=100)
             open (unit=100,file='uvw')
-            if (ldim.eq.3) then 
+            if (ldim.eq.3) then
                do i=1,lxyz
                   write (100,*) buf(i+lxyz*3),buf(i+lxyz*3+nsg*lxyz*nel)
      $               ,buf(i+lxyz*3+nsg*lxyz*nel*2)
