@@ -1,0 +1,27 @@
+      common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
+     $              buf(lxyz*leb*lfld)
+
+      common /gram/ ga(lgld*(lsg+1)**2),gb(lgld*(lsg+1)**2),
+     $              gm(lgld*(lsg+1)**2),gg(lsg*lsg),gvec((lsg+1)*lsg),
+     $              gvect((lsg+1)*lsg),gval(lsg),
+     $              gvecc(((lsg-1)/lpmin+1)*lsg),
+     $              gc(((lsg+1)**2)*(lsl+1)*lgld),
+     $              gt(((lsg+1)**2)*(lsl+1)*lgld)
+
+      real mass
+      common /integ/ mass(lxyz*lel),visc(lxyz*lel),
+     $               geom(lxyz*lel*(ldim-1)*3),rx(lxyzd*ldim*ldim*lel)
+
+      common /ivec/ ieg(leb*lfld*4),indxr(ldim+ldimt+2)
+
+      integer*8 ibuf8
+      common /iread8/ ibuf8(lxyz*leb*lfld)
+      common /iread/ ibuf(lxyz*leb*lfld)
+
+      common /isca/ nel,nep,neg,nsl,nsg,ixmin
+
+      logical ifread
+      common /lvec/ ifread(7+ldimt)
+
+      character*132 fnames
+      common /lchr/ fnames(lsg)

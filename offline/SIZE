@@ -1,0 +1,137 @@
+c
+c     Include file to dimension static arrays
+c     and to set some hardwired run-time parameters
+c
+      integer toteq
+
+      include 'LVAR1'
+!     LVAR
+
+c     parameter (lsg=600)
+c     parameter (leg=2024)
+c     parameter (leb=leg) ! maximum number of element groups for reading
+c     parameter (ldim=3)
+c     parameter (lx1=2)
+c     parameter (ldimt=1)
+c     parameter (lpmin=1)
+
+c     parameter (lfld=ldimt+ldim*2)
+c     parameter (lsl=(lsg-1)/lpmin+1)
+c     parameter (lel=leg/lpmin+1)
+c     parameter (ly1=lx1)
+c     parameter (lz1=(lx1-1)*(ldim-2)+1)
+c     parameter (lx2=lx1)
+c     parameter (ly2=ly1)
+c     parameter (lz2=lz1)
+c     parameter (lx3=lx1)
+c     parameter (ly3=ly1)
+c     parameter (lz3=lz1)
+c     parameter (lx1m=1)
+c     parameter (ly1m=1)
+c     parameter (lz1m=1)
+c     parameter (lxyz=lx1*ly1*lz1)
+c     parameter (lxd=3)
+c     parameter (lyd=3)
+c     parameter (lzd=3)
+c     parameter (lxd=lx1*3/2+1)
+c     parameter (lyd=ly1*3/2+1)
+c     parameter (lzd=(ldim-2)*lz1*3/2+1)
+c     parameter (lxyzd=lxd*lyd*lzd)
+c     parameter (lgld=lfld)
+c     parameter (lelt=lel)
+c     parameter (lelg=leg)
+c     parameter (lelr=leg)
+
+c     parameter (ldimt1=10)
+c     parameter (nsessmax=1)
+c     parameter (ldimt3=3+1)
+
+c     parameter (iHeaderSize=132)
+c     parameter (nelgt_max=178956970)
+
+
+
+      ! OPTIONAL
+      parameter (ldimt_proj=1)         ! max auxiliary fields residual projection
+      parameter (lhis=1)               ! max history/monitoring points
+      parameter (maxobj=1)             ! max number of objects
+      parameter (lpert=1)              ! max number of perturbations
+      parameter (toteq=1)              ! max number of conserved scalars in CMT
+      parameter (lxo=lx1)              ! max GLL points on output (lxo>=lx1)
+      parameter (mxprev=20,lgmres=30)  ! max dim of projection & Krylov space
+      parameter (lorder=3)             ! max order in time
+      parameter (lfdm=0)               ! unused 
+      parameter (lelx=1,lely=1,lelz=1) ! global tensor mesh dimensions
+
+      parameter (lbelt=1)              ! lelt for mhd
+      parameter (lpelt=1)              ! lelt for linear stability
+      parameter (lcvelt=1)             ! lelt for cvode
+
+      parameter(lelv=lelt)
+
+      ! Averaging
+      integer ax1,ay1,az1
+      parameter (ax1=lx1)
+      parameter (ay1=ax1)
+      parameter (az1=1 + (ldim-2)*(ax1-1))
+
+      integer ax2,ay2,az2
+      parameter(ax2=lx2)
+      parameter(ay2=ax2)
+      parameter(az2=1 + (ldim-2)*(ax2-1))
+
+      ! Adjoint
+      parameter(lpelv=lpelt)
+
+      parameter(lpx1=lx1)
+      parameter(lpy1=lpx1)
+      parameter(lpz1=1 + (ldim-2)*(lpx1-1))
+
+      parameter(lpx2=lx2)
+      parameter(lpy2=lpx2)
+      parameter(lpz2=1 + (ldim-2)*(lpx2-1))
+
+      ! MHD
+      parameter(lbelv=lbelt)
+
+      parameter(lbx1=lx1)
+      parameter(lby1=lbx1)
+      parameter(lbz1=1 + (ldim-2)*(lbx1-1))
+
+      parameter(lbx2=lx2)
+      parameter(lby2=lbx2)
+      parameter(lbz2=1 + (ldim-2)*(lbx2-1))
+
+      parameter (lxz=lx1*lz1)
+
+      parameter (lzl=3 + 2*(ldim-3))
+
+      integer lctmp0,lctmp1
+      parameter (lctmp0 =2*lx1*ly1*lz1*lelt)
+      parameter (lctmp1 =4*lx1*ly1*lz1*lelt)
+
+      parameter (maxmor = lelt)
+
+      common/IOFLAG/ nio  ! for logfile verbosity control
+
+      parameter (lxs=1,lys=lxs,lzs=(lxs-1)*(ldim-2)+1) !New Pressure Preconditioner
+
+      parameter (maxmbr=lelt*6)
+
+      ! cvode
+      parameter(lcvx1=lx1)
+      parameter(lcvy1=lcvx1)
+      parameter(lcvz1=1 + (ldim-2)*(lcvx1-1))
+
+      ! nek-nek
+      integer nmaxl_nn,nfldmax_nn
+      parameter (nmaxl_nn=
+     $          min(1+(nsessmax-1)*2*ldim*lxz*lelt,2*ldim*lxz*lelt))
+      parameter (nfldmax_nn=
+     $          min(1+(nsessmax-1)*(ldim+1+ldimt),ldim+1+ldimt))
+
+      integer loglevel,optlevel
+      common /lolevels/ loglevel,optlevel
+
+      common/dimn/  nelv,nelt,nfield,npert,nid,idsess
+     $ ,nx1,ny1,nz1,nx2,ny2,nz2,nx3,ny3,nz3,nxd,nyd,nzd,ndim,ldimr
