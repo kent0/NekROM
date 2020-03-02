@@ -341,6 +341,7 @@ c-----------------------------------------------------------------------
          call setb(bu,bu0,'ops/bu ')
 c        call setc(cul,1,'ops/cu ')
          call setc(cul,0,'ops/cu0 ')
+c        call setc_snap(cul,0,'ops/cus0 ')
       endif
       if (ifrom(2)) then
          ifield=2
@@ -348,6 +349,7 @@ c        call setc(cul,1,'ops/cu ')
          call setb(bt,bt0,'ops/bt ')
 c        call setc(ctl,1,'ops/ct ')
          call setc(ctl,0,'ops/ct0 ')
+         call setc_snap(cul,0,'ops/cts0 ')
          call sets(st0,tb,'ops/ct ')
       endif
 
@@ -913,6 +915,109 @@ c           if (idc_t.gt.0) call rzero(tb,n)
       ifield=jfield
 
       if (nio.eq.0) write (6,*) 'exiting rom_init_fields'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setc_snap(cl,ii0,fname)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real cux(lt),cuy(lt),cuz(lt)
+
+      common /scrcwk/ wk(lcloc),wk2(0:lub)
+
+      real cl(lcloc)
+
+      character*128 fname
+      character*128 fnlint
+
+      if (nio.eq.0) write (6,*) 'inside setc'
+
+      call nekgsync
+      conv_time=dnekclock()
+
+      if (iffastc) call exitti('fastc not supported in setc_new$',nb)
+
+      call cpart(kc1,kc2,jc1,jc2,ic1,ic2,ncloc,nb,np,nid+1) ! old indexing
+c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
+
+      n=lx1*ly1*lz1*nelv
+
+      call lints(fnlint,fname,128)
+      if (nid.eq.0) open (unit=100,file=fnlint)
+      if (nio.eq.0) write (6,*) 'setc file:',fnlint
+
+      if (rmode.eq.'ON '.or.rmode.eq.'ONB') then
+         do k=0,nb
+         do j=0,mb
+         do i=ii0,mb
+            cel=0.
+            if (nid.eq.0) read (100,*) cel
+            cel=glsum(cel,1)
+            call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
+         enddo
+         enddo
+         enddo
+      else
+         if (.not.ifaxis) then
+            do i=0,ns-1
+               call opcopy(vxlag,vylag,vzlag,
+     $            us0(1,1,i+1),us0(1,2,i+1),us0(1,ldim,i+1))
+               call opadd2(vxlag,vylag,vzlag,ub,vb,wb)
+               call set_convect_new(c1v(1,i),c2v(1,i),c3v(1,i),
+     $                              vxlag,vylag,vzlag)
+               if (ifield.eq.1) then
+                  call intp_rstd_all(u1v(1,i),vxlag,nelv)
+                  call intp_rstd_all(u2v(1,i),vylag,nelv)
+                  if (ldim.eq.3)
+     $               call intp_rstd_all(u3v(1,i),vzlag,nelv)
+               else
+                  call copy(tlag,ts0(1,i+1),n)
+                  call add2(tlag,tb,n)
+                  call intp_rstd_all(u1v(1,i),tlag,nelv)
+               endif
+            enddo
+         endif
+
+         do k=0,ns-1
+            if (nio.eq.0) write (6,*) 'setc: ',k,'/',nb
+            do j=0,ns-1
+               if (ifield.eq.1) then
+                  call ccu(cux,cuy,cuz,k,j)
+               else
+                  call cct(cux,k,j)
+               endif
+               do i=ii0,ns-1
+                  if (ifield.eq.1) then
+                     call opcopy(vxlag,vylag,vzlag,
+     $                  us0(1,1,i+1),us0(1,2,i+1),us0(1,ldim,i+1))
+                     call opadd2(vxlag,vylag,vzlag,ub,vb,wb)
+                     cel=op_glsc2_wt(
+     $                  vxlag,vylag,vzlag,cux,cuy,cuz,ones)
+                  else
+                     call copy(tlag,ts0(1,i+1),n)
+                     call add2(tlag,tb,n)
+                     cel=glsc2(tlag,cux,n)
+                  endif
+c                 call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
+                  if (nid.eq.0) write (100,*) cel
+               enddo
+            enddo
+         enddo
+      endif
+
+      if (nid.eq.0) close (unit=100)
+
+      call nekgsync
+      if (nio.eq.0) write (6,*) 'conv_time: ',dnekclock()-conv_time
+      if (nio.eq.0) write (6,*) 'ncloc=',ncloc
+
+      if (nio.eq.0) write (6,*) 'exiting setc'
 
       return
       end
