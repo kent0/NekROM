@@ -4,7 +4,7 @@
       common /gram/ ga(lgld*(lsg+1)**2),gb(lgld*(lsg+1)**2),
      $              gm(lgld*(lsg+1)**2),gg(lsg*lsg),gvec((lsg+1)*lsg),
      $              gvect((lsg+1)*lsg),gval(lsg),
-     $              gvecc(((lsg-1)/lpmin+1)*lsg),
+     $              gvecc(((lsg-1)/lpmin+1)*lsg,2),
      $              gc(((lsg+1)**2)*(lsl+1)*lgld),
      $              gt(((lsg+1)**2)*(lsl+1)*lgld)
 
