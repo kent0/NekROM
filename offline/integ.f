@@ -545,6 +545,10 @@ c-----------------------------------------------------------------------
          call loadsnaps(buf,ieg,indxr,nsg,iftherm)
          write (6,*) 'ie',ieg(1),ieg(2)
          call exitt0
+         if (ieg(2).lt.0) then
+            neg=ieg(1)+ieg(2)
+            exit
+         endif
          nel=ieg(4)
          open (unit=100,file='xyz')
          do i=1,lxyz
