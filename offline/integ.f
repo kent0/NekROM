@@ -545,8 +545,6 @@ c-----------------------------------------------------------------------
          ieg(1)=ie
          ieg(2)=min(ie+mel*mp-1,neg)
          call loadsnaps(buf,ieg,indxr,nsg,iftherm)
-         write (6,*) 'ie',ieg(1),ieg(2)
-         call exitt0
          if (ieg(2).lt.0) then
             neg=ieg(1)+ieg(2)
             exit
