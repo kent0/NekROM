@@ -408,10 +408,14 @@ c-----------------------------------------------------------------------
       integer i2(1),i3(1),i4(1),indxr(1),ibuf(1)
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8,ibuf8(1)
 
+      logical ifdebug
+
       offs0   = iHeadersize + 4 + isize*nelgr
       nxyzr8  = nxr*nyr*nzr
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
+
+      ifdebug=.true.
 
 c     write (6,*) 'wdsizr',wdsizr
 
@@ -442,7 +446,7 @@ c     write (6,*) 'wdsizr',wdsizr
       ifldt=1
       jfld=1
       do while (indxr(ifld).ne.-1)
-c        write (6,*) 'wp 4.2',ifld,ifldt
+         if (ifdebug) write (6,*) 'rrh 1',ifld,ifldt
          if (ifld.le.2) then
              mdim=ndim
          else
@@ -456,7 +460,7 @@ c        write (6,*) 'wp 4.2',ifld,ifldt
             if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ndim
             if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ndim
             if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1+(ifld-4)
-c           write (6,*) 'wp 6.3',ifld
+            if (ifdebug) write (6,*) 'rrh 2',ifld
 
             if (ifld.le.2) then
                if (ndim.eq.2) then
@@ -472,7 +476,7 @@ c           write (6,*) 'wp 6.3',ifld
             else
                indx=1
             endif
-c           write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
+            if (ifdebug) write (6,*) 'rrh 3',nfld,ndim,mdim,indx
             iloc=1
             ig=1
             do while (i3(ig).ne.0) ! for now, read mdim stuff instead of nfld
@@ -485,7 +489,7 @@ c           write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
                 iloc=iloc+nwk
                 ig=ig+1
             enddo
-c           write (6,*) 'wp 6.5',ig,ng
+            if (ifdebug) write (6,*) 'rrh 4',ig,iofldsr,stride,iloc
 
             nwk=ner*ldim*nxyzr8
 
@@ -500,7 +504,8 @@ c           write (6,*) 'wp 6.5',ig,ng
             call copy(xupt(n+1),wk,lxyz*nfld*ner)
             nel=0
             do k=1,ner
-c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
+               if (ifdebug) write (6,*)
+     $            'rrh 5, k=',k,mod(k,mp),mp,mid,nel
                if (mod(k-1,mp).eq.mid) nel=nel+1
             do j=1,nfld
             do i=1,lxyz
