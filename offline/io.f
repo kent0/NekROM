@@ -420,6 +420,7 @@ c-----------------------------------------------------------------------
 c     write (6,*) 'wdsizr',wdsizr
 
       ner=0
+      mel=nel
       i=1
       n=0
 
@@ -428,7 +429,7 @@ c     write (6,*) 'wdsizr',wdsizr
          is=1
       endif
 
-      do while (i3(i).ne.0)
+      do while (i3(i).ne.0.and.i.le.mel)
          ner=ner+i4(i)
          i=i+1
       enddo
@@ -479,7 +480,8 @@ c     write (6,*) 'wdsizr',wdsizr
             if (ifdebug) write (6,*) 'rrh 3',nfld,ndim,mdim,indx
             iloc=1
             ig=1
-            do while (i3(ig).ne.0) ! for now, read mdim stuff instead of nfld
+            do while (i3(ig).ne.0.and.ig.le.mel)
+                ! for now, read mdim stuff instead of nfld
                 ie=i3(ig)
                 nep=i4(ig)
                 nwk=nep*mdim*nxyzr8
