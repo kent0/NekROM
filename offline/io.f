@@ -81,6 +81,8 @@ c     write (6,*) 'starting load_snap'
         n=n+ieg(3)
       enddo
 
+      nel=ieg(4)
+
       m=lxyz*leb*lfld
       mio=mid
       mio=-1
