@@ -171,6 +171,11 @@ c-----------------------------------------------------------------------
       integer ieg(1),indxr(1),ibuf(1)
       integer*8 ibuf8(1)
 
+      if (ieg(1).gt.nelgr) then
+         ieg(2)=nelgr-ieg(1)
+         return
+      endif
+
       ieg(2)=min(ieg(2),nelgr)
 
       ieg0=ieg(1)
