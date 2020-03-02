@@ -6,15 +6,15 @@ cwd="$(pwd -P)"
 # remove pre-existing files
 
 rm MOR              &> /dev/null
+rm POST             &> /dev/null
 rm test.usr         &> /dev/null
 rm makefile_usr.inc &> /dev/null
 rm pdrive           &> /dev/null
 
 # link files
 
-ln -s {$MOR_DIR/code,${cwd}}/MOR
-ln -s {$MOR_DIR/tests,$cwd}/test.usr
-ln -s {$MOR_DIR/bin,$cwd}/pdrive
+ln -s {$MOR_DIR/code,$cwd}/MOR
+ln -s {$MOR_DIR/code,$cwd}/POST
 
 echo "MOR_DIR=${MOR_DIR}" > makefile_usr.inc
 cat $MOR_DIR/code/makefile_usr.inc >> $cwd/makefile_usr.inc
@@ -22,6 +22,7 @@ cat $MOR_DIR/code/makefile_usr.inc >> $cwd/makefile_usr.inc
 # copy SIZE & LMOR & config.json if it does not exist
 
 cp -n $MOR_DIR/templates/LMOR.template LMOR
+cp -n $MOR_DIR/templates/LPOST.template LPOST
 cp -n $MOR_DIR/templates/SIZE.template SIZE
 cp -n $MOR_DIR/templates/config.json.template config.json
 

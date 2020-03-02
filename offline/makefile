@@ -1,5 +1,6 @@
 ### makefile automatically created by makenek 02/10/2020 16:59:58 ###
 MOR_DIR=/Users/kaneko/Developer/MOR
+OFF_DIR=$(MOR_DIR)/offline
 
 BINNAME=nek5000
 LIBNAME=libnek5000.a
@@ -19,7 +20,7 @@ LDFLAGS=
 PPPO=
 PPS= MPI UNDERSCORE TIMER
 
-USR=aux.o io.o integ.o geom.o
+USR=io.o integ.o geom.o misc.o util.o
 USR_LFLAGS=-mcmodel=medium -L/Users/kaneko/Developer/Nek5000/3rd_party/gslib/lib -lgs
 
 MPI=1
@@ -171,7 +172,8 @@ $(OBJDIR)/dictionary.o :$S/3rd_party/dictionary.c;  $(CC)  -c $(cFL2) $(JL) $< -
 
 # My Files #####
 
-$(OBJDIR)/aux.o :$(MOR_DIR)/offline/aux.f LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/io.o  :$(MOR_DIR)/offline/io.f  LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/integ.o  :$(MOR_DIR)/offline/integ.f  LVAR IO OFFLINE INTEG; $(FC) -c $(FL2) $< -o $@
-$(OBJDIR)/geom.o  :$(MOR_DIR)/offline/geom.f  LVAR IO OFFLINE; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/io.o    :$(OFF_DIR)/io.f    LVAR1; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/integ.o :$(OFF_DIR)/integ.f LVAR1; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/geom.o  :$(OFF_DIR)/geom.f  LVAR1; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/util.o  :$(OFF_DIR)/util.f  LVAR1; $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/misc.o  :$(OFF_DIR)/misc.f  LVAR1; $(FC) -c $(FL2) $< -o $@

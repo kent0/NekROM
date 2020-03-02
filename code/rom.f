@@ -31,7 +31,6 @@ c-----------------------------------------------------------------------
 
       ifmult=.not.ifrom(2).and.ifheat
 
-
       if (rmode.ne.'OFF') then
       if (ifmult) then
          if (ifflow) call exitti(
@@ -228,6 +227,8 @@ c-----------------------------------------------------------------------
 
       call setbases
 
+      call setn
+
       call checker('aea',ad_step)
       call setops
       call checker('afa',ad_step)
@@ -341,6 +342,7 @@ c-----------------------------------------------------------------------
          call setb(bu,bu0,'ops/bu ')
 c        call setc(cul,1,'ops/cu ')
          call setc(cul,0,'ops/cu0 ')
+c        call setc_snap(cul,0,'ops/cus0 ')
       endif
       if (ifrom(2)) then
          ifield=2
@@ -348,6 +350,7 @@ c        call setc(cul,1,'ops/cu ')
          call setb(bt,bt0,'ops/bt ')
 c        call setc(ctl,1,'ops/ct ')
          call setc(ctl,0,'ops/ct0 ')
+         call setc_snap(cul,0,'ops/cts0 ')
          call sets(st0,tb,'ops/ct ')
       endif
 
@@ -651,7 +654,20 @@ c-----------------------------------------------------------------------
 
       ad_qstep=nint(param(180))+ad_iostep*max(1-nint(param(180)),0)
 
-      iftneu=(param(178).ne.0.and.param(174).ne.0)
+      ntneu=0
+
+      do ie=1,nelt
+      do ifc=1,2*ldim
+         if (cbc(ifc,ie,2).eq.'f  ') ntneu=ntneu+1
+      enddo
+      enddo
+
+      ntneu=iglsum(ntneu,1)
+
+      if (nio.eq.0) write (6,*)
+     $   'number of inhomogeneous Neumann faces:',ntneu
+
+      iftneu=ntneu.gt.0
 
       ifctke=.false.
       if (param(181).ne.0) ifctke=.true.
@@ -917,6 +933,109 @@ c           if (idc_t.gt.0) call rzero(tb,n)
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setc_snap(cl,ii0,fname)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real cux(lt),cuy(lt),cuz(lt)
+
+      common /scrcwk/ wk(lcloc),wk2(0:lub)
+
+      real cl(lcloc)
+
+      character*128 fname
+      character*128 fnlint
+
+      if (nio.eq.0) write (6,*) 'inside setc'
+
+      call nekgsync
+      conv_time=dnekclock()
+
+      if (iffastc) call exitti('fastc not supported in setc_new$',nb)
+
+      call cpart(kc1,kc2,jc1,jc2,ic1,ic2,ncloc,nb,np,nid+1) ! old indexing
+c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
+
+      n=lx1*ly1*lz1*nelv
+
+      call lints(fnlint,fname,128)
+      if (nid.eq.0) open (unit=100,file=fnlint)
+      if (nio.eq.0) write (6,*) 'setc file:',fnlint
+
+      if (rmode.eq.'ON '.or.rmode.eq.'ONB') then
+         do k=0,nb
+         do j=0,mb
+         do i=ii0,mb
+            cel=0.
+            if (nid.eq.0) read (100,*) cel
+            cel=glsum(cel,1)
+            call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
+         enddo
+         enddo
+         enddo
+      else
+         if (.not.ifaxis) then
+            do i=0,ns-1
+               call opcopy(vxlag,vylag,vzlag,
+     $            us0(1,1,i+1),us0(1,2,i+1),us0(1,ldim,i+1))
+               call opadd2(vxlag,vylag,vzlag,ub,vb,wb)
+               call set_convect_new(c1v(1,i),c2v(1,i),c3v(1,i),
+     $                              vxlag,vylag,vzlag)
+               if (ifield.eq.1) then
+                  call intp_rstd_all(u1v(1,i),vxlag,nelv)
+                  call intp_rstd_all(u2v(1,i),vylag,nelv)
+                  if (ldim.eq.3)
+     $               call intp_rstd_all(u3v(1,i),vzlag,nelv)
+               else
+                  call copy(tlag,ts0(1,i+1),n)
+                  call add2(tlag,tb,n)
+                  call intp_rstd_all(u1v(1,i),tlag,nelv)
+               endif
+            enddo
+         endif
+
+         do k=0,ns-1
+            if (nio.eq.0) write (6,*) 'setc: ',k,'/',nb
+            do j=0,ns-1
+               if (ifield.eq.1) then
+                  call ccu(cux,cuy,cuz,k,j)
+               else
+                  call cct(cux,k,j)
+               endif
+               do i=ii0,ns-1
+                  if (ifield.eq.1) then
+                     call opcopy(vxlag,vylag,vzlag,
+     $                  us0(1,1,i+1),us0(1,2,i+1),us0(1,ldim,i+1))
+                     call opadd2(vxlag,vylag,vzlag,ub,vb,wb)
+                     cel=op_glsc2_wt(
+     $                  vxlag,vylag,vzlag,cux,cuy,cuz,ones)
+                  else
+                     call copy(tlag,ts0(1,i+1),n)
+                     call add2(tlag,tb,n)
+                     cel=glsc2(tlag,cux,n)
+                  endif
+c                 call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
+                  if (nid.eq.0) write (100,*) cel
+               enddo
+            enddo
+         enddo
+      endif
+
+      if (nid.eq.0) close (unit=100)
+
+      call nekgsync
+      if (nio.eq.0) write (6,*) 'conv_time: ',dnekclock()-conv_time
+      if (nio.eq.0) write (6,*) 'ncloc=',ncloc
+
+      if (nio.eq.0) write (6,*) 'exiting setc'
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine setc(cl,ii0,fname)
 
       include 'SIZE'
@@ -1043,11 +1162,13 @@ c        enddo
                      cel=glsc2(tb(1,i),cux,n)
                   endif
                   call setc_local(cl,cel,ic1,ic2,jc1,jc2,kc1,kc2,i,j,k)
-                  if (nid.eq.0) write (100,*) cel
+                  if (nid.eq.0) write (100,1) cel
                enddo
             enddo
          enddo
       endif
+
+    1 format(1pe24.16)
 
       if (nid.eq.0) close (unit=100)
 
@@ -1056,6 +1177,55 @@ c        enddo
       if (nio.eq.0) write (6,*) 'ncloc=',ncloc
 
       if (nio.eq.0) write (6,*) 'exiting setc'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setc_snap(cl,fname)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real cux(lt),cuy(lt),cuz(lt)
+
+      common /scrcwk/ wk(lcloc),wk2(0:lub)
+
+      real cl(lcloc)
+
+      character*128 fname
+      character*128 fnlint
+
+      if (nio.eq.0) write (6,*) 'inside setc_snap'
+
+      if (iffastc) call exitti('fastc not supported in setc_new$',nb)
+
+      n=lx1*ly1*lz1*nelv
+
+      call lints(fnlint,fname,128)
+      if (nid.eq.0) open (unit=100,file=fnlint)
+      if (nio.eq.0) write (6,*) 'setc file:',fnlint
+
+      do k=1,ns
+         if (nio.eq.0) write (6,*) 'setc_snap: ',k,'/',nb
+         do j=1,ns
+            call convect_new(cux,us0(1,1,j),.false.,
+     $         us0(1,1,k),us0(1,2,k),us0(1,ldim,k),.false.)
+            call convect_new(cuy,us0(1,2,j),.false.,
+     $         us0(1,1,k),us0(1,2,k),us0(1,ldim,k),.false.)
+            call rzero(cuz,nelv*lxd*lyd*lzd)
+            do i=1,ns
+               cel=op_glsc2_wt(
+     $            us0(1,1,i),us0(1,2,i),us0(1,ldim,i),
+     $            cux,cuy,cuz,ones)
+               if (nid.eq.0) write (100,*) cel
+            enddo
+         enddo
+      enddo
+
+      if (nid.eq.0) close (unit=100)
 
       return
       end
@@ -1128,35 +1298,14 @@ c-----------------------------------------------------------------------
 
       if (rmode.eq.'ON '.or.rmode.eq.'ONB'.or.rmode.eq.'CP ') then
          if (nio.eq.0) write (6,*) 'reading s...'
-         call read_mat_serial(s0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
+         call read_serial(s0,nb+1,fname,tab,nid)
       else
          if (nio.eq.0) write (6,*) 'forming s...'
-         nio=-1
+         n=lx1*ly1*lz1*lelt
          do i=0,nb
             if (nio.eq.0) write (6,*) 'sets: ',i,'/',nb
-            s=0.
-            do ie=1,nelt
-            do ifc=1,2*ldim
-               if (cbc(ifc,ie,2).ne.'E  '.and.
-     $             cbc(ifc,ie,2).ne.'P  ') then
-                  call facind(kx1,kx2,ky1,ky2,kz1,kz2,
-     $                        lx1,ly1,lz1,ifc)
-                  l=0
-                  do iz=kz1,kz2
-                  do iy=ky1,ky2
-                  do ix=kx1,kx2
-                     l=l+1
-                     s=s+area(l,1,ifc,ie)*tt(ix,iy,iz,ie,i)
-     $                                   *gn(ix,iy,iz,ie)
-                  enddo
-                  enddo
-                  enddo
-               endif
-            enddo
-            enddo
-            s0(i)=glsum(s,1)
+            s0(i)=glsc2(qq,tt,n)
          enddo
-         nio=nid
       endif
 
       return
@@ -1401,6 +1550,47 @@ c-----------------------------------------------------------------------
       if (ifrom(2)) call dump_serial(uta,nb+1,'ops/uta ',nid)
 
       if (ifrecon) call dump_sfld
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setn
+
+      include 'SIZE'
+      include 'LMOR'
+      include 'INPUT'
+      include 'GEOM'
+      include 'PARALLEL'
+
+      common /morforce/ fx(lx1*ly1*lz1*lelm),
+     $                  fy(lx1*ly1*lz1*lelm),
+     $                  fz(lx1*ly1*lz1*lelm),
+     $                  gx(lx1*ly1*lz1*lelm),
+     $                  gy(lx1*ly1*lz1*lelm),
+     $                  gz(lx1*ly1*lz1*lelm),
+     $                  qq(lx1,ly1,lz1,lelm)
+
+      call rzero(qq,lx1*ly1*lz1*nelt)
+
+      do ie=1,nelt
+         ieg=lglel(ie)
+         do ifc=1,2*ldim
+            if (cbc(ifc,ie,2).eq.'f  ') then
+               call facind(kx1,kx2,ky1,ky2,kz1,kz2,lx1,ly1,lz1,ifc)
+               l=1
+               do iz=kz1,kz2
+               do iy=ky1,ky2
+               do ix=kx1,kx2
+                  call userbc(ix,iy,iz,ifc,ieg)
+                  qq(ix,iy,iz,ie)=qq(ix,iy,iz,ie)+
+     $               flux*area(l,1,ifc,ie)
+                  l=l+1
+               enddo
+               enddo
+               enddo
+            endif
+         enddo
+      enddo
 
       return
       end

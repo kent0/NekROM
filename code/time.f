@@ -499,9 +499,8 @@ c     call add2(tmp(1),st0(1),nb)
 
       call sub2(rhs,tmp(1),nb)
 
-      if (ifsource) then
-         call add2(rhs,rq,nb)
-      endif
+      if (iftneu) call add2(rhs,st0(1),nb)
+      if (ifsource) call add2(rhs,rq,nb)
 
       return
       end

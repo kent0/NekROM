@@ -246,6 +246,7 @@ c-----------------------------------------------------------------------
 
       character*132 hdr,hname,hname_
       real*4 bytetest
+      logical if_byte_swap_test
 
       ierr = 0
 
@@ -407,10 +408,14 @@ c-----------------------------------------------------------------------
       integer i2(1),i3(1),i4(1),indxr(1),ibuf(1)
       integer*8 offs0,offs,nbyte,stride,strideB,nxyzr8,ibuf8(1)
 
+      logical ifdebug
+
       offs0   = iHeadersize + 4 + isize*nelgr
       nxyzr8  = nxr*nyr*nzr
       strideB = nelBr* nxyzr8*wdsizr
       stride  = nelgr* nxyzr8*wdsizr
+
+      ifdebug=.true.
 
 c     write (6,*) 'wdsizr',wdsizr
 
@@ -441,7 +446,7 @@ c     write (6,*) 'wdsizr',wdsizr
       ifldt=1
       jfld=1
       do while (indxr(ifld).ne.-1)
-c        write (6,*) 'wp 4.2',ifld,ifldt
+         if (ifdebug) write (6,*) 'rrh 1',ifld,ifldt
          if (ifld.le.2) then
              mdim=ndim
          else
@@ -455,7 +460,7 @@ c        write (6,*) 'wp 4.2',ifld,ifldt
             if (ifld.ge.2.and.ifgetxr) iofldsr=iofldsr+ndim
             if (ifld.ge.3.and.ifgetur) iofldsr=iofldsr+ndim
             if (ifld.ge.4.and.ifgetpr) iofldsr=iofldsr+1+(ifld-4)
-c           write (6,*) 'wp 6.3',ifld
+            if (ifdebug) write (6,*) 'rrh 2',ifld
 
             if (ifld.le.2) then
                if (ndim.eq.2) then
@@ -471,7 +476,7 @@ c           write (6,*) 'wp 6.3',ifld
             else
                indx=1
             endif
-c           write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
+            if (ifdebug) write (6,*) 'rrh 3',nfld,ndim,mdim,indx
             iloc=1
             ig=1
             do while (i3(ig).ne.0) ! for now, read mdim stuff instead of nfld
@@ -484,7 +489,7 @@ c           write (6,*) 'wp 6.4',nfld,ndim,mdim,indx
                 iloc=iloc+nwk
                 ig=ig+1
             enddo
-c           write (6,*) 'wp 6.5',ig,ng
+            if (ifdebug) write (6,*) 'rrh 4',ig,iofldsr,stride,iloc
 
             nwk=ner*ldim*nxyzr8
 
@@ -499,7 +504,8 @@ c           write (6,*) 'wp 6.5',ig,ng
             call copy(xupt(n+1),wk,lxyz*nfld*ner)
             nel=0
             do k=1,ner
-c              write (6,*) 'k=',k,mod(k,mp),mp,mid,nel
+               if (ifdebug) write (6,*)
+     $            'rrh 5, k=',k,mod(k,mp),mp,mid,nel
                if (mod(k-1,mp).eq.mid) nel=nel+1
             do j=1,nfld
             do i=1,lxyz
@@ -597,6 +603,250 @@ c-----------------------------------------------------------------------
             write (6,*) ' '
          endif
       endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine addfid(fname,fid)
+
+      character*1 fname(132)
+      integer fid
+
+      character*8  eight,fmt,s8
+      save         eight
+      data         eight / "????????" /
+
+      do ipass=1,2      ! 2nd pass, in case 1 file/directory
+         do k=8,1,-1
+            i1 = indx1(fname,eight,k)
+            if (i1.ne.0) then ! found k??? string
+               write(fmt,1) k,k
+               write(s8,fmt) fid
+               call chcopy(fname(i1),s8,k)
+               goto 10
+            endif
+         enddo
+   10    continue
+      enddo
+
+    1 format('(i',i1,'.',i1,')')
+
+      return
+      end
+c-----------------------------------------------------------------------
+      logical function if_byte_swap_test(bytetest,ierr)
+
+      include 'LVAR'
+
+      common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
+ 
+      real*4 bytetest,test2
+      real*4 test_pattern
+      save   test_pattern
+ 
+      test_pattern = 6.54321
+      eps          = 0.00020
+      etest        = abs(test_pattern-bytetest)
+      if_byte_swap_test = .true.
+      if (etest.le.eps) if_byte_swap_test = .false.
+ 
+      test2 = bytetest
+      call byte_reverse(test2,1,ierr)
+      if (mid.eq.0 .and. loglevel.gt.2) 
+     $   write(6,*) 'byte swap:',if_byte_swap_test,bytetest,test2
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine mfi_parse_hdr(hdr,ierr)
+
+      character*132 hdr
+
+      if (indx2(hdr,132,'#std',4).eq.1) then
+          call parse_std_hdr(hdr)
+      else
+         ierr = 1
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine parse_std_hdr(hdr)
+
+      include 'LVAR'
+      include 'IO'
+
+      character*132 hdr
+      character*4 dummy
+      logical if_press_mesh
+
+      p0thr = -1
+      if_press_mesh = .false.
+
+      read(hdr,*,iostat=ierr) dummy
+     $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
+     $         ,  ifiler,nfiler
+     $         ,  rdcode      ! 74+20=94
+     $         ,  p0thr, if_press_mesh
+
+      if (ierr.gt.0) then ! try again without pressure format flag
+        read(hdr,*,iostat=ierr) dummy
+     $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
+     $         ,  ifiler,nfiler
+     $         ,  rdcode      ! 74+20=94
+     $         ,  p0thr
+      endif
+
+      if (ierr.gt.0) then ! try again without mean pressure
+        read(hdr,*,err=99) dummy
+     $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
+     $         ,  ifiler,nfiler
+     $         ,  rdcode      ! 74+20=94
+      endif
+
+c     set if_full_pres flag
+      if_full_pres = .false.
+      if (.not.ifsplit) if_full_pres = if_press_mesh
+
+c      ifgtim  = .true.  ! always get time
+      ifgetxr = .false.
+      ifgetur = .false.
+      ifgetpr = .false.
+      ifgettr = .false.
+      do k=1,ldimt-1
+         ifgtpsr(k) = .false.
+      enddo
+
+      NPSR = 0
+      do i=1,10
+         if (rdcode1(i).eq.'X') ifgetxr = .true.
+         if (rdcode1(i).eq.'U') ifgetur = .true.
+         if (rdcode1(i).eq.'P') ifgetpr = .true.
+         if (rdcode1(i).eq.'T') ifgettr = .true.
+         if (rdcode1(i).eq.'S') then
+            read(rdcode1(i+1),'(I1)') NPS1
+            read(rdcode1(i+2),'(I1)') NPS0
+            NPSR = 10*NPS1+NPS0
+            NPS  = NPSR
+            if(NPSR.gt.ldimt-1) NPS=ldimt-1
+            do k=1,NPS
+               ifgtpsr(k) = .true.
+            enddo
+            ! nothing will follow
+            GOTO 50
+         endif
+      enddo
+
+  50  if (NPS.lt.NPSR) then
+         if (nid.eq.0) then
+c          write(*,'(A,/,A)')
+c    &      'WARNING: restart file has a NSPCAL > LDIMT',
+c    &      'read only part of the fld-data!'
+         endif
+      endif
+
+      if (NPS.lt.NPSCAL) then
+         if (nid.eq.0) then
+c          write(*,'(A,/,A)')
+c    &      'WARNING: NPSCAL read from restart file differs from ',
+c    &      'currently used NPSCAL!'
+         endif
+      endif
+
+      p0th = 1
+      if (p0thr.gt.0) p0th = p0thr
+
+      return
+
+   99 continue   !  If we got here, then the May 2008 variant of std hdr
+                 !  failed and we may have an older input file.
+
+      call parse_std_hdr_2006(hdr,rdcode)  ! try the original header format
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine parse_std_hdr_2006(hdr,rlcode)
+
+      include 'LVAR'
+		include 'IO'
+
+      character*132 hdr
+      character*1 rlcode(20)
+
+c                4  7  10  13   23    33    53    62     68     74
+      read(hdr,1) wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
+     $         , ifiler,nfiler
+     $         , (rlcode(k),k=1,20)                   ! 74+20=94
+    1 format(4x,i2,3i3,2i10,e20.13,i9,2i6,20a1)
+
+      if (nid.eq.0) write(6,*) 'WARNING: reading depreacted header!'
+
+      if (nelr.gt.lelr) then
+        write(6,*)nid,nelr,lelr,'parse_std_hdr06: inc. lelr in RESTART'
+        call exitt
+      endif
+
+c     Assign read conditions, according to rdcode
+c     NOTE: In the old hdr format: what you see in file is what you get.
+c      ifgtim  = .true.  ! always get time
+      ifgetxr = .false.
+      ifgetur = .false.
+      ifgetpr = .false.
+      ifgettr = .false.
+      do k=1,npscal
+         ifgtpsr(k) = .false.
+      enddo
+
+      if (rlcode(1).eq.'X') ifgetxr = .true.
+      if (rlcode(2).eq.'U') ifgetur = .true.
+      if (rlcode(3).eq.'P') ifgetpr = .true.
+      if (rlcode(4).eq.'T') ifgettr = .true.
+      do k=1,npscal
+         if (rlcode(4+k).ne.' ') ifgtpsr(k) = .true.
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine flush_io
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_serial(a,n,fname,nid)
+
+      real a(n)
+
+      character*128 fname
+      character*128 fntrunc
+
+      write (6,*) 'nid',nid
+      if (nid.eq.0) then
+         call blank(fntrunc,128)
+
+         len=ltruncr(fname,128)
+         call chcopy(fntrunc,fname,len)
+
+         call dump_serial_helper(a,n,fntrunc)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_serial_helper(a,n,fname)
+
+      real a(n)
+
+      character*128 fname
+
+      open (unit=12,file=fname)
+      write (6,*) 'writing to ',fname
+
+      do i=1,n
+         write (12,1) a(i)
+      enddo
+
+      close (unit=12)
+    1 format(1pe24.16)
 
       return
       end

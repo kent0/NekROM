@@ -1,0 +1,62 @@
+      include 'SIZE'
+      include 'MOR'
+      include 'LPOST'
+
+      real mass
+      common /integr/ mass(lxyz*lelp),visc(lxyz*lelp),
+     $                rxp(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                rxpt(lxd*lyd*lzd*ldim*ldim*lelp),
+     $                grav(lxyz*lelp*ldim)
+
+      common /geo/ gfac(lxyz*lelp,6)
+
+      common /fvars/ uu(lxyz*lelp*ldim*ls),zz(lxyz*lelp*ldim*ls),
+     $               tt(lxyz*lelp*ls),zt(lxyz*lelp*ldim*ls)
+
+      common /work/ wv1(lxyz*lelp*ldim),
+     $              wvf1(lxyz*lelp*ldim*ls),wvf2(lxyz*lelp*ldim*ls),
+     $              wvf3(lxyz*lelp*ldim*ls),wvf4(lxyz*lelp*ldim*ls),
+     $              wvf12(lxyz*lelp*ldim*ls*2),
+     $              w9(lxyz*lelp*9),
+     $              wevec(ls*lsg),
+     $              wevecc(ls*lsg*lsg)
+
+      common /pod/ gram(ls*lsg),
+     $             gram0(lsg),
+     $             qu((lsg+1)**2),qt((lsg+1)**2)
+
+      common /gram/ gub(ls*lsg),gua(ls*lsg),
+     $              guc(ls*lsg*lsg),guc2(ls*lsg*lsg),
+     $              gtb(ls*lsg),gta(ls*lsg),
+     $              gtc(ls*lsg*lsg),gtc2(ls*lsg*lsg)
+
+      common /ops/ aa((ls+1)*(lsg+1)),bb((ls+1)*(lsg+1)),
+     $             bbut((ls+1)*(lsg+1)),bbtu((ls+1)*(lsg+1)),
+     $             cc(2*(ls+1)*(lsg+1)**2)
+
+      common /opst/ aat((ls+1)*(lsg+1)),
+     $              bbt((ls+1)*(lsg+1)),
+     $              cct(2*(ls+1)*(lsg+1)**2)
+
+      common /surf/ sst(ls)
+
+      common /ipparallel/ nps,lenpb,melt,itmp(lx1*ly1*lz1*lelt)
+      common /pparallel/ nns(lsg),nnb(lb),ms(lsg),ilgls(lsg),iglls(lsg)
+      common /pparallelp/ msp(lsg),ilglsp(lsg),ms0(lsg),
+     $                    iw1(2*lsg*lsg*lsg),msr(2,lsg),msrp(2,lsg)
+
+      integer*8 iw2
+      common /parallelp8/ iw2(2*lsg*lsg*lsg),iw3(3*lsg*lsg*lsg)
+
+      common /scales/ zsc(lsg)
+
+      character*1 fnames
+      common /snapf/ fnames(132*lsg)
+
+      logical ifcread,iftherm
+      common /ifpar/ ifcread,iftherm
+
+      common /pcomm/ igsh(2),igshp(2)
+
+      common /ptime/ aa_time,bb_time,cc_time,zz_time,read_time,comm_time
+      common /cnvtime/ cnv_time
