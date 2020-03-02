@@ -446,6 +446,7 @@ c     write (6,*) 'wdsizr',wdsizr
       ifld=1
       ifldt=1
       jfld=1
+      iloc=1
       do while (indxr(ifld).ne.-1)
          if (ifdebug) write (6,*) 'rrh 1',ifld,ifldt
          if (ifld.le.2) then
@@ -478,7 +479,6 @@ c     write (6,*) 'wdsizr',wdsizr
                indx=1
             endif
             if (ifdebug) write (6,*) 'rrh 3',nfld,ndim,mdim,indx
-            iloc=1
             ig=1
             do while (i3(ig).ne.0.and.ig.le.mel)
                 ! for now, read mdim stuff instead of nfld
