@@ -106,7 +106,7 @@ usrfile:
 	@env CASENAME=$(CASENAME) PPS="$(PPS)" $S/mkuserfile
 
 nek5000: lib usrfile
-	$(FC) $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) obj/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
+	$(FC) -I$(OD)/ $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) obj/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
 	@if test -f ${BINNAME}; then \
         echo ""; \
         echo "$(NEK_WARN)"; \
