@@ -525,7 +525,9 @@ c-----------------------------------------------------------------------
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real buf(1)
 
-      logical iftherm
+      logical iftherm,ifdebug
+
+      ifdebug=.false.
 
       ie=1
 
@@ -550,17 +552,31 @@ c-----------------------------------------------------------------------
             exit
          endif
          nel=ieg(4)
-         open (unit=100,file='xyz')
-         do i=1,lxyz
-            write (100,*) buf(i),buf(i+lxyz),buf(i+lxyz*2)
-         enddo
+         if (ifdebug) then
+            open (unit=100,file='xyz')
+            if (ldim.eq.3) then
+               do i=1,lxyz
+                  write (100,*) buf(i),buf(i+lxyz),buf(i+lxyz*2)
+               enddo
+            else
+               do i=1,lxyz
+                  write (100,*) buf(i),buf(i+lxyz)
+               enddo
+            endif
+            close (unit=100)
+            open (unit=100,file='uvw')
+            if (ldim.eq.3) then 
+               do i=1,lxyz
+                  write (100,*) buf(i+lxyz*3),buf(i+lxyz*3+nsg*lxyz*nel)
+     $               ,buf(i+lxyz*3+nsg*lxyz*nel*2)
+               enddo
+            else
+               do i=1,lxyz
+                  write (100,*) buf(i+lxyz*2),buf(i+lxyz*2+nsg*lxyz*nel)
+               enddo
+            endif
          close (unit=100)
-         open (unit=100,file='uvw')
-         do i=1,lxyz
-            write (100,*) buf(i+lxyz*3),buf(i+lxyz*4),buf(i+lxyz*5)
-         enddo
-         close (unit=100)
-         call exitt0
+         endif
          call setgeom(buf,nel)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
