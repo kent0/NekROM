@@ -69,6 +69,7 @@ c     write (6,*) 'starting load_snap'
       n=0
       do is=1,nsl
         ieg(4)=is+mid*((nsg-1)/mp+1)
+        ieg(4)=is*mp+mid
         if (is.eq.ixmin) then
            indxr(1)=7
         else
