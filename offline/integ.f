@@ -689,7 +689,7 @@ c-----------------------------------------------------------------------
       call genevec(qu(1,2),elam,gram,nsg,1)
 
       do i=1,nsg
-         s=1./sqrt(elam(i))
+         s=1./sqrt(abs(elam(i)))
          call cmult(qu(1,i+1),s,nsg)
       enddo
 
