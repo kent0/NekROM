@@ -2,14 +2,14 @@
 MD=/Users/kaneko/Developer/MOR
 OD=$(MD)/offline
 
-BINNAME=nek5000
-LIBNAME=libnek5000.a
+BINNAME=offline
+LIBNAME=libo.a
 CASENAME:=h3d
 CASEDIR:=$(OD)
 S=/Users/kaneko/Developer/Nek5000/core
 SCMT=/Users/kaneko/Developer/Nek5000/core/cmt
 OPT_INCDIR=./
-OBJDIR=obj
+OBJDIR=oobj
 
 FC=mpif77
 CC=mpicc
@@ -97,7 +97,7 @@ cFL2   = $(L2) $(CFLAGS) $(PPS_C) -I$S -I$(OPT_INCDIR)
 cFL3   = $(L3) $(CFLAGS) $(PPS_C) -I$S -I$(OPT_INCDIR)
 
 ################################################################################
-all : nek5000
+all : offline
 
 objdir:
 	@mkdir $(OBJDIR) 2>/dev/null; cat /dev/null
@@ -105,7 +105,7 @@ objdir:
 usrfile:
 	@env CASENAME=$(CASENAME) PPS="$(PPS)" $S/mkuserfile
 
-nek5000: lib usrfile
+offline: lib usrfile
 	$(FC) -I$(OD)/ $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) obj/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
 	@if test -f ${BINNAME}; then \
         echo ""; \
@@ -130,7 +130,7 @@ lib:	objdir $(NOBJS)
 	@ranlib obj/${LIBNAME}
 
 clean:
-	@echo "cleaning Nek5000 ..."
+	@echo "cleaning offline ..."
 	@rm -rf ${CASENAME}.f obj ${BINNAME}
 ifeq ($(MPI),0)
 	@rm -rf $S/mpif.h
