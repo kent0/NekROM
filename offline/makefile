@@ -106,6 +106,8 @@ usrfile:
 	@env CASENAME=$(CASENAME) PPS="$(PPS)" $S/mkuserfile
 
 offline: lib usrfile
+	@touch offline
+	@rm offline
 	$(FC) -I$(OD)/ $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) $(OBJDIR)/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
 	@if test -f ${BINNAME}; then \
         echo ""; \
