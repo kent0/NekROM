@@ -1582,3 +1582,51 @@ C
       RETURN
       END
 c-----------------------------------------------------------------------
+      subroutine gen_igll(jgl,jgt,mp,np,w)
+
+c     Generate interpolation from np GLL points to mp GLL points
+c
+c     jgl   = interpolation matrix, mapping from np to mp
+c     jgt   = transpose of interpolation matrix
+c     w     = work array of size (np+mp)
+c     np,mp = number of points on each grid
+
+      real jgl(mp,np),jgt(np*mp),w(1)
+
+      iz = 1
+      id = iz + np
+
+      call zwgll (w(iz),jgt,np)
+      call zwgll (w(id),jgt,mp)
+
+      n  = np-1
+      do i=1,mp
+         call fd_weights_full(w(id+i-1),w(iz),n,0,jgt)
+         do j=1,np
+            jgl(i,j) = jgt(j)                  !  Interpolation matrix
+         enddo
+      enddo
+
+      call transpose(jgt,np,jgl,mp)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setup_proj
+
+      include 'LVAR'
+
+      common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),wk(lx1**2,5)
+
+      l=1
+      do i=lx1-1,2,-1
+         call gen_igll(wk(1,1),wk(1,2),i,lx1,wk(1,5))
+         call gen_igll(wk(1,3),wk(1,4),lx1,i,wk(1,5))
+         call mxm(wk(1,3),lx1,wk(1,1),i,pmat(1,l),lx1)
+         call mxm(wk(1,2),lx1,wk(1,4),i,ptmat(1,l),lx1)
+         l=l+1
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
