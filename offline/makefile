@@ -106,7 +106,7 @@ usrfile:
 	@env CASENAME=$(CASENAME) PPS="$(PPS)" $S/mkuserfile
 
 offline: lib usrfile
-	$(FC) -I$(OD)/ $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) obj/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
+	$(FC) -I$(OD)/ $(FL2) -o ${BINNAME} drive.f $(CASEDIR)/${CASENAME}.f $(VISITNEK_INCLUDES) $(OBJDIR)/${LIBNAME} $(USR_LFLAGS) $(LDFLAGS)
 	@if test -f ${BINNAME}; then \
         echo ""; \
         echo "$(NEK_WARN)"; \
@@ -126,12 +126,12 @@ ifeq ($(MPI),0)
 endif
 
 lib:	objdir $(NOBJS)
-	@$(AR) cru obj/${LIBNAME} $(NOBJS)
-	@ranlib obj/${LIBNAME}
+	@$(AR) cru $(OBJDIR)/${LIBNAME} $(NOBJS)
+	@ranlib $(OBJDIR)/${LIBNAME}
 
 clean:
 	@echo "cleaning offline ..."
-	@rm -rf ${CASENAME}.f obj ${BINNAME}
+	@rm -rf ${CASENAME}.f  $(OBJDIR) ${BINNAME}
 ifeq ($(MPI),0)
 	@rm -rf $S/mpif.h
 endif
