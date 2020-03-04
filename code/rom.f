@@ -190,7 +190,10 @@ c-----------------------------------------------------------------------
       include 'MOR'
       include 'AVG'
 
-      logical iftmp,ifexist
+      logical iftmp,ifexist,ifdebug
+      character*3 tips
+
+      ifdebug=.true.
 
       if (nio.eq.0) write (6,*) 'inside rom_setup'
 
@@ -219,6 +222,20 @@ c-----------------------------------------------------------------------
          enddo
          close (unit=10)
       else
+         if (ifdebug) then
+            call chcopy(tips,ips,3)
+            ips='L2 '
+            call gengram(ug,us0,ns,ldim)
+            call dump_serial(ug,ns*ns,'ops/gub ',nid)
+            call gengram(ug,ts0,ns,1)
+            call dump_serial(ug,ns*ns,'ops/gtb ',nid)
+            ips='H10'
+            call gengram(ug,us0,ns,ldim)
+            call dump_serial(ug,ns*ns,'ops/gua ',nid)
+            call gengram(ug,ts0,ns,1)
+            call dump_serial(ug,ns*ns,'ops/gta ',nid)
+            call chcopy(ips,tips,3)
+         endif
          call setgram
          call setevec
       endif
