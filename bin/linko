@@ -5,11 +5,11 @@ cwd="$(pwd -P)"
 
 # remove pre-existing files
 
-rm LVAR1    &> /dev/null
+#rm LVAR1    &> /dev/null
 rm makefile &> /dev/null
 
 ln -s $MOR_DIR/offline/makefile $cwd/makefile
-cp -n $MOR_DIR/templates/LVAR1.template LVAR1
+#cp -n $MOR_DIR/templates/LVAR1.template LVAR1
 
 mkdir ops &> /dev/null
 mkdir qoi &> /dev/null
