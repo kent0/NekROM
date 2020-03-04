@@ -583,6 +583,12 @@ c-----------------------------------------------------------------------
       real ga(nsg,nsg),gb(nsg,nsg),gc(nsg,nsg,nsg)
       logical ifc
       character*3 pfx
+      character*1 fname(4)
+      character*4 fname2
+
+      call chcopy(fname,pfx,3)
+      fname(4)='c'
+      call chcopy(fname2,fname,4)
 
       if (mid.eq.0) then
          do j=1,nsg
@@ -602,13 +608,16 @@ c-----------------------------------------------------------------------
          write (6,*) ' '
 
          if (ifc) then
+            if (mid.eq.0) open (unit=10,file=fname2)
             do k=1,nsg
             do j=1,nsg
             do i=1,nsg
-               write (6,*) i,j,k,gc(i,j,k),pfx,'c'
+c              write (6,*) i,j,k,gc(i,j,k),pfx,'c'
+               write (10,*) i,j,k,gc(i,j,k)
             enddo
             enddo
             enddo
+            if (mid.eq.0) close (unit=10)
 
             write (6,*) ' '
          endif

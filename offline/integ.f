@@ -620,8 +620,13 @@ c-----------------------------------------------------------------------
       subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,pfx)
 
       real gc(1),gt(1),gvec(1),gvect(1),gvecc(1)
-      character*3 pfx
+      character*1 pfx
+      character*1 fname(2)
+      character*2 fname2
 
+      call chcopy(fname,pfx,1)
+      fname(2)='c'
+      call chcopy(fname2,fname,2)
       call mxm(gvect,nsg1,gc,nsg,gt,nsg*nsc)
 
       do i=1,nsc
@@ -629,18 +634,23 @@ c-----------------------------------------------------------------------
      $        gvec,nsg,gc(1+(i-1)*(nsg1)**2),nsg1)
       enddo
 
+      if (mid.eq.0) open (unit=10,file=fname2)
+
+      ncount=0
       do k=1,nsg1
          call mxm(gc,(nsg1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
          call gop(gt,gt((nsg1)**2+1),'+  ',(nsg1)**2)
          do j=0,nsg1-1
          do i=0,nsg1-1
-            if (mid.eq.0) write (6,*)
-     $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
+c           if (mid.eq.0) write (6,*)
+c    $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
+            if (mid.eq.0) write (10,*)
+     $         i,j,k-1,gt(1+i+j*(nsg1))
          enddo
          enddo
       enddo
-
-      if (mid.eq.0) write (6,*) ' '
+      call nekgsync
+      if (mid.eq.0) close (unit=10)
 
       return
       end
