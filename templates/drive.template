@@ -12,9 +12,12 @@ c-----------------------------------------------------------------------
 
       write (6,*) 'lxyz',lxyz
 
-      nsg=3
-      neg=512
-      mel=512
+      open (unit=10,file='ls.log')
+      read (10,*) nsg
+      close (unit=10)
+c     nsg=51
+
+      neg=9
       mel=1
 
       iftherm=.true.
@@ -33,11 +36,17 @@ c-----------------------------------------------------------------------
       call setg(gg,gb,gt,nsg,ifavg0)
       call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
 
+      do j=1,nsg
+      do i=1,nsg
+         write (6,*) i,j,gvec(i+(j-1)*nsg),'q'
+      enddo
+      enddo
+
       call qop2(ga,gt,gvec,gvect,nsg,nsg1)
       call qop2(gb,gt,gvec,gvect,nsg,nsg1)
       call write_ops(ga,gb,gc,nsg1,mid,'  u',.false.)
 
-      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  u')
+      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'u')
 
       if (iftherm) then
          call setg(gg,gb((nsg+1)**2+1),gt,nsg,ifavg0)
@@ -48,8 +57,9 @@ c-----------------------------------------------------------------------
          call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
      $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1,mid,'  t',.false.)
 
+         write (6,*) 'nsg',nsg,nsg1,nsc
          call qop3(gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
-     $        gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'  t')
+     $        gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'t')
       endif
 
       return
