@@ -4,9 +4,11 @@ c-----------------------------------------------------------------------
       include 'LVAR'
       include 'OFFLINE'
 
+      common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),wk(lx1**2,5)
+
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       character*132 fname
-      logical ifavg0,iftherm
+      logical ifavg0,iftherm,ifgf
 
       call offline_init(icomm)
 
@@ -24,9 +26,12 @@ c     nsg=51
       ifavg0=.true.
       ifavg0=.true.
       ifavg0=.false.
+      ifgf=.false.
 
-      call gengrams(ga,gb,gc,gt,buf,ieg,indxr,
-     $  nsg,mp,neg,mel,ldim,lxyz,iftherm)
+      call setup_proj
+
+      call gengrams(ga,gb,gc,gf,gt,buf,ieg,indxr,
+     $  nsg,mp,neg,mel,ldim,lxyz,iftherm,ifgf)
 
       call write_ops(ga,gb,gc,nsg,mid,' gu',.true.)
 

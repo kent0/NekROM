@@ -516,16 +516,21 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gengrams(ga,gb,gc,gt,buf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lxyz,iftherm)
+      subroutine gengrams(ga,gb,gc,gf,gt,buf,ieg,indxr,
+     $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifgf)
+
+      common /nekmpi/ mid
 
       integer ieg(1),indxr(1)
       real ga((nsg+1)**2,1),gb((nsg+1)**2,1)
+      real gf((nsg+1)**2,1)
       real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real buf(1)
 
-      logical iftherm,ifdebug
+      logical iftherm,ifdebug,ifgf
+
+      if (mid.eq.0) write (6,*) 'starting gengrams'
 
       ifdebug=.false.
 
@@ -578,21 +583,30 @@ c-----------------------------------------------------------------------
          call setgeom(buf,nel)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
+         if (ifgf) call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nsg,ldim)
          if (iftherm) then
             call setops(ga(1,2),gb(1,2),gc(1,2),gt,
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
      $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
+            if (ifgf) call setgf(gf(1,2),
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,ldim)
          endif
          ie=ieg(2)+1
       enddo
 
+      if (mid.eq.0) write (6,*) 'summing Gramians'
+
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
+      if (ifgf) call gop(gf,gt,'+  ',nsg*nsg)
 
       if (iftherm) then
          call gop(ga(1,2),gt,'+  ',nsg*nsg)
          call gop(gb(1,2),gt,'+  ',nsg*nsg)
+         if (ifgf) call gop(gf(1,2),gt,'+  ',nsg*nsg)
       endif
+
+      if (mid.eq.0) write (6,*) 'ending gengrams'
 
       return
       end
@@ -756,6 +770,29 @@ c-----------------------------------------------------------------------
       do ib=1,nb
          call intp_rstd_all(ud(1,1,ib,idim),u(1,1,ib,idim),nel)
       enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setgf(gf,buf,tmpf,nel,nsg,ndim)
+
+      include 'LVAR'
+
+      common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),wk(lx1**2,5)
+
+      real gf(nsg*nsg,lx1-2),buf(lxyz,nel,nsg,ndim),
+     $     tmpf(nel*lxyz*ndim*nsg,2)
+
+      do i=1,lx1-2
+         do ie=1,nel*nsg*ndim
+            call specmpn(tmpf,lx1,buf(1,ie,1,1),lx1,pmat(1,i),ptmat(1,i)
+     $         ,ldim.eq.3,wk,lx1*lx1)
+         enddo
+         call copy(tmpf(1,2),tmpf,lxyz*nel*ndim*nsg)
+         s=-2.
+         call add2s2(tmpf(1,2),buf,lxyz*nel*nsg*ndim)
+         call bip(gf(1,i),tmpf,tmpf(1,2),nel,nsg,ndim)
       enddo
 
       return
