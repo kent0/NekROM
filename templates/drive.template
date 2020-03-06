@@ -24,8 +24,6 @@ c     nsg=51
 
       iftherm=.true.
       ifavg0=.true.
-      ifavg0=.true.
-      ifavg0=.false.
       ifgf=.false.
 
       call setup_proj
