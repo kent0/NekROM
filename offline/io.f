@@ -7,6 +7,8 @@ c-----------------------------------------------------------------------
       character*132 fnames(1)
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
+      logical iflag
+
 c     write (6,*) 'starting setxsnap'
 
       nslmax=iglmax(nsl,1)
@@ -17,12 +19,14 @@ c     write (6,*) 'starting setxsnap'
       call izero(myr,nslmax*mp)
       call izero(mzr,nslmax*mp)
 
+      iflag=.false.
+
       do is=1,nsl
          call rxupt_open(fnames(is))
          call rxupt_close
-         if (ifgetxr) then
+         if (ifgetxr.and..not.iflag) then
             ixmin=is+mid*nslmax
-            exit
+            iflag=.true.
          endif
          mer(1+mid+(is-1)*mp)=nelgr
          mxr(1+mid+(is-1)*mp)=nxr
