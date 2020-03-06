@@ -25,51 +25,51 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine cfill(a,b,n)
-      DIMENSION  A(1)
-C
-      DO 100 I = 1, N
- 100     A(I) = B
+      dimension  a(1)
+c
+      do 100 i = 1, n
+ 100     a(i) = b
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine chsign(a,n)
-      REAL A(1)
-C
-      DO 100 I=1,N
-         A(I) = -A(I)
- 100  CONTINUE
+      real a(1)
+c
+      do 100 i=1,n
+         a(i) = -a(i)
+ 100  continue
       return
-      END
-C
+      end
+c
 c-----------------------------------------------------------------------
       function glsum (x,n)
-      DIMENSION X(1)
-      DIMENSION TMP(1),WORK(1)
-      TSUM = 0.
-      DO 100 I=1,N
-         TSUM = TSUM+X(I)
- 100  CONTINUE
-      TMP(1)=TSUM
+      dimension x(1)
+      dimension tmp(1),work(1)
+      tsum = 0.
+      do 100 i=1,n
+         tsum = tsum+x(i)
+ 100  continue
+      tmp(1)=tsum
       CALL GOP(TMP,WORK,'+  ',1)
-      GLSUM = TMP(1)
+      glsum = tmp(1)
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine i8copy(a,b,n)
-      INTEGER*8 A(1), B(1)
-C
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      integer*8 a(1), b(1)
+c
+      do 100 i = 1, n
+ 100     a(i) = b(i)
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine icopy(a,b,n)
-      INTEGER A(1), B(1)
-C
-      DO 100 I = 1, N
- 100     A(I) = B(I)
+      integer a(1), b(1)
+c
+      do 100 i = 1, n
+ 100     a(i) = b(i)
       return
-      END
+      end
 c-----------------------------------------------------------------------
       function iglmin(a,n)
       integer a(1),tmin
@@ -110,23 +110,23 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      INTEGER FUNCTION INDX1(S1,S2,L2)
-      CHARACTER*132 S1,S2
-C
-      N1=132-L2+1
-      INDX1=0
-      IF (N1.LT.1) return
-C
-      DO 100 I=1,N1
-         I2=I+L2-1
-         IF (S1(I:I2).EQ.S2(1:L2)) THEN
-            INDX1=I
+      integer function indx1(s1,s2,l2)
+      character*132 s1,s2
+c
+      n1=132-l2+1
+      indx1=0
+      if (n1.lt.1) return
+c
+      do 100 i=1,n1
+         i2=i+l2-1
+         if (s1(i:i2).eq.s2(1:l2)) then
+            indx1=i
             return
-         ENDIF
-  100 CONTINUE
-C
+         endif
+  100 continue
+c
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine mxm(a,n1,b,n2,c,n3)
 c
@@ -219,34 +219,34 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       integer function log2(k)
-      RK=(K)
-      RLOG=LOG10(RK)
-      RLOG2=LOG10(2.0)
-      RLOG=RLOG/RLOG2+0.5
-      LOG2=INT(RLOG)
+      rk=(k)
+      rlog=log10(rk)
+      rlog2=log10(2.0)
+      rlog=rlog/rlog2+0.5
+      log2=int(rlog)
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine ione(a,n)
-      INTEGER  A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 1
+      integer  a(1)
+      do 100 i = 1, n
+ 100     a(i ) = 1
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine isort(a,ind,n)
-C
-C     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
-C
+c
+c     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
+c
       integer a(1),ind(1)
       integer aa
-C
-      dO 10 j=1,n
+c
+      do 10 j=1,n
          ind(j)=j
    10 continue
-C
+c
       if (n.le.1) return
-      L=n/2+1
+      l=n/2+1
       ir=n
   100 continue
          if (l.gt.1) then
@@ -280,26 +280,26 @@ C
             else
                j=ir+1
             endif
-         GOTO 200
+         goto 200
          endif
            a(i) = aa
          ind(i) = ii
-      GOTO 100
+      goto 100
       end
 c-----------------------------------------------------------------------
       subroutine sort(a,ind,n)
-C
-C     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
-C
+c
+c     Use Heap Sort (p 231 Num. Rec., 1st Ed.)
+c
       real a(1),aa
       integer ind(1)
-C
-      dO 10 j=1,n
+c
+      do 10 j=1,n
          ind(j)=j
    10 continue
-C
+c
       if (n.le.1) return
-      L=n/2+1
+      l=n/2+1
       ir=n
   100 continue
          if (l.gt.1) then
@@ -333,11 +333,11 @@ C
             else
                j=ir+1
             endif
-         GOTO 200
+         goto 200
          endif
            a(i) = aa
          ind(i) = ii
-      GOTO 100
+      goto 100
       end
 c-----------------------------------------------------------------------
       function ltruncr(string,l)
@@ -357,7 +357,7 @@ c-----------------------------------------------------------------------
 
       return
       end
-C-----------------------------------------------------------------
+c-----------------------------------------------------------------
       subroutine col2(a,b,n)
 
       real a(1),b(1)
@@ -381,74 +381,74 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine vdot2 (dot,u1,u2,v1,v2,n)
-C
 C     Compute a Cartesian vector dot product. 2-d version
-C
-      DIMENSION DOT(1)
-      DIMENSION U1(1),U2(1)
-      DIMENSION V1(1),V2(1)
-C
-C
-      DO 100 I=1,N
-         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I)
-  100 CONTINUE
+c
+c
+      dimension dot(1)
+      dimension u1(1),u2(1)
+      dimension v1(1),v2(1)
+c
+c
+      do 100 i=1,n
+         dot(i) = u1(i)*v1(i) + u2(i)*v2(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine vdot3 (dot,u1,u2,u3,v1,v2,v3,n)
-C
 C     Compute a Cartesian vector dot product. 3-d version
-C
-      DIMENSION DOT(1)
-      DIMENSION U1(1),U2(1),U3(1)
-      DIMENSION V1(1),V2(1),V3(1)
-C
-C
-      DO 100 I=1,N
-         DOT(I) = U1(I)*V1(I) + U2(I)*V2(I) + U3(I)*V3(I)
-  100 CONTINUE
+c
+c
+      dimension dot(1)
+      dimension u1(1),u2(1),u3(1)
+      dimension v1(1),v2(1),v3(1)
+c
+c
+      do 100 i=1,n
+         dot(i) = u1(i)*v1(i) + u2(i)*v2(i) + u3(i)*v3(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine vcross (u1,u2,u3,v1,v2,v3,w1,w2,w3,n)
-C
 C     Compute a Cartesian vector cross product.
-C
-      DIMENSION U1(1),U2(1),U3(1)
-      DIMENSION V1(1),V2(1),V3(1)
-      DIMENSION W1(1),W2(1),W3(1)
-C
-C
-      DO 100 I=1,N
-         U1(I) = V2(I)*W3(I) - V3(I)*W2(I)
-         U2(I) = V3(I)*W1(I) - V1(I)*W3(I)
-         U3(I) = V1(I)*W2(I) - V2(I)*W1(I)
-  100 CONTINUE
+c
+c
+      dimension u1(1),u2(1),u3(1)
+      dimension v1(1),v2(1),v3(1)
+      dimension w1(1),w2(1),w3(1)
+c
+c
+      do 100 i=1,n
+         u1(i) = v2(i)*w3(i) - v3(i)*w2(i)
+         u2(i) = v3(i)*w1(i) - v1(i)*w3(i)
+         u3(i) = v1(i)*w2(i) - v2(i)*w1(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
-      SUBROUTINE RZERO3 (A,B,C,N)
-      DIMENSION A(1),B(1),C(1)
-      DO 100 I=1,N
-         A(I)=0.0
-         B(I)=0.0
-         C(I)=0.0
-  100 CONTINUE
-      RETURN
-      END
+      subroutine rzero3 (a,b,c,n)
+      dimension a(1),b(1),c(1)
+      do 100 i=1,n
+         a(i)=0.0
+         b(i)=0.0
+         c(i)=0.0
+  100 continue
+      return
+      end
 c-----------------------------------------------------------------------
-      SUBROUTINE UNITVEC (X,Y,Z,N)
-      DIMENSION X(1),Y(1),Z(1)
-      DO 100 I=1,N
-      XLNGTH = SQRT( X(I)**2 + Y(I)**2 + Z(I)**2 )
-      IF (XLNGTH.NE.0.0) THEN
-         X(I) = X(I)/XLNGTH
-         Y(I) = Y(I)/XLNGTH
-         Z(I) = Z(I)/XLNGTH
-      ENDIF
-  100 CONTINUE
-      RETURN
-      END
+      subroutine unitvec (x,y,z,n)
+      dimension x(1),y(1),z(1)
+      do 100 i=1,n
+      xlngth = sqrt( x(i)**2 + y(i)**2 + z(i)**2 )
+      if (xlngth.ne.0.0) then
+         x(i) = x(i)/xlngth
+         y(i) = y(i)/xlngth
+         z(i) = z(i)/xlngth
+      endif
+  100 continue
+      return
+      end
 c-----------------------------------------------------------------------
       function vlsc3(x,y,b,n)
 
@@ -466,11 +466,11 @@ c     local inner product, with weight
       end
 c-----------------------------------------------------------------------
       subroutine rone(a,n)
-      DIMENSION A(1)
-      DO 100 I = 1, N
- 100     A(I ) = 1.0
+      dimension a(1)
+      do 100 i = 1, n
+ 100     a(i ) = 1.0
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine addcol3(a,b,c,n)
 
@@ -484,13 +484,13 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine subcol3(a,b,c,n)
-      REAL A(1),B(1),C(1)
-C
-      DO 100 I=1,N
-         A(I)=A(I)-B(I)*C(I)
-  100 CONTINUE
+      real a(1),b(1),c(1)
+c
+      do 100 i=1,n
+         a(i)=a(i)-b(i)*c(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine col3(a,b,c,n)
 
@@ -523,36 +523,36 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine local_grad3(ur,us,ut,u,N,e,D,Dt)
-c     Output: ur,us,ut         Input:u,N,e,D,Dt
-      real ur(0:N,0:N,0:N),us(0:N,0:N,0:N),ut(0:N,0:N,0:N)
-      real u (0:N,0:N,0:N,1)
-      real D (0:N,0:N),Dt(0:N,0:N)
+      subroutine local_grad3(ur,us,ut,u,n,e,d,dt)
+c     Output: ur,us,ut         Input:u,n,e,d,dt
+      real ur(0:n,0:n,0:n),us(0:n,0:n,0:n),ut(0:n,0:n,0:n)
+      real u (0:n,0:n,0:n,1)
+      real d (0:n,0:n),dt(0:n,0:n)
       integer e
 c
-      m1 = N+1
+      m1 = n+1
       m2 = m1*m1
 c
-      call mxm(D ,m1,u(0,0,0,e),m1,ur,m2)
-      do k=0,N
-         call mxm(u(0,0,k,e),m1,Dt,m1,us(0,0,k),m1)
+      call mxm(d ,m1,u(0,0,0,e),m1,ur,m2)
+      do k=0,n
+         call mxm(u(0,0,k,e),m1,dt,m1,us(0,0,k),m1)
       enddo
-      call mxm(u(0,0,0,e),m2,Dt,m1,ut,m1)
+      call mxm(u(0,0,0,e),m2,dt,m1,ut,m1)
 c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine local_grad2(ur,us,u,N,e,D,Dt)
-c     Output: ur,us         Input:u,N,e,D,Dt
-      real ur(0:N,0:N),us(0:N,0:N)
-      real u (0:N,0:N,1)
-      real D (0:N,0:N),Dt(0:N,0:N)
+      subroutine local_grad2(ur,us,u,n,e,d,dt)
+c     Output: ur,us         Input:u,n,e,d,dt
+      real ur(0:n,0:n),us(0:n,0:n)
+      real u (0:n,0:n,1)
+      real d (0:n,0:n),dt(0:n,0:n)
       integer e
 c
-      m1 = N+1
+      m1 = n+1
 c
-      call mxm(D ,m1,u(0,0,e),m1,ur,m1)
-      call mxm(u(0,0,e),m1,Dt,m1,us,m1)
+      call mxm(d ,m1,u(0,0,e),m1,ur,m1)
+      call mxm(u(0,0,e),m1,dt,m1,us,m1)
 c
       return
       end
@@ -569,50 +569,50 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine cadd(a,const,n)
-      REAL A(1)
-C
+      real a(1)
+c
       include 'OPCTR'
-C
-      DO 100 I=1,N
-         A(I)=A(I)+CONST
- 100  CONTINUE
+c
+      do 100 i=1,n
+         a(i)=a(i)+const
+ 100  continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine cmult(a,const,n)
-      REAL A(1)
-C
+      real a(1)
+c
       include 'OPCTR'
-C
-      DO 100 I=1,N
-         A(I)=A(I)*CONST
- 100  CONTINUE
+c
+      do 100 i=1,n
+         a(i)=a(i)*const
+ 100  continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       real function vlsum(vec,n)
-      REAL VEC(1)
+      real vec(1)
       include 'OPCTR'
-C
-      SUM = 0.
-C
-      DO 100 I=1,N
-         SUM=SUM+VEC(I)
- 100  CONTINUE
-      VLSUM = SUM
+c
+      sum = 0.
+c
+      do 100 i=1,n
+         sum=sum+vec(i)
+ 100  continue
+      vlsum = sum
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine sub2(a,b,n)
-      REAL A(1),B(1)
-C
+      real a(1),b(1)
+c
       include 'OPCTR'
-C
-      DO 100 I=1,N
-         A(I)=A(I)-B(I)
- 100  CONTINUE
+c
+      do 100 i=1,n
+         a(i)=a(i)-b(i)
+ 100  continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine outmat2(a,m,n,k,name)
       include 'SIZE'
@@ -633,14 +633,14 @@ c-----------------------------------------------------------------------
       subroutine add2s2(a,b,c1,n)
 
       real a(1),b(1)
-C
-      DO 100 I=1,N
-        A(I)=A(I)+C1*B(I)
-  100 CONTINUE
+c
+      do 100 i=1,n
+        a(i)=a(i)+c1*b(i)
+  100 continue
 
       return
-      END
-C
+      end
+c
 c-----------------------------------------------------------------------
       subroutine add3(a,b,c,n)
       real a(1),b(1),c(1)
@@ -652,31 +652,31 @@ c-----------------------------------------------------------------------
       end
 c-----------------------------------------------------------------------
       subroutine addcol4(a,b,c,d,n)
-      REAL A(1),B(1),C(1),D(1)
+      real a(1),b(1),c(1),d(1)
 
-      DO 100 I=1,N
-         A(I)=A(I)+B(I)*C(I)*D(I)
-  100 CONTINUE
+      do 100 i=1,n
+         a(i)=a(i)+b(i)*c(i)*d(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine ascol5 (a,b,c,d,e,n)
-      REAL A(1),B(1),C(1),D(1),E(1)
+      real a(1),b(1),c(1),d(1),e(1)
 
-      DO 100 I=1,N
-         A(I) = B(I)*C(I)-D(I)*E(I)
- 100  CONTINUE
+      do 100 i=1,n
+         a(i) = b(i)*c(i)-d(i)*e(i)
+ 100  continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine subcol4(a,b,c,d,n)
-      REAL A(1),B(1),C(1),D(1)
-C
-      DO 100 I=1,N
-         A(I)=A(I)-B(I)*C(I)*D(I)
-  100 CONTINUE
+      real a(1),b(1),c(1),d(1)
+c
+      do 100 i=1,n
+         a(i)=a(i)-b(i)*c(i)*d(i)
+  100 continue
       return
-      END
+      end
 c-----------------------------------------------------------------------
       subroutine genevec(vec,val,gram,nsg,ifld)
 
