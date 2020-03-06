@@ -8,7 +8,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       character*132 fname
-      logical ifavg0,iftherm,ifgf
+      logical ifavg0,iftherm,ifgf,ifbuoy
 
       call offline_init(icomm)
 
@@ -23,13 +23,14 @@ c     nsg=51
       mel=1
 
       iftherm=.true.
+      ifbuoy=.false.
       ifavg0=.true.
       ifgf=.false.
 
       call setup_proj
 
-      call gengrams(ga,gb,gc,gf,gt,buf,ieg,indxr,
-     $  nsg,mp,neg,mel,ldim,lxyz,iftherm,ifgf)
+      call gengrams(ga,gb,gc,gm,gf,gt,buf,ieg,indxr,
+     $  nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
 
       call write_ops(ga,gb,gc,nsg,mid,' gu',.true.)
 

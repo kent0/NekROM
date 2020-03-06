@@ -758,3 +758,26 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine opcolv(a1,a2,a3,c,nel)
+
+      include 'LVAR'
+
+      real a1(1),a2(1),a3(1),c(1)
+
+      ntot1=lx1*ly1*lz1*nel
+
+      if (ldim.eq.3) then
+         do 100 i=1,ntot1
+            a1(i)=a1(i)*c(i)
+            a2(i)=a2(i)*c(i)
+            a3(i)=a3(i)*c(i)
+  100    continue
+      else
+         do 200 i=1,ntot1
+            a1(i)=a1(i)*c(i)
+            a2(i)=a2(i)*c(i)
+  200    continue
+      endif
+      return
+      end
+c-----------------------------------------------------------------------

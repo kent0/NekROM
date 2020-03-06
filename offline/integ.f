@@ -516,8 +516,8 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gengrams(ga,gb,gc,gf,gt,buf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifgf)
+      subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,ieg,indxr,
+     $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
 
       common /nekmpi/ mid
 
@@ -528,7 +528,7 @@ c-----------------------------------------------------------------------
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real buf(1)
 
-      logical iftherm,ifdebug,ifgf
+      logical iftherm,ifdebug,ifgf,ifbuoy
 
       if (mid.eq.0) write (6,*) 'starting gengrams'
 
@@ -545,6 +545,8 @@ c-----------------------------------------------------------------------
          call rzero(gb(1,2),nsg*nsg)
          call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
       endif
+
+      if (ifbuoy) call rzero(gm,nsg*nsg)
 
       do while (ie.le.neg)
          ieg(1)=ie
@@ -591,6 +593,7 @@ c-----------------------------------------------------------------------
             if (ifgf) call setgf(gf(1,2),
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,ldim)
          endif
+         if (ifbuoy) call setg(gm,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
          ie=ieg(2)+1
       enddo
 
@@ -794,6 +797,26 @@ c-----------------------------------------------------------------------
          call add2s2(tmpf(1,2),buf,lxyz*nel*nsg*ndim)
          call bip(gf(1,i),tmpf,tmpf(1,2),nel,nsg,ndim)
       enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setgm(gm,xyz,uvw,t,gxyz,nel,nsg)
+
+      include 'LVAR'
+
+      real gxyz(lxyz*nel,1)
+      real xyz(lxyz,nel,1),uvw(lxyz,nel,1),t(lxyz,nel)
+
+      ! implement gx,gy,gz
+
+      call rzero(gxyz,nel*lxyz*ldim)
+      call rzero(gxyz(1,2),nel*lxyz*ldim)
+      if (ldim.eq.3) call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
+
+      call opcolv(gxyz,gxyz(1,2),gxyz(1,ldim),t,nel)
+
+      call bip(gm,uvw,gxyz,nel,nsg,ldim)
 
       return
       end
