@@ -18,16 +18,16 @@ c     write (6,*) 'starting setxsnap'
       call izero(mzr,nslmax*mp)
 
       do is=1,nsl
-        call rxupt_open(fnames(is))
-        call rxupt_close
-        if (ifgetxr) then
-           ixmin=is+mid*nslmax
-           exit
-        endif
-        mer(1+mid+(is-1)*mp)=nelgr
-        mxr(1+mid+(is-1)*mp)=nxr
-        myr(1+mid+(is-1)*mp)=nyr
-        mzr(1+mid+(is-1)*mp)=nzr
+         call rxupt_open(fnames(is))
+         call rxupt_close
+         if (ifgetxr) then
+            ixmin=is+mid*nslmax
+            exit
+         endif
+         mer(1+mid+(is-1)*mp)=nelgr
+         mxr(1+mid+(is-1)*mp)=nxr
+         myr(1+mid+(is-1)*mp)=nyr
+         mzr(1+mid+(is-1)*mp)=nzr
       enddo
 
       call igop(mer,mrt,'+  ',nslmax*mp)
@@ -100,26 +100,26 @@ c     write (6,*) 'starting load_snap'
       nsg=min(nsmax,lsg)
 
       if (ieg(1).eq.1) then
-        call loadflist(fnames,nsg,nsl)
-        call setxsnap(ixmin,fnames,nsl)
-        call setindxr(indxr,iftherm)
+         call loadflist(fnames,nsg,nsl)
+         call setxsnap(ixmin,fnames,nsl)
+         call setindxr(indxr,iftherm)
       endif
 
       iloc=1
       n=0
       do is=1,nsl
-        ieg(4)=is+mid*((nsg-1)/mp+1)
-        ieg(4)=is*mp+mid
-        if (is.eq.ixmin) then
+         ieg(4)=is+mid*((nsg-1)/mp+1)
+         ieg(4)=is*mp+mid
+         if (is.eq.ixmin) then
            indxr(1)=7
-        else
-           indxr(1)=0
-        endif
-        call rxupt_open(fnames(is))
-        call rxupt_read(buf(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
-        call rxupt_close
-        iloc=iloc+ieg(3)
-        n=n+ieg(3)
+         else
+            indxr(1)=0
+         endif
+         call rxupt_open(fnames(is))
+         call rxupt_read(buf(iloc),ibuf(iloc),ibuf8(iloc),ieg,indxr)
+         call rxupt_close
+         iloc=iloc+ieg(3)
+         n=n+ieg(3)
       enddo
 
       nel=ieg(4)
@@ -140,9 +140,8 @@ c     write (6,*) 'starting load_snap'
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
 
-
- 10   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld1')
- 11   format(i5,i5,i5,i5,'  ',1p1e13.5,'  fld2')
+ 10   format (i5,i5,i5,i5,'  ',1p1e13.5,'  fld1')
+ 11   format (i5,i5,i5,i5,'  ',1p1e13.5,'  fld2')
 
 c     write (6,*) 'ending load_snap'
 
@@ -263,7 +262,7 @@ c-----------------------------------------------------------------------
       close (unit=2)
 
     3 continue
-    1 format(a132)
+    1 format (a132)
 
       return
       end
@@ -357,7 +356,7 @@ c-----------------------------------------------------------------------
       enddo
 
       close (unit=12)
-    1 format(1pe24.16)
+    1 format (1pe24.16)
 
       return
       end
@@ -577,20 +576,20 @@ c-----------------------------------------------------------------------
 
       nsl=0
       do isg=1,nsg
-          call blank(fname,132)
-          fname='done '
-          if (mid.eq.0) read (10,'(a132)',end=100) fname
-          write (6,*) fname,mid,mp,'fname'
-  100     call bcast(fname,132)
-          if (indx1(fname,'done ',5).eq.0) then
-             ms=isg
-             if (mod(isg-1,mp).eq.mid) then
-                nsl=nsl+1
-                call chcopy(fnames(nsl),fname,132)
-             endif
-          else
-             goto 200
-          endif
+         call blank(fname,132)
+         fname='done '
+         if (mid.eq.0) read (10,'(a132)',end=100) fname
+         write (6,*) fname,mid,mp,'fname'
+  100    call bcast(fname,132)
+         if (indx1(fname,'done ',5).eq.0) then
+            ms=isg
+            if (mod(isg-1,mp).eq.mid) then
+               nsl=nsl+1
+               call chcopy(fnames(nsl),fname,132)
+            endif
+         else
+            goto 200
+         endif
       enddo
 
   200 nsg=ms
@@ -657,19 +656,19 @@ c-----------------------------------------------------------------------
       data         eight / "????????" /
 
       do ipass=1,2      ! 2nd pass, in case 1 file/directory
-         do k=8,1,-1
-            i1 = indx1(fname,eight,k)
-            if (i1.ne.0) then ! found k??? string
-               write(fmt,1) k,k
-               write(s8,fmt) fid
-               call chcopy(fname(i1),s8,k)
-               goto 10
-            endif
-         enddo
-   10    continue
+      do k=8,1,-1
+         i1 = indx1(fname,eight,k)
+         if (i1.ne.0) then ! found k??? string
+            write(fmt,1) k,k
+            write(s8,fmt) fid
+            call chcopy(fname(i1),s8,k)
+            goto 10
+         endif
+      enddo
+   10 continue
       enddo
 
-    1 format('(i',i1,'.',i1,')')
+    1 format ('(i',i1,'.',i1,')')
 
       return
       end
@@ -702,7 +701,7 @@ c-----------------------------------------------------------------------
       character*132 hdr
 
       if (indx2(hdr,132,'#std',4).eq.1) then
-          call parse_std_hdr(hdr)
+         call parse_std_hdr(hdr)
       else
          ierr = 1
       endif
@@ -722,14 +721,14 @@ c-----------------------------------------------------------------------
       p0thr = -1
       if_press_mesh = .false.
 
-      read(hdr,*,iostat=ierr) dummy
+      read (hdr,*,iostat=ierr) dummy
      $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
      $         ,  ifiler,nfiler
      $         ,  rdcode      ! 74+20=94
      $         ,  p0thr, if_press_mesh
 
       if (ierr.gt.0) then ! try again without pressure format flag
-        read(hdr,*,iostat=ierr) dummy
+         read (hdr,*,iostat=ierr) dummy
      $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
      $         ,  ifiler,nfiler
      $         ,  rdcode      ! 74+20=94
@@ -737,7 +736,7 @@ c-----------------------------------------------------------------------
       endif
 
       if (ierr.gt.0) then ! try again without mean pressure
-        read(hdr,*,err=99) dummy
+         read (hdr,*,err=99) dummy
      $         ,  wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
      $         ,  ifiler,nfiler
      $         ,  rdcode      ! 74+20=94
@@ -763,11 +762,11 @@ c      ifgtim  = .true.  ! always get time
          if (rdcode1(i).eq.'P') ifgetpr = .true.
          if (rdcode1(i).eq.'T') ifgettr = .true.
          if (rdcode1(i).eq.'S') then
-            read(rdcode1(i+1),'(I1)') NPS1
-            read(rdcode1(i+2),'(I1)') NPS0
+            read (rdcode1(i+1),'(I1)') NPS1
+            read (rdcode1(i+2),'(I1)') NPS0
             NPSR = 10*NPS1+NPS0
             NPS  = NPSR
-            if(NPSR.gt.ldimt-1) NPS=ldimt-1
+            if (NPSR.gt.ldimt-1) NPS=ldimt-1
             do k=1,NPS
                ifgtpsr(k) = .true.
             enddo
@@ -814,10 +813,10 @@ c-----------------------------------------------------------------------
       character*1 rlcode(20)
 
 c                4  7  10  13   23    33    53    62     68     74
-      read(hdr,1) wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
+      read (hdr,1) wdsizr,nxr,nyr,nzr,nelr,nelgr,timer,istpr
      $         , ifiler,nfiler
      $         , (rlcode(k),k=1,20)                   ! 74+20=94
-    1 format(4x,i2,3i3,2i10,e20.13,i9,2i6,20a1)
+    1 format (4x,i2,3i3,2i10,e20.13,i9,2i6,20a1)
 
       if (nid.eq.0) write(6,*) 'WARNING: reading depreacted header!'
 
@@ -886,7 +885,7 @@ c-----------------------------------------------------------------------
       enddo
 
       close (unit=12)
-    1 format(1pe24.16)
+    1 format (1pe24.16)
 
       return
       end
