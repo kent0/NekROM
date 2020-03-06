@@ -12,6 +12,11 @@ c     write (6,*) 'starting setxsnap'
       nslmax=iglmax(nsl,1)
       ixmin=nslmax*mp+1
 
+      call izero(mer,nslmax*mp)
+      call izero(mxr,nslmax*mp)
+      call izero(myr,nslmax*mp)
+      call izero(mzr,nslmax*mp)
+
       do is=1,nsl
         call rxupt_open(fnames(is))
         call rxupt_close
@@ -19,7 +24,42 @@ c     write (6,*) 'starting setxsnap'
            ixmin=is+mid*nslmax
            exit
         endif
+        mer(1+mid+(is-1)*mp)=nelgr
+        mxr(1+mid+(is-1)*mp)=nxr
+        myr(1+mid+(is-1)*mp)=nyr
+        mzr(1+mid+(is-1)*mp)=nzr
       enddo
+
+      call igop(mer,mrt,'+  ',nslmax*mp)
+      call igop(mxr,mrt,'+  ',nslmax*mp)
+      call igop(myr,mrt,'+  ',nslmax*mp)
+      call igop(mzr,mrt,'+  ',nslmax*mp)
+
+      ierr=0
+      iloc=1
+
+      if (mid.eq.0) then
+         if (mer(1).eq.0) ierr=ierr+1
+         if (mxr(1).eq.0) ierr=ierr+2
+         if (myr(1).eq.0) ierr=ierr+4
+         if (mzr(1).eq.0) ierr=ierr+8
+         if (ierr.ne.0) call
+     $      exitti('error in restart par in node 0$',ierr)
+
+         do i=2,nslmax*mp
+            if (mer(i).ne.0) iloc=iloc+1
+            if (mer(i).ne.0.and.mer(i).ne.mer(1)) then
+               write (6,*) 'first nelgr ',mer(1),' current nelgr',mer(i)
+               call exitti('inconsistency in fld elements$',iloc)
+            endif
+            if (mer(i).ne.0.and.mer(i).ne.mer(1)) ierr=ierr+1
+            if (mer(i).ne.0.and.mer(i).ne.mer(1)) ierr=ierr+2
+            if (mer(i).ne.0.and.mer(i).ne.mer(1)) ierr=ierr+4
+            if (ierr.ne.0) write (6,*)
+     $           'WARNING: inconsistent polynomial order',ierr
+            ierr=0
+         enddo
+      endif
 
       jxmin=iglmin(ixmin,1)
 

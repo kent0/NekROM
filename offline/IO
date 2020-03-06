@@ -76,3 +76,6 @@ c     multisession
 
       integer               nsessions
       common /session_info/ nsessions
+
+      common /irestart/ mer(lsg*2),mxr(lsg*2),myr(lsg*2),mzr(lsg*2),
+     $                  mrt(lsg*2)
