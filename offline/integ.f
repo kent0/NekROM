@@ -813,8 +813,13 @@ c-----------------------------------------------------------------------
       ! implement gx,gy,gz
 
       call rzero(gxyz,nel*lxyz*ldim)
-      call rzero(gxyz(1,2),nel*lxyz*ldim)
-      if (ldim.eq.3) call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
+
+      if (ldim.eq.2) then
+         call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
+      else
+         call rzero(gxyz(1,2),nel*lxyz*ldim)
+         call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
+      endif
 
       call opcolv(gxyz,gxyz(1,2),gxyz(1,ldim),t,nel)
 
