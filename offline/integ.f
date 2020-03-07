@@ -593,7 +593,7 @@ c-----------------------------------------------------------------------
             if (ifgf) call setgf(gf(1,2),
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,ldim)
          endif
-         if (ifbuoy) call setg(gm,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
+         if (ifbuoy) call setgm(gm,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
          ie=ieg(2)+1
       enddo
 
