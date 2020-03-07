@@ -609,6 +609,8 @@ c-----------------------------------------------------------------------
          if (ifgf) call gop(gf(1,2),gt,'+  ',nsg*nsg)
       endif
 
+      if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
+
       if (mid.eq.0) write (6,*) 'ending gengrams'
 
       return
