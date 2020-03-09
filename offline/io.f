@@ -573,7 +573,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
-      character*132 fnames(ns),fname
+      character*132 fnames(nsg),fname
 
       if (mid.eq.0) open (unit=10,file='file.list')
       ms=1
