@@ -12,12 +12,6 @@ c-----------------------------------------------------------------------
       call copy(ym1,xyz(n+1),n)
       if (ldim.eq.3) call copy(zm1,xyz(n*2+1),n)
 
-      do i=1,10
-         write (6,*) i,xyz(i),xyz(n+i),xyz(n*2+i),'xyz'
-      enddo
-
-      call exitt0
-
       call glmapm1(nel)
       call geodat1(nel)
       call setrx(nel)

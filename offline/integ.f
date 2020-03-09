@@ -582,6 +582,20 @@ c-----------------------------------------------------------------------
             endif
          close (unit=100)
          endif
+
+         do i=1,10
+            write (6,*) i,buf(i),buf(lxyz*nel+i),buf(lxyz*nel*2+i),'xyz'
+         enddo
+
+         write (6,*) ' '
+
+         do i=1,10
+            write (6,*) i,buf(lxyz*nel*3+i),
+     $         buf(lxyz*nel*3+lxyz*nel*nsg+i),
+     $         buf(lxyz*nel*3+ixyz*nel*nsg*2+i),'uvw'
+         enddo
+
+         call exitt0
          call setgeom(buf,nel)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
