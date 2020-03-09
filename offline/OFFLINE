@@ -1,5 +1,5 @@
       common /flds/ xyz(lxyz*ldim*lel),upt(lxyz*leb*lfld),
-     $              buf(lxyz*leb*lfld),tmpf(lxyz*leb*ldim)
+     $              buf(lxyz*leb*lfld),tmpf(lxyz*leb*lfld)
 
       common /gram/ ga(lgld*(lsg+1)**2),gb(lgld*(lsg+1)**2),
      $              gm(lgld*(lsg+1)**2),gg(lsg*lsg),gvec((lsg+1)*lsg,2),
