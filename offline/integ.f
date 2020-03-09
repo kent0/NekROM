@@ -798,7 +798,7 @@ c-----------------------------------------------------------------------
          enddo
          call copy(tmpf(1,2),tmpf,lxyz*nel*ndim*nsg)
          s=-2.
-         call add2s2(tmpf(1,2),buf,lxyz*nel*nsg*ndim)
+         call add2s2(tmpf(1,2),buf,s,lxyz*nel*nsg*ndim)
          call bip(gf(1,i),tmpf,tmpf(1,2),nel,nsg,ndim)
       enddo
 
