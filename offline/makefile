@@ -1,13 +1,13 @@
 ### makefile automatically created by makenek 02/10/2020 16:59:58 ###
-MD=/Users/kaneko/Developer/MOR
+MD=$(HOME)/Developer/MOR
 OD=$(MD)/offline
 
 BINNAME=offline
 LIBNAME=libo.a
 CASENAME:=h3d
 CASEDIR:=$(OD)
-S=/Users/kaneko/Developer/Nek5000/core
-SCMT=/Users/kaneko/Developer/Nek5000/core/cmt
+S=$(HOME)/Developer/Nek5000/core
+SCMT=$(HOME)/Developer/Nek5000/core/cmt
 OPT_INCDIR=./
 OBJDIR=oobj
 
@@ -21,7 +21,7 @@ PPPO=
 PPS= MPI UNDERSCORE TIMER
 
 USR=io.o integ.o geom.o misc.o util.o
-USR_LFLAGS=-mcmodel=medium -L/Users/kaneko/Developer/Nek5000/3rd_party/gslib/lib -lgs
+USR_LFLAGS=-mcmodel=medium -L$(HOME)/Developer/Nek5000/3rd_party/gslib/lib -lgs
 
 MPI=1
 CMT=0
@@ -31,7 +31,7 @@ VISIT=0
 VISIT_IFLAGS=
 VISIT_LFLAGS=
 HYPRE_IFLAGS=
-GSLIB_IFLAGS:=-DPREFIX=gslib_ -DFPREFIX=fgslib_ -DGLOBAL_LONG_LONG -I/Users/kaneko/Developer/Nek5000/3rd_party/gslib/include
+GSLIB_IFLAGS:=-DPREFIX=gslib_ -DFPREFIX=fgslib_ -DGLOBAL_LONG_LONG -I$(HOME)/Developer/Nek5000/3rd_party/gslib/include
 
 ################################################################################
 
