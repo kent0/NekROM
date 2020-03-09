@@ -583,6 +583,8 @@ c-----------------------------------------------------------------------
          close (unit=100)
          endif
 
+         write (6,*) 'par',nel,lxyz
+
          do i=1,10
             write (6,*) i,buf(i),buf(lxyz*nel+i),buf(lxyz*nel*2+i),'xyz'
          enddo
