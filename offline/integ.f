@@ -516,17 +516,17 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,ieg,indxr,
+      subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
      $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
 
       common /nekmpi/ mid
 
       integer ieg(1),indxr(1)
-      real ga((nsg+1)**2,1),gb((nsg+1)**2,1)
+      real ga((nsg+1)**2,1),gb((nsg+1)**2,1),gm(1)
       real gf((nsg+1)**2,1)
       real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
-      real buf(1)
+      real buf(1),tmpf(1)
 
       logical iftherm,ifdebug,ifgf,ifbuoy
 
@@ -593,7 +593,8 @@ c-----------------------------------------------------------------------
             if (ifgf) call setgf(gf(1,2),
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,ldim)
          endif
-         if (ifbuoy) call setgm(gm,buf(nel*lxyz*ldim+1),nel,nsg,ldim)
+         if (ifbuoy) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
+     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg)
          ie=ieg(2)+1
       enddo
 
@@ -807,23 +808,17 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
 
-      real gxyz(lxyz*nel,1)
+      real gxyz(lxyz*nel*nsg,1)
       real xyz(lxyz,nel,1),uvw(lxyz,nel,1),t(lxyz,nel)
 
       ! implement gx,gy,gz
 
-      call rzero(gxyz,nel*lxyz*ldim)
+      call rzero(gxyz,nel*lxyz*(ldim-1)*nsg)
+      call copy(gxyz(1,ldim),t,nel*lxyz*nsg)
+      call chsign(gxyz(1,ldim),nel*lxyz*nsg)
 
-      if (ldim.eq.2) then
-         call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
-      else
-         call rzero(gxyz(1,2),nel*lxyz*ldim)
-         call cfill(gxyz(1,ldim),-1.,nel*lxyz*ldim)
-      endif
-
-      call opcolv(gxyz,gxyz(1,2),gxyz(1,ldim),t,nel)
-
-      call bip(gm,uvw,gxyz,nel,nsg,ldim)
+c     call bip(gm,uvw,gxyz,nel,nsg,ldim)
+      call bip(gm,gxyz,uvw,nel,nsg,ldim)
 
       return
       end
