@@ -29,7 +29,7 @@ c     nsg=51
 
       call setup_proj
 
-      call gengrams(ga,gb,gc,gm,gf,gt,buf,ieg,indxr,
+      call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
      $  nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
 
       call write_ops(ga,gb,gc,nsg,mid,' gu',.true.)
