@@ -551,6 +551,7 @@ c-----------------------------------------------------------------------
       do while (ie.le.neg)
          ieg(1)=ie
          ieg(2)=min(ie+mel*mp-1,neg)
+         if (mid.eq.0) write (6,*) 'reading',ieg(1),ieg(2),'...'
          call loadsnaps(buf,ieg,indxr,nsg,iftherm)
          if (ieg(2).lt.0) then
             neg=ieg(1)+ieg(2)
