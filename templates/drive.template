@@ -3,6 +3,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'OFFLINE'
+      include 'TIMES'
 
       common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),wk(lx1**2,5)
 
@@ -10,7 +11,9 @@ c-----------------------------------------------------------------------
       character*132 fname
       logical ifavg0,iftherm,ifgf,ifbuoy
 
+      call reset_times
       call offline_init(icomm)
+      ttt=dnekclock()
 
       write (6,*) 'lxyz',lxyz
 
@@ -40,22 +43,26 @@ c     nsg=51
       call setg(gg,gb,gt,nsg,ifavg0)
       call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
 
+      tt=dnekclock()
       do j=1,nsg1
       do i=1,nsg
          write (6,*) i,j,gvec(i+(j-1)*nsg,1),'gvec'
       enddo
       enddo
+      time_dump=time_dump+(dnekclock()-tt)
 
       call qop2(ga,gt,gvec,gvect,nsg,nsg1)
       call qop2(gb,gt,gvec,gvect,nsg,nsg1)
       call write_ops(ga,gb,gc,nsg1,mid,'  u',.false.)
       if (ifgf) then
          call qop2(gf,gt,gvec,gvect,nsg,nsg1)
+         tt=dnekclock()
          do j=1,nsg1
          do i=1,nsg1
             write (6,*) i,j,gm(i+(j-1)*nsg1),'gubf'
          enddo
          enddo
+         time_dump=time_dump+(dnekclock()-tt)
       endif
 
       call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'u')
@@ -76,12 +83,17 @@ c     nsg=51
 
       if (ifbuoy) then
          call qop2(gm,gt,gvec(1,2),gvect,nsg,nsg1)
+         tt=dnekclock()
          do j=1,nsg1
          do i=1,nsg1
             write (6,*) i,j,gm(i+(j-1)*nsg1),'but'
          enddo
          enddo
+         time_dump=time_dump+(dnekclock()-tt)
       endif
+
+      time_off=dnekclock()-ttt
+      call exitt0
 
       return
       end

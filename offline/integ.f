@@ -14,6 +14,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'INTEG'
+      include 'TIMES'
 
       common /tinteg/ tmp(lxyz,lel,ldim)
 
@@ -22,10 +23,14 @@ c-----------------------------------------------------------------------
 
       do l=1,ndim
       do k=1,nb
+         tt=dnekclock()
          call col3(tmp,u(1,1,k,l),bm1,lxyz*nel)
+         time_bop=time_bop+(dnekclock()-tt)
+         tt=dnekclock()
          do j=1,nb
             b(j,k)=b(j,k)+vlsc2(tmp,v(1,1,j,l),lxyz*nel)
          enddo
+         time_bip=time_bip+(dnekclock()-tt)
       enddo
       enddo
 
@@ -36,6 +41,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'INTEG'
+      include 'TIMES'
 
       common /tinteg/ tmp(lxyz,lel,ldim)
 
@@ -44,10 +50,14 @@ c-----------------------------------------------------------------------
 
       do l=1,ndim
       do k=1,nb
+         tt=dnekclock()
          call aop(tmp,u(1,1,k,l),nel)
+         time_aop=time_aop+(dnekclock()-tt)
+         tt=dnekclock()
          do j=1,nb
             a(j,k)=a(j,k)+vlsc2(tmp,v(1,1,j,l),lxyz*nel)
          enddo
+         time_aip=time_aip+(dnekclock()-tt)
       enddo
       enddo
 
@@ -58,6 +68,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'INTEG'
+      include 'TIMES'
 
       logical ifuf,ifcf
 
@@ -72,27 +83,37 @@ c-----------------------------------------------------------------------
       ifuf=.false.
       ifcf=.true.
 
+      tt=dnekclock()
       call intp_rstd_all2(ud,u,nel,nb,mdim)
+      time_cdea=time_cdea+(dnekclock()-tt)
 
       do k=1,nb
+         tt=dnekclock()
          call set_convect_new_part(dw,dw(1,1,2),dw(1,1,ndim),
      $      w(1,1,k,1),w(1,1,k,2),w(1,1,k,ndim),nel)
+         time_cdea=time_cdea+(dnekclock()-tt)
          call rzero(wk,nb*nb)
          do j=1,nb
             do idim=1,mdim
+               tt=dnekclock()
                call conv(tmp(1+(idim-1)*lxyz*nel),
      $            ud(1+(j-1)*lxyzd*nel+(idim-1)*lxyzd*nel*nb),.true.,
      $            dw(1,1,1),dw(1,1,2),dw(1,1,ndim),.true.,nel)
+               time_cconv=time_cconv+(dnekclock()-tt)
             enddo
+            tt=dnekclock()
             do idim=1,mdim
             do i=1,nb
                wk(i+(j-1)*nb,1)=wk(i+(j-1)*nb,1)+
      $            vlsc2(tmp(1+(idim-1)*lxyz*nel),v(1,1,i,idim),lxyz*nel)
             enddo
             enddo
+            time_cip=time_cip+(dnekclock()-tt)
          enddo
          call gop(wk,wk(1,2),'+  ',nb*nb)
+         tt=dnekclock()
          call updatec(c,wk,nb,k)
+         time_cip=time_cip+(dnekclock()-tt)
       enddo
 
       return
@@ -519,6 +540,8 @@ c-----------------------------------------------------------------------
       subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
      $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
 
+      include 'TIMES'
+
       common /nekmpi/ mid
 
       integer ieg(1),indxr(1)
@@ -640,6 +663,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,pfx)
 
+      include 'TIMES'
+
       real gc(1),gt(1),gvec(1),gvect(1),gvecc(1)
       character*1 pfx
       character*1 fname(2)
@@ -661,6 +686,7 @@ c-----------------------------------------------------------------------
       do k=1,nsg1
          call mxm(gc,(nsg1)**2,gvecc(1+(k-1)*nsc),nsc,gt,1)
          call gop(gt,gt((nsg1)**2+1),'+  ',(nsg1)**2)
+         tt=dnekclock()
          do j=0,nsg1-1
          do i=0,nsg1-1
 c           if (mid.eq.0) write (6,*)
@@ -669,6 +695,7 @@ c    $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
      $         i,j,k-1,gt(1+i+j*(nsg1))
          enddo
          enddo
+         time_dump=time_dump+(dnekclock()-tt)
       enddo
       call nekgsync
       if (mid.eq.0) close (unit=10)

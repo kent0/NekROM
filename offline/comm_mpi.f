@@ -153,26 +153,16 @@ c-----------------------------------------------------------------------
 
 c     Global vector commutative operation
 
-      include 'CTIMER'
-
+      include 'TIMES'
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
 
       real x(n), w(n)
       character*3 op
 
-      if (ifsync) call nekgsync()
+      call nekgsync()
+      tt=dnekclock()
 
-#ifdef TIMER
-      if (icalld.eq.0) then
-        tgop =0.0d0
-        ngop =0
-        icalld=1
-      endif
-      ngop = ngop + 1
-      etime1=dnekclock()
-#endif
-c
       if (op.eq.'+  ') then
       call mpi_allreduce(x,w,n,MPI_DOUBLE_PRECISION,mpi_sum,nekcomm,ie)
       elseif (op.EQ.'M  ') then
@@ -188,22 +178,23 @@ c
 
       call copy(x,w,n)
 
-#ifdef TIMER
-      tgop =tgop +(dnekclock()-etime1)
-#endif
+      time_gop=time_gop+(dnekclock()-tt)
 
       return
       end
 c-----------------------------------------------------------------------
       subroutine igop( x, w, op, n)
-c
+
 c     Global vector commutative operation
-c
+
+      include 'TIMES'
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
 
       integer x(n), w(n)
       character*3 op
+
+      tt=dnekclock()
 
       if     (op.eq.'+  ') then
         call mpi_allreduce (x,w,n,mpi_integer,mpi_sum ,nekcomm,ierr)
@@ -220,18 +211,23 @@ c
 
       call icopy(x,w,n)
 
+      time_gop=time_gop+(dnekclock()-tt)
+
       return
       end
 c-----------------------------------------------------------------------
       subroutine i8gop( x, w, op, n)
-c
+
 c     Global vector commutative operation
-c
+
+      include 'TIMES'
       include 'mpif.h'
       common /nekmpi/ nid,np,nekcomm,nekgroup,nekreal
 
       integer*8 x(n), w(n)
       character*3 op
+
+      tt=dnekclock()
 
       if     (op.eq.'+  ') then
         call mpi_allreduce (x,w,n,mpi_integer8,mpi_sum ,nekcomm,ierr)
@@ -247,6 +243,8 @@ c
       endif
 
       call i8copy(x,w,n)
+
+      time_gop=time_gop+(dnekclock()-tt)
 
       return
       end
@@ -541,6 +539,8 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) then
          write(6,*) ' '
+         call final
+         write(6,*) ' '
          write(6,'(A)') 'run successful: dying ...'
          write(6,*) ' '
       endif
@@ -558,6 +558,8 @@ c-----------------------------------------------------------------------
       include 'TOTAL'
 
       if (nid.eq.0) then
+         write(6,*) ' '
+         call final
          write(6,*) ' '
          write(6,'(A)') 'an error occured: dying ...'
          write(6,*) ' '

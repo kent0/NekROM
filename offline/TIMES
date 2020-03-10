@@ -1,0 +1,7 @@
+      common /otimes/ time_ip,time_read,time_dump,time_sort,
+     $                time_bip,time_aip,time_cip,time_cipc,
+     $                time_bop,time_aop,time_cop,
+     $                time_cdea,time_cconv,
+     $                time_qop2,time_qop3,time_disk,
+     $                time_gop,time_cst,time_mxm,time_eig,
+     $                time_off

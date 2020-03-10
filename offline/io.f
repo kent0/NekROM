@@ -82,6 +82,7 @@ c-----------------------------------------------------------------------
       subroutine loadsnaps(buf,ieg,indxr,nsmax,iftherm)
 
       include 'LVAR'
+      include 'TIMES'
 
       integer*8 ibuf8
       common /iread8/ ibuf8(lxyz*leb*lfld)
@@ -135,11 +136,15 @@ c     write (6,*) 'starting load_snap'
       do i=1,n
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'pre'
       enddo
+      tt=dnekclock()
       call fgslib_crystal_tuple_transfer(ih,n,m,ibuf,1,ibuf8,1,buf,1,1)
+      time_cst=time_cst+(dnekclock()-tt)
       do i=1,n
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'mid'
       enddo
+      tt=dnekclock()
       call fgslib_crystal_tuple_sort(ih,n,ibuf,1,ibuf8,1,buf,1,2,1)
+      time_sort=time_sort+(dnekclock()-tt)
       do i=1,n
          if (mio.eq.0) write (6,*) i,ibuf(i),ibuf8(i),buf(i),'post'
       enddo
@@ -191,6 +196,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'IO'
+      include 'TIMES'
 
       common /scrread/ wk(lxyz*ldim*lel)
 
@@ -215,7 +221,9 @@ c-----------------------------------------------------------------------
 
       do while (iel.lt.nel)
          mel=min(lel,nelgr-jeg+1)
+         tt=dnekclock()
          call byte_read(er,mel,ierr) ! get element mapping
+         time_disk=time_disk+(dnekclock()-tt)
          if (if_byte_sw) call byte_reverse(er,mel,ierr)
          do ie=1,mel
             if (er(ie).ge.ieg0.and.er(ie).le.ieg1) then
@@ -241,7 +249,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine rxupt_close
 
+      include 'TIMES'
+
+      tt=dnekclock()
       call byte_close(ierr)
+      time_disk=time_disk+(dnekclock()-tt)
 
       return
       end
@@ -275,6 +287,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'IO'
+      include 'TIMES'
 
       character*132 hdr,hname,hname_
       real*4 bytetest
@@ -284,14 +297,20 @@ c-----------------------------------------------------------------------
 
       call chcopy(hname_,hname,132)
       call addfid(hname_,0)
+      tt=dnekclock()
       call byte_open(hname_,ierr)
+      time_disk=time_disk+(dnekclock()-tt)
       if (ierr.ne.0) goto 102
 
       call blank(hdr,iHeaderSize)
+      tt=dnekclock()
       call byte_read(hdr,iHeaderSize/4,ierr)
+      time_disk=time_disk+(dnekclock()-tt)
       if (ierr.ne.0) goto 102
 
+      tt=dnekclock()
       call byte_read(bytetest,1,ierr)
+      time_disk=time_disk+(dnekclock()-tt)
       if (ierr.ne.0) goto 102
 
       if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
@@ -302,7 +321,9 @@ c-----------------------------------------------------------------------
       return
   102 continue
 
+      tt=dnekclock()
       call byte_close(ierr)
+      time_disk=time_disk+(dnekclock()-tt)
       call exitt
 
       return
@@ -354,7 +375,11 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine esort(ieg,nel)
 
+      include 'TIMES'
+
       integer ieg(nel,4)
+
+      tt=dnekclock()
 
       call isort(ieg,ieg(1,2),nel)
 
@@ -372,6 +397,8 @@ c-----------------------------------------------------------------------
             ieg(ng,4)=ieg(ng,4)+1
          endif
       enddo
+
+      time_sort=time_sort+(dnekclock()-tt)
 
       return
       end
@@ -418,6 +445,7 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
       include 'IO'
+      include 'TIMES'
 
       common /comm_handles/ ih
 
@@ -505,8 +533,10 @@ c-----------------------------------------------------------------------
                 nep=i4(ig)
                 nwk=nep*mdim*nxyzr8
                 offs=offs0+iofldsr*stride+mdim*(ie-1)*nxyzr8*wdsizr
+                tt=dnekclock()
                 call byte_seek(offs/4,ierr)
                 call byte_read(wk(iloc),nwk*(wdsizr/4),ierr)
+                time_disk=time_disk+(dnekclock()-tt)
                 iloc=iloc+nwk
                 ig=ig+1
             enddo
@@ -591,6 +621,8 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine write_ops(ga,gb,gc,nsg,mid,pfx,ifc)
 
+      include 'TIMES'
+
       real ga(nsg,nsg),gb(nsg,nsg),gc(nsg,nsg,nsg)
       logical ifc
       character*3 pfx
@@ -600,6 +632,8 @@ c-----------------------------------------------------------------------
       call chcopy(fname,pfx,3)
       fname(4)='c'
       call chcopy(fname2,fname,4)
+
+      tt=dnekclock()
 
       if (mid.eq.0) then
          do j=1,nsg
@@ -633,6 +667,8 @@ c              write (6,*) i,j,k,gc(i,j,k),pfx,'c'
             write (6,*) ' '
          endif
       endif
+
+      time_dump=time_dump+(dnekclock()-tt)
 
       return
       end

@@ -129,13 +129,17 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine mxm(a,n1,b,n2,c,n3)
-c
+
+      include 'TIMES'
+
 c     Compute matrix-matrix product C = A*B
 c     for contiguously packed matrices A,B, and C.
-c
+
       real a(n1,n2),b(n2,n3),c(n1,n3)
-c
+
+      tt=dnekclock()
       call mxmf2(a,n1,b,n2,c,n3)
+      time_mxm=time_mxm+(dnekclock()-tt)
 
       return
       end
@@ -723,13 +727,16 @@ c     precision, in bytes, so as to know whether dsygv or ssygv
 c     should be called.
 
       include 'LVAR'
+      include 'TIMES'
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
 
       real a(n,n),lam(n),wk(n,n)
       real aa(100)
 
+      tt=dnekclock()
       call dsyev('V','U',n,a,n,lam,wk,n*n,info)
+      time_eig=time_eig+(dnekclock()-tt)
 
       if (info.ne.0) then
          if (mid.eq.0) then
