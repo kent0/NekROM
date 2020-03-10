@@ -827,8 +827,8 @@ c-----------------------------------------------------------------------
 
       do i=1,lx1-2
          do ie=1,nel*nsg*ndim
-            call specmpn(tmpf,lx1,buf(1,ie,1,1),lx1,pmat(1,i),ptmat(1,i)
-     $         ,ldim.eq.3,wk,5*lx1**ldim)
+            call specmpn(tmpf(1+(ie-1)*lxyz,1),lx1,buf(1,ie,1,1),lx1,
+     $         ptmat(1,i),pmat(1,i),ldim.eq.3,wk,5*lx1**ldim)
          enddo
          call copy(tmpf(1,2),tmpf,lxyz*nel*ndim*nsg)
          s=-2.
