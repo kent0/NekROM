@@ -689,8 +689,6 @@ c-----------------------------------------------------------------------
          tt=dnekclock()
          do j=0,nsg1-1
          do i=0,nsg1-1
-c           if (mid.eq.0) write (6,*)
-c    $         i,j,k-1,gt(1+i+j*(nsg1)),pfx,'c'
             if (mid.eq.0) write (10,*)
      $         i,j,k-1,gt(1+i+j*(nsg1))
          enddo
