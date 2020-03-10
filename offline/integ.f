@@ -786,7 +786,8 @@ c-----------------------------------------------------------------------
 
       include 'LVAR'
 
-      common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),wk(lx1**2,5)
+      common /sei/ pmat(lx1**2,lx1),ptmat(lx1**2,lx1),
+     $             wk(lx1**(ldim-1),5)
 
       real gf(nsg*nsg,lx1-2),buf(lxyz,nel,nsg,ndim),
      $     tmpf(nel*lxyz*ndim*nsg,2)
@@ -794,7 +795,7 @@ c-----------------------------------------------------------------------
       do i=1,lx1-2
          do ie=1,nel*nsg*ndim
             call specmpn(tmpf,lx1,buf(1,ie,1,1),lx1,pmat(1,i),ptmat(1,i)
-     $         ,ldim.eq.3,wk,lx1*lx1)
+     $         ,ldim.eq.3,wk,5*lx1**(ldim-1))
          enddo
          call copy(tmpf(1,2),tmpf,lxyz*nel*ndim*nsg)
          s=-2.
