@@ -285,32 +285,19 @@ c-----------------------------------------------------------------------
       call chcopy(hname_,hname,132)
       call addfid(hname_,0)
       call byte_open(hname_,ierr)
-      if (ierr.ne.0) goto 101
+      if (ierr.ne.0) goto 102
 
       call blank(hdr,iHeaderSize)
       call byte_read(hdr,iHeaderSize/4,ierr)
-      if (ierr.ne.0) goto 101
+      if (ierr.ne.0) goto 102
 
       call byte_read(bytetest,1,ierr)
-      if (ierr.ne.0) goto 101
+      if (ierr.ne.0) goto 102
 
       if_byte_sw = if_byte_swap_test(bytetest,ierr) ! determine endianess
-      if (ierr.ne.0) goto 101
-
-  101 continue
+      if (ierr.ne.0) goto 102
 
       call mfi_parse_hdr(hdr,ierr)
-
-      if (nelr.gt.lelr) then
-         write (6,*) 'ERROR: increase lelr in SIZE!',lelr,nelr
-         goto 102
-      endif
-
-      istride=np/nfiler
-      if (istride.lt.1) then
-         write (6,*) nfiler,np,'  TOO MANY FILES, mfi_prepare'
-         goto 102
-      endif
 
       return
   102 continue
