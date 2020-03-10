@@ -546,7 +546,7 @@ c-----------------------------------------------------------------------
 
       integer ieg(1),indxr(1)
       real ga((nsg+1)**2,1),gb((nsg+1)**2,1),gm(1)
-      real gf((nsg+1)**2,1)
+      real gf(nsg**2,lx1-2,1)
       real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real buf(1),tmpf(1)
@@ -614,8 +614,8 @@ c-----------------------------------------------------------------------
             call setops(ga(1,2),gb(1,2),gc(1,2),gt,
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
      $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
-            if (ifgf) call setgf(gf(1,2),
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,ldim)
+            if (ifgf) call setgf(gf(1,1,2),
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,1)
          endif
          if (ifbuoy) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg)
