@@ -538,7 +538,7 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lxyz,iftherm,ifbuoy,ifgf)
+     $   nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf)
 
       include 'TIMES'
 
@@ -626,12 +626,20 @@ c-----------------------------------------------------------------------
 
       call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
-      if (ifgf) call gop(gf,gt,'+  ',nsg*nsg)
+      if (ifgf) then
+         do i=1,lx1-2
+            call gop(gf(1,i,1),gt,'+  ',nsg*nsg)
+         enddo
+      endif
 
       if (iftherm) then
          call gop(ga(1,2),gt,'+  ',nsg*nsg)
          call gop(gb(1,2),gt,'+  ',nsg*nsg)
-         if (ifgf) call gop(gf(1,2),gt,'+  ',nsg*nsg)
+         if (ifgf) then
+            do i=1,lx1-2
+               call gop(gf(1,i,2),gt,'+  ',nsg*nsg)
+            enddo
+         endif
       endif
 
       if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
