@@ -40,7 +40,8 @@ c     nsg=51
 
       call write_ops(ga,gb,gc,nsg**2,nsc*nsg**2,mid,' gu',.true.)
       if (iftherm) call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
-     $   gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg,mid,' gt',.true.)
+     $   gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
+     $   nsg**2,nsc*nsg**2,mid,' gt',.true.)
 
       call dump_serial(gvec,nsg*nsg,'gvec ',mid)
 
