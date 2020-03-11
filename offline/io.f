@@ -619,56 +619,30 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine write_ops(ga,gb,gc,nsg,mid,pfx,ifc)
+      subroutine write_ops(ga,gb,gc,nsg2,nsg3,mid,pfx,ifc)
 
       include 'TIMES'
 
-      real ga(nsg,nsg),gb(nsg,nsg),gc(nsg,nsg,nsg)
+      real ga(nsg2),gb(nsg2),gc(nsg3)
       logical ifc
       character*3 pfx
-      character*1 fname(4)
-      character*4 fname2
+      character*1 fname(5)
 
-      call chcopy(fname,pfx,3)
-      fname(4)='c'
-      call chcopy(fname2,fname,4)
+      nf=5
+      call blank(fname,nf)
+      call copy(fname,pfx,3)
+      call strip_pws(fname,nf)
 
-      tt=dnekclock()
+      call chcopy(fname(nf+1),'a',1)
+      call dump_serial(ga,nsg2,fname,mid)
 
-      if (mid.eq.0) then
-         do j=1,nsg
-         do i=1,nsg
-            write (6,*) i,j,ga(i,j),pfx,'a'
-         enddo
-         enddo
+      call chcopy(fname(nf+1),'b',1)
+      call dump_serial(gb,nsg2,fname,mid)
 
-         write (6,*) ' '
-
-         do j=1,nsg
-         do i=1,nsg
-            write (6,*) i,j,gb(i,j),pfx,'b'
-         enddo
-         enddo
-
-         write (6,*) ' '
-
-         if (ifc) then
-            if (mid.eq.0) open (unit=10,file=fname2)
-            do k=1,nsg
-            do j=1,nsg
-            do i=1,nsg
-c              write (6,*) i,j,k,gc(i,j,k),pfx,'c'
-               write (10,*) i,j,k,gc(i,j,k)
-            enddo
-            enddo
-            enddo
-            if (mid.eq.0) close (unit=10)
-
-            write (6,*) ' '
-         endif
+      if (ifc) then
+         call chcopy(fname(nf+1),'c',1)
+         call dump_global(gc,nsg3,fname,mid)
       endif
-
-      time_dump=time_dump+(dnekclock()-tt)
 
       return
       end
@@ -899,19 +873,110 @@ c-----------------------------------------------------------------------
 c-----------------------------------------------------------------------
       subroutine dump_serial_helper(a,n,fname)
 
-      real a(n)
+      include 'TIMES'
 
+      real a(n)
       character*128 fname
 
       open (unit=12,file=fname)
       write (6,*) 'writing to ',fname
 
+      tt=dnekclock()
       do i=1,n
          write (12,1) a(i)
       enddo
+      time_dump=time_dump+(dnekclock()-tt)
 
       close (unit=12)
     1 format (1pe24.16)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine strip_pws(a,n)
+
+      character*1 a(n)
+
+      nc=0
+      i=0
+
+      do while ((i+1).le.n.and.a(i+1).eq.' ')
+         i=i+1
+      enddo
+
+      do j=1,(n-i)
+         a(j)=a(j+i)
+      enddo
+
+      do j=(n-i+1),n
+         a(j)=' '
+      enddo
+
+      n=n-i
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_global(a,n,fname,wk1,wk2,nid)
+
+      real a(n),wk1(1),wk2(1)
+
+      character*128 fname
+      character*128 fntrunc
+
+      if (nid.eq.0) then
+         call blank(fntrunc,128)
+         len=ltruncr(fname,128)
+         call chcopy(fntrunc,fname,len)
+      endif
+
+      call dump_global_helper(a,n,fntrunc,wk1,wk2,nid)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine dump_global_helper(a,n,fname,wk1,wk2,nid)
+
+      include 'TIMES'
+
+      real a(n),wk1(1),wk2(1)
+      integer iwk(1)
+
+      character*128 fname
+
+      if (nid.eq.0) open (unit=12,file=fname)
+
+      iwk(1)=n
+      nmax=iglmax(iwk,1)
+
+      iwk(1)=nid
+      ipmax=iglmax(iwk,0)
+
+      do ip=0,ipmax
+         if (nid.eq.ip) then
+            call copy(wk1,a,nmax)
+            iwk(1)=n
+         else
+            call rzero(wk1,nmax)
+            iwk(1)=0
+         endif
+
+         iwk(1)=iglmax(iwk,1)
+
+         call gop(wk1,wk2,'+  ',nmax)
+
+         if (nid.eq.0) then
+            tt=dnekclock()
+            do i=1,iwk(1)
+               write (12,1) wk1(i)
+            enddo
+            time_dump=time_dump+(dnekclock()-tt)
+         endif
+      enddo
+
+    1 format(1pe24.16)
+
+      if (nid.eq.0) close (unit=12)
 
       return
       end
