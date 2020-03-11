@@ -639,10 +639,11 @@ c-----------------------------------------------------------------------
       call chcopy(fname(nf+1),'b',1)
       call dump_serial(gb,nsg2,fname,mid)
 
-      if (ifc) then
-         call chcopy(fname(nf+1),'c',1)
-         call dump_global(gc,nsg3,fname,mid)
-      endif
+      ! implement efficient dump_global
+c     if (ifc) then
+c        call chcopy(fname(nf+1),'c',1)
+c        call dump_global(gc,nsg3,fname,mid)
+c     endif
 
       return
       end
