@@ -630,7 +630,7 @@ c-----------------------------------------------------------------------
 
       nf=5
       call blank(fname,nf)
-      call copy(fname,pfx,3)
+      call chcopy(fname,pfx,3)
       call strip_pws(fname,nf)
 
       call chcopy(fname(nf+1),'a',1)
