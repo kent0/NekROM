@@ -571,10 +571,19 @@ c-----------------------------------------------------------------------
 
       if (ifbuoy) call rzero(gm,nsg*nsg)
 
+      tt=dnekclock()
+
       do while (ie.le.neg)
          ieg(1)=ie
          ieg(2)=min(ie+mel*mp-1,neg)
-         if (mid.eq.0) write (6,*) 'reading',ieg(1),ieg(2),'...'
+         rate=(dnekclock()-tt)/(ieg(1)-1)
+         if (mid.eq.0) then
+            if (ieg(1).eq.1) then
+               write (6,1) ieg(1),ieg(2),neg
+            else
+               write (6,2) ieg(1),ieg(2),neg,rate,(neg-ieg(1)+1)rate
+            endif
+         endif
          call loadsnaps(buf,ieg,indxr,nsg,iftherm)
          if (ieg(2).lt.0) then
             neg=ieg(1)+ieg(2)
@@ -645,6 +654,10 @@ c-----------------------------------------------------------------------
       if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
 
       if (mid.eq.0) write (6,*) 'ending gengrams'
+
+    1 format ('reading [',i8,',',i8,'] / ',i8,' ...')
+    2 format ('reading [',i8,',',i8,'] / ',i8,
+     $   ', Rate: ',1p1e12.5,', ETA: ',1p1e12.5,' ...')
 
       return
       end
