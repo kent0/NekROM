@@ -898,22 +898,29 @@ c-----------------------------------------------------------------------
 
       character*1 a(n)
 
-      nc=0
       i=0
 
       do while ((i+1).le.n.and.a(i+1).eq.' ')
          i=i+1
       enddo
 
-      do j=1,(n-i)
+      do j=1,n-i
          a(j)=a(j+i)
       enddo
 
-      do j=(n-i+1),n
+      do j=(n-i),n
          a(j)=' '
       enddo
 
-      n=n-i
+      do i=1,n-i
+         if (a(i).ne.' ') then
+            m=i
+         else
+            exit
+         endif
+      enddo
+
+      n=m
 
       return
       end
