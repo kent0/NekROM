@@ -716,8 +716,10 @@ c-----------------------------------------------------------------------
          enddo
          time_dump=time_dump+(dnekclock()-tt)
       enddo
-      call nekgsync
+
       if (mid.eq.0) close (unit=10)
+
+      call nekgsync
 
       return
       end
