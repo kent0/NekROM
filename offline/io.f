@@ -639,11 +639,10 @@ c-----------------------------------------------------------------------
       call chcopy(fname(nf+1),'b',1)
       call dump_serial(gb,nsg2,fname,mid)
 
-      ! implement efficient dump_global
-c     if (ifc) then
-c        call chcopy(fname(nf+1),'c',1)
-c        call dump_global(gc,nsg3,fname,mid)
-c     endif
+      if (ifc) then
+         call chcopy(fname(nf+1),'c',1)
+         call dump_global(gc,nsg3,fname,mid)
+      endif
 
       return
       end
@@ -925,66 +924,56 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dump_global(a,n,fname,wk1,wk2,nid)
+      subroutine dump_global(a,n,fname,nid)
 
-      real a(n),wk1(1),wk2(1)
+      real a(n)
 
       character*128 fname
       character*128 fntrunc
 
-      if (nid.eq.0) then
-         call blank(fntrunc,128)
-         len=ltruncr(fname,128)
-         call chcopy(fntrunc,fname,len)
-      endif
+      call blank(fntrunc,128)
+      len=ltruncr(fname,128)
+      call chcopy(fntrunc,fname,len)
 
-      call dump_global_helper(a,n,fntrunc,wk1,wk2,nid)
+      call dump_global_helper(a,n,fntrunc,nid)
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dump_global_helper(a,n,fname,wk1,wk2,nid)
+      subroutine dump_global_helper(a,n,fname,nid)
 
       include 'TIMES'
 
-      real a(n),wk1(1),wk2(1)
+      real a(n)
       integer iwk(1)
-
       character*128 fname
 
-      if (nid.eq.0) open (unit=12,file=fname)
-
-      iwk(1)=n
-      nmax=iglmax(iwk,1)
-
       iwk(1)=nid
-      ipmax=iglmax(iwk,0)
+      ipmax=iglmax(iwk,1)
+
+      tt=dnekclock()
 
       do ip=0,ipmax
          if (nid.eq.ip) then
-            call copy(wk1,a,nmax)
-            iwk(1)=n
-         else
-            call rzero(wk1,nmax)
-            iwk(1)=0
-         endif
+            if (nid.eq.0) then
+               write (6,*) 'writing to ',fname
+               open (unit=12,file=fname)
+            else
+               open (unit=12,file=fname,access='append')
+            endif
 
-         iwk(1)=iglmax(iwk,1)
-
-         call gop(wk1,wk2,'+  ',nmax)
-
-         if (nid.eq.0) then
-            tt=dnekclock()
-            do i=1,iwk(1)
-               write (12,1) wk1(i)
+            do i=1,n
+               write (12,1) a(i)
             enddo
-            time_dump=time_dump+(dnekclock()-tt)
+
+            close (unit=12)
          endif
+         call nekgsync
       enddo
 
-    1 format(1pe24.16)
+      time_dump=time_dump+(dnekclock()-tt)
 
-      if (nid.eq.0) close (unit=12)
+    1 format(1pe24.16)
 
       return
       end
