@@ -581,7 +581,7 @@ c-----------------------------------------------------------------------
             if (ieg(1).eq.1) then
                write (6,1) ieg(1),ieg(2),neg
             else
-               write (6,2) ieg(1),ieg(2),neg,rate,(neg-ieg(1)+1)rate
+               write (6,2) ieg(1),ieg(2),neg,rate,(neg-ieg(1)+1)*rate
             endif
          endif
          call loadsnaps(buf,ieg,indxr,nsg,iftherm)
