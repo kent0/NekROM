@@ -27,7 +27,7 @@ c     nsg=51
 
       iftherm=.true.
       ifbuoy=.true.
-      ifavg0=.true.
+      ifavg0=.false.
       ifgf=.true.
 
       call setup_proj
