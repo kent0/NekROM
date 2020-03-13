@@ -540,8 +540,8 @@ c
       return
       end
 c-----------------------------------------------------------------------
-      subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifm1)
+      subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
+     $   nsg,nb,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifm1)
 
       include 'TIMES'
 
@@ -552,7 +552,7 @@ c-----------------------------------------------------------------------
       real gf(nsg**2,lx1-2,1)
       real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
-      real buf(1),tmpf(1)
+      real buf(1),tmpf(1),gvec(nsg,nb)
 
       logical iftherm,ifdebug,ifgf,ifbuoy,ifm1
 
@@ -562,19 +562,19 @@ c-----------------------------------------------------------------------
 
       ie=1
 
-      call rzero(gb,nsg*nsg)
-      if (iftherm) call rzero(gb(1,2),nsg*nsg)
+      call rzero(gb,nb*nb)
+      if (iftherm) call rzero(gb(1,2),nb*nb)
 
       if (ifm1) then
-         call rzero(ga,nsg*nsg)
-         call rzero(gc,nsg*nsg*((nsg-1)/mp+1))
+         call rzero(ga,nb*nb)
+         call rzero(gc,nb*nb*((nb-1)/mp+1))
 
          if (iftherm) then
-            call rzero(ga(1,2),nsg*nsg)
-            call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
+            call rzero(ga(1,2),nb*nb)
+            call rzero(gc(1,2),nb*nb*((nb-1)/mp+1))
          endif
 
-         if (ifbuoy) call rzero(gm,nsg*nsg)
+         if (ifbuoy) call rzero(gm,nb*nb)
       endif
 
       tt=dnekclock()
@@ -595,47 +595,53 @@ c-----------------------------------------------------------------------
             neg=ieg(1)+ieg(2)
             exit
          endif
+
          nel=ieg(4)
+
          call setgeom(buf,nel,ifm1)
+         call transop(buf(nel*lxyz*ldim+1),buf(nel*lxyz*ldim*(nsg+1)+1),
+     $      tmpf,gvec,lxyz*nel,ldim,nsg,nb,iftherm)
+
+         write (6,*) 'nel=',nel,mel
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim,ifm1)
+     $      buf(nel*lxyz*ldim+1),nel,nb,ldim,ldim,ifm1)
          if (ifgf.and.ifm1)
-     $      call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nsg,ldim)
+     $      call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nb,ldim)
          if (iftherm) then
             call setops(ga(1,2),gb(1,2),gc(1,2),gt,
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
-     $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim,ifm1)
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),
+     $         buf(nel*lxyz*ldim+1),nel,nb,1,ldim,ifm1)
             if (ifgf) call setgf(gf(1,1,2),
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,1)
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),tmpf,nel,nb,1)
          endif
          if (ifbuoy.and.ifm1) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg)
+     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),tmpf,nel,nb)
          ie=ieg(2)+1
       enddo
 
       if (mid.eq.0) write (6,*) 'summing Gramians'
 
-      call gop(gb,gt,'+  ',nsg*nsg)
-      if (iftherm) call gop(gb(1,2),gt,'+  ',nsg*nsg)
+      call gop(gb,gt,'+  ',nb*nb)
+      if (iftherm) call gop(gb(1,2),gt,'+  ',nb*nb)
 
       if (ifm1) then
-         call gop(ga,gt,'+  ',nsg*nsg)
+         call gop(ga,gt,'+  ',nb*nb)
          if (ifgf) then
             do i=1,lx1-2
-               call gop(gf(1,i,1),gt,'+  ',nsg*nsg)
+               call gop(gf(1,i,1),gt,'+  ',nb*nb)
             enddo
          endif
 
          if (iftherm) then
-            call gop(ga(1,2),gt,'+  ',nsg*nsg)
+            call gop(ga(1,2),gt,'+  ',nb*nb)
             if (ifgf) then
                do i=1,lx1-2
-                  call gop(gf(1,i,2),gt,'+  ',nsg*nsg)
+                  call gop(gf(1,i,2),gt,'+  ',nb*nb)
                enddo
             endif
          endif
 
-         if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
+         if (ifbuoy) call gop(gm,gt,'+  ',nb*nb)
       endif
 
       if (mid.eq.0) write (6,*) 'ending gengrams'
@@ -856,6 +862,24 @@ c-----------------------------------------------------------------------
 
 c     call bip(gm,uvw,gxyz,nel,nsg,ldim)
       call bip(gm,gxyz,uvw,nel,nsg,ldim)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine transop(uvw,t,tmpf,gvec,lxyze,ldim,nsg,nb,iftherm)
+
+      real uvw(lxyze,nsg,ldim),t(lxyze,nsg),tmpf(1),gvec(1)
+      logical iftherm
+
+      do idim=1,ldim
+         call mxm(uvw(1,1,idim),lxyze,gvec,nsg,tmpf,nb)
+c        call copy(uvw(1,1+(idim-1)*nb,1),tmpf,lxyze*nb)
+      enddo
+
+      if (iftherm) then
+         call mxm(t,lxyze,gvec,nsg,gvec,nsg,tmpf,nb)
+c        call copy(t,tmpf,lxyze*nb)
+      endif
 
       return
       end

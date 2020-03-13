@@ -21,6 +21,7 @@ c-----------------------------------------------------------------------
       read (10,*) nsg
       close (unit=10)
 c     nsg=51
+      nb=nsg
 
       ifmethod1=.true.
 
@@ -33,9 +34,10 @@ c     nsg=51
       ifgf=.true.
 
       call setup_proj
+      call iden(gvec,nsg)
 
-      call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
-     $  nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifmethod1)
+      call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
+     $  nsg,nb,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifmethod1)
 
       call setg(gg,gb,gt,nsg,ifavg0)
       call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
