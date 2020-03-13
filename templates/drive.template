@@ -39,41 +39,70 @@ c     nsg=51
       call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
      $  nsg,nb,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifmethod1)
 
-      call setg(gg,gb,gt,nsg,ifavg0)
-      call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
+      if (ifmethod1) then
+         call setg(gg,gb,gt,nsg,ifavg0)
+         call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
 
-      call write_ops(ga,gb,gc,nsg**2,nsc*nsg**2,mid,' gu',.true.)
-      if (iftherm) call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
-     $   gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
-     $   nsg**2,nsc*nsg**2,mid,' gt',.true.)
+         call write_ops(ga,gb,gc,nsg**2,nsc*nsg**2,mid,' gu',.true.)
+         if (iftherm) call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
+     $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
+     $      nsg**2,nsc*nsg**2,mid,' gt',.true.)
 
-      call dump_serial(gvec,nsg*nsg,'gvec ',mid)
+         call dump_serial(gvec,nsg*nsg,'gvec ',mid)
 
-      call qop2(ga,gt,gvec,gvect,nsg,nsg1)
-      call qop2(gb,gt,gvec,gvect,nsg,nsg1)
-      call write_ops(ga,gb,gc,nsg1**2,nsc*nsg1**2,mid,'  u',.false.)
-      if (ifgf) call dump_serial(gf,nsg*nsg*(lx1-2),'gubf ',mid)
+         call qop2(ga,gt,gvec,gvect,nsg,nsg1)
+         call qop2(gb,gt,gvec,gvect,nsg,nsg1)
+         call write_ops(ga,gb,gc,nsg1**2,nsc*nsg1**2,mid,'  u',.false.)
+         if (ifgf) call dump_serial(gf,nsg*nsg*(lx1-2),'gubf ',mid)
 
-      call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'u')
+         call qop3(gc,gt,gvec,gvect,gvecc,nsg,nsg1,nsc,mid,'u')
 
-      if (iftherm) then
-         call setg(gg,gb((nsg+1)**2+1),gt,nsg,ifavg0)
-         call setq(gvec(1,2),gvect(1,2),gvecc(1,2),gval,gg,
-     $      nsg,nsc,mp,mid,ifavg0,nsg1)
-         call qop2(ga((nsg+1)**2+1),gt,gvec(1,2),gvect(1,2),nsg,nsg1)
-         call qop2(gb((nsg+1)**2+1),gt,gvec(1,2),gvect(1,2),nsg,nsg1)
-         call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
-     $      gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1**2,nsc*nsg1**2,
-     $      mid,'  t',.false.)
+         if (iftherm) then
+            call setg(gg,gb((nsg+1)**2+1),gt,nsg,ifavg0)
+            call setq(gvec(1,2),gvect(1,2),gvecc(1,2),gval,gg,
+     $         nsg,nsc,mp,mid,ifavg0,nsg1)
+            call qop2(ga((nsg+1)**2+1),gt,gvec(1,2),gvect(1,2),nsg,nsg1)
+            call qop2(gb((nsg+1)**2+1),gt,gvec(1,2),gvect(1,2),nsg,nsg1)
+            call write_ops(ga((nsg+1)**2+1),gb((nsg+1)**2+1),
+     $         gc(((nsg-1)/mp+2)*(nsg+1)**2+1),nsg1**2,nsc*nsg1**2,
+     $         mid,'  t',.false.)
 
-         write (6,*) 'nsg',nsg,nsg1,nsc
-         call qop3(gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
-     $        gt,gvec(1,2),gvect(1,2),gvecc,nsg,nsg1,nsc,mid,'t')
-      endif
+            write (6,*) 'nsg',nsg,nsg1,nsc
+            call qop3(gc(((nsg-1)/mp+2)*(nsg+1)**2+1),
+     $           gt,gvec(1,2),gvect(1,2),gvecc,nsg,nsg1,nsc,mid,'t')
+         endif
 
-      if (ifbuoy) then
-         call qop2(gm,gt,gvec(1,2),gvect,nsg,nsg1)
-         call dump_serial(gm,nsg1*nsg1,'but ',mid)
+         if (ifbuoy) then
+            call qop2(gm,gt,gvec(1,2),gvect,nsg,nsg1)
+            call dump_serial(gm,nsg1*nsg1,'but ',mid)
+         endif
+      else
+         nsc=1
+         call setg(gg,gb,gt,nsg,ifavg0)
+         call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
+         call write_ops(ga,gb,gc,nsg**2,nsc*nsg**2,mid,' gu',.true.)
+         nb=nsg+1
+
+         call dump_serial(gvec,nsg*nb,'gvec ',mid)
+
+         if (iftherm) call write_ops(ga((nb+1)**2+1),gb((nb+1)**2+1),
+     $      gc(((nb-1)/mp+2)*(nb+1)**2+1),
+     $      nsg**2,nsc*nsg**2,mid,' gt',.true.)
+
+         do i=1,nb
+            write (6,*) i,gvec(i,1),'gevec'
+         enddo
+
+         call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
+     $     nsg,nsg1,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,.true.)
+         call dump_serial(ga,nb*nb,'ua ',mid)
+         call dump_serial(gb,nb*nb,'ub ',mid)
+         call dump_serial(gc,nb*nb*nb,'uc ',mid)
+         if (iftherm) then
+            call dump_serial(ga((nb+1)**2+1),nb*nb,'ta ',mid)
+            call dump_serial(gb((nb+1)**2+1),nb*nb,'tb ',mid)
+            call dump_serial(gc(nsc*(nb+1)**2+1),nb*nb*nsc,'tc ',mid)
+         endif
       endif
 
       time_off=dnekclock()-ttt

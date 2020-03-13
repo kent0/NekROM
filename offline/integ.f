@@ -548,10 +548,10 @@ c-----------------------------------------------------------------------
       common /nekmpi/ mid
 
       integer ieg(1),indxr(1)
-      real ga((nsg+1)**2,1),gb((nsg+1)**2,1),gm(1)
-      real gf(nsg**2,lx1-2,1)
-      real gc(((nsg-1)/mp+2)*(nsg+1)**2,1)
-      real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
+      real ga((nb+1)**2,1),gb((nb+1)**2,1),gm(1)
+      real gf(nb**2,lx1-2,1)
+      real gc(((nb-1)/mp+2)*(nb+1)**2,1)
+      real gt(((nb-1)/mp+2)*(nb+1)**2,1)
       real buf(1),tmpf(1),gvec(nsg,nb)
 
       logical iftherm,ifdebug,ifgf,ifbuoy,ifm1
@@ -609,13 +609,13 @@ c-----------------------------------------------------------------------
      $      call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nb,ldim)
          if (iftherm) then
             call setops(ga(1,2),gb(1,2),gc(1,2),gt,
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
      $         buf(nel*lxyz*ldim+1),nel,nb,1,ldim,ifm1)
             if (ifgf) call setgf(gf(1,1,2),
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),tmpf,nel,nb,1)
+     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nb,1)
          endif
          if (ifbuoy.and.ifm1) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nb+1),tmpf,nel,nb)
+     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nb)
          ie=ieg(2)+1
       enddo
 
