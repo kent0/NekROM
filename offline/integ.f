@@ -873,12 +873,12 @@ c-----------------------------------------------------------------------
 
       do idim=1,ldim
          call mxm(uvw(1,1,idim),lxyze,gvec,nsg,tmpf,nb)
-c        call copy(uvw(1,1+(idim-1)*nb,1),tmpf,lxyze*nb)
+         call copy(uvw(1,1+(idim-1)*nb,1),tmpf,lxyze*nb)
       enddo
 
       if (iftherm) then
-         call mxm(t,lxyze,gvec,nsg,gvec,nsg,tmpf,nb)
-c        call copy(t,tmpf,lxyze*nb)
+         call mxm(t,lxyze,gvec,nsg,tmpf,nb)
+         call copy(t,tmpf,lxyze*nb)
       endif
 
       return
