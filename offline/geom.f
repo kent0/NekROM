@@ -1,10 +1,11 @@
 c-----------------------------------------------------------------------
-      subroutine setgeom(xyz,nel)
+      subroutine setgeom(xyz,nel,ifm1)
 
       include 'LVAR'
       include 'INTEG'
 
       real xyz(1)
+      logical ifm1
 
       n=lxyz*nel
 
@@ -14,7 +15,7 @@ c-----------------------------------------------------------------------
 
       call glmapm1(nel)
       call geodat1(nel)
-      call setrx(nel)
+      if (ifm1) call setrx(nel)
 
       return
       end

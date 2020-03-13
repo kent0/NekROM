@@ -9,7 +9,7 @@ c-----------------------------------------------------------------------
 
       common /nekmpi/ mid,mp,nekcomm,nekgroup,nekreal
       character*132 fname
-      logical ifavg0,iftherm,ifgf,ifbuoy
+      logical ifavg0,iftherm,ifgf,ifbuoy,ifmethod1
 
       call reset_times
       call offline_init(icomm)
@@ -22,6 +22,8 @@ c-----------------------------------------------------------------------
       close (unit=10)
 c     nsg=51
 
+      ifmethod1=.true.
+
       neg=9
       mel=1
 
@@ -33,7 +35,7 @@ c     nsg=51
       call setup_proj
 
       call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
-     $  nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf)
+     $  nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifmethod1)
 
       call setg(gg,gb,gt,nsg,ifavg0)
       call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)

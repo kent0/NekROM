@@ -1,11 +1,14 @@
 c-----------------------------------------------------------------------
-      subroutine setops(a,b,c,wk,t,u,nel,nb,mdim,ndim)
+      subroutine setops(a,b,c,wk,t,u,nel,nb,mdim,ndim,ifm1)
 
       real a(1),b(1),c(1),t(1),u(1)
+      logical ifm1
 
       call bip(b,t,t,nel,nb,mdim)
-      call aip(a,t,t,nel,nb,mdim)
-      call cip(c,t,t,u,nel,nb,mdim,ndim)
+      if (ifm1) then
+         call aip(a,t,t,nel,nb,mdim)
+         call cip(c,t,t,u,nel,nb,mdim,ndim)
+      endif
 
       return
       end
@@ -538,7 +541,7 @@ c
       end
 c-----------------------------------------------------------------------
       subroutine gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,ieg,indxr,
-     $   nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf)
+     $   nsg,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,ifm1)
 
       include 'TIMES'
 
@@ -551,7 +554,7 @@ c-----------------------------------------------------------------------
       real gt(((nsg-1)/mp+2)*(nsg+1)**2,1)
       real buf(1),tmpf(1)
 
-      logical iftherm,ifdebug,ifgf,ifbuoy
+      logical iftherm,ifdebug,ifgf,ifbuoy,ifm1
 
       if (mid.eq.0) write (6,*) 'starting gengrams'
 
@@ -559,17 +562,20 @@ c-----------------------------------------------------------------------
 
       ie=1
 
-      call rzero(ga,nsg*nsg)
       call rzero(gb,nsg*nsg)
-      call rzero(gc,nsg*nsg*((nsg-1)/mp+1))
+      if (iftherm) call rzero(gb(1,2),nsg*nsg)
 
-      if (iftherm) then
-         call rzero(ga(1,2),nsg*nsg)
-         call rzero(gb(1,2),nsg*nsg)
-         call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
+      if (ifm1) then
+         call rzero(ga,nsg*nsg)
+         call rzero(gc,nsg*nsg*((nsg-1)/mp+1))
+
+         if (iftherm) then
+            call rzero(ga(1,2),nsg*nsg)
+            call rzero(gc(1,2),nsg*nsg*((nsg-1)/mp+1))
+         endif
+
+         if (ifbuoy) call rzero(gm,nsg*nsg)
       endif
-
-      if (ifbuoy) call rzero(gm,nsg*nsg)
 
       tt=dnekclock()
 
@@ -590,68 +596,47 @@ c-----------------------------------------------------------------------
             exit
          endif
          nel=ieg(4)
-         if (ifdebug) then
-            open (unit=100,file='xyz')
-            if (ldim.eq.3) then
-               do i=1,lxyz
-                  write (100,*) buf(i),buf(i+lxyz),buf(i+lxyz*2)
-               enddo
-            else
-               do i=1,lxyz
-                  write (100,*) buf(i),buf(i+lxyz)
-               enddo
-            endif
-            close (unit=100)
-            open (unit=100,file='uvw')
-            if (ldim.eq.3) then
-               do i=1,lxyz
-                  write (100,*) buf(i+lxyz*3),buf(i+lxyz*3+nsg*lxyz*nel)
-     $               ,buf(i+lxyz*3+nsg*lxyz*nel*2)
-               enddo
-            else
-               do i=1,lxyz
-                  write (100,*) buf(i+lxyz*2),buf(i+lxyz*2+nsg*lxyz*nel)
-               enddo
-            endif
-         close (unit=100)
-         endif
-         call setgeom(buf,nel)
+         call setgeom(buf,nel,ifm1)
          call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim)
-         if (ifgf) call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nsg,ldim)
+     $      buf(nel*lxyz*ldim+1),nel,nsg,ldim,ldim,ifm1)
+         if (ifgf.and.ifm1)
+     $      call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nsg,ldim)
          if (iftherm) then
             call setops(ga(1,2),gb(1,2),gc(1,2),gt,
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
-     $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim)
+     $         buf(nel*lxyz*ldim+1),nel,nsg,1,ldim,ifm1)
             if (ifgf) call setgf(gf(1,1,2),
      $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg,1)
          endif
-         if (ifbuoy) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
+         if (ifbuoy.and.ifm1) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
      $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nsg)
          ie=ieg(2)+1
       enddo
 
       if (mid.eq.0) write (6,*) 'summing Gramians'
 
-      call gop(ga,gt,'+  ',nsg*nsg)
       call gop(gb,gt,'+  ',nsg*nsg)
-      if (ifgf) then
-         do i=1,lx1-2
-            call gop(gf(1,i,1),gt,'+  ',nsg*nsg)
-         enddo
-      endif
+      if (iftherm) call gop(gb(1,2),gt,'+  ',nsg*nsg)
 
-      if (iftherm) then
-         call gop(ga(1,2),gt,'+  ',nsg*nsg)
-         call gop(gb(1,2),gt,'+  ',nsg*nsg)
+      if (ifm1) then
+         call gop(ga,gt,'+  ',nsg*nsg)
          if (ifgf) then
             do i=1,lx1-2
-               call gop(gf(1,i,2),gt,'+  ',nsg*nsg)
+               call gop(gf(1,i,1),gt,'+  ',nsg*nsg)
             enddo
          endif
-      endif
 
-      if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
+         if (iftherm) then
+            call gop(ga(1,2),gt,'+  ',nsg*nsg)
+            if (ifgf) then
+               do i=1,lx1-2
+                  call gop(gf(1,i,2),gt,'+  ',nsg*nsg)
+               enddo
+            endif
+         endif
+
+         if (ifbuoy) call gop(gm,gt,'+  ',nsg*nsg)
+      endif
 
       if (mid.eq.0) write (6,*) 'ending gengrams'
 
