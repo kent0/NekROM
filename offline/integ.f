@@ -585,7 +585,8 @@ c-----------------------------------------------------------------------
          nel=ieg(4)
 
          call setgeom(buf,nel,ifm1)
-         call transop(buf(nel*lxyz*ldim+1),buf(nel*lxyz*ldim*(nsg+1)+1),
+         call transop(buf(nel*lxyz*ldim+1),
+     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
      $      tmpf,gvec,lxyz*nel,ldim,nsg,nb,iftherm)
 
          write (6,*) 'nel=',nel,mel
@@ -854,7 +855,7 @@ c     call bip(gm,uvw,gxyz,nel,nsg,ldim)
 c-----------------------------------------------------------------------
       subroutine transop(uvw,t,tmpf,gvec,lxyze,ldim,nsg,nb,iftherm)
 
-      real uvw(lxyze,nsg,ldim),t(lxyze,nsg),tmpf(1),gvec(1)
+      real uvw(lxyze,nsg,ldim),t(lxyze,nsg),tmpf(1),gvec(nsg*nb,2)
       logical iftherm
 
       do idim=1,ldim
@@ -863,7 +864,7 @@ c-----------------------------------------------------------------------
       enddo
 
       if (iftherm) then
-         call mxm(t,lxyze,gvec,nsg,tmpf,nb)
+         call mxm(t,lxyze,gvec(1,2),nsg,tmpf,nb)
          call copy(t,tmpf,lxyze*nb)
       endif
 
