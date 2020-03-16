@@ -846,7 +846,6 @@ c-----------------------------------------------------------------------
       call copy(gxyz(1,ldim),t,nel*lxyz*nsg)
       call chsign(gxyz(1,ldim),nel*lxyz*nsg)
 
-c     call bip(gm,uvw,gxyz,nel,nsg,ldim)
       call bip(gm,gxyz,uvw,nel,nsg,ldim)
 
       return
