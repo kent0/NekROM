@@ -97,6 +97,8 @@ c     nsg=51
          enddo
 
          nb=nsg
+         call dump_serial(gvec,nsg*nb*2,'gvec ',mid)
+
          call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
      $     nsg,nb,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,.true.)
 
