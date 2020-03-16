@@ -583,26 +583,25 @@ c-----------------------------------------------------------------------
          endif
 
          nel=ieg(4)
+         iuvw=lxyz*nel*ldim+1
+         it=iuvw
+         if (iftherm) it=it+lxyz*nel*ldim*nsg
 
          call setgeom(buf,nel,ifm1)
-         call transop(buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
-     $      tmpf,gvec,lxyz*nel,ldim,nsg,nb,iftherm)
+         call transop(buf(iuvw),buf(it),tmpf,gvec,
+     $      lxyz*nel,ldim,nsg,nb,iftherm)
 
-         write (6,*) 'nel=',nel,mel
-         call setops(ga,gb,gc,gt,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+1),nel,nb,ldim,ldim,ifm1)
+         call setops(ga,gb,gc,gt,buf(iuvw),buf(iuvw),
+     $      nel,nb,ldim,ldim,ifm1)
          if (ifgf.and.ifm1)
-     $      call setgf(gf,buf(nel*lxyz*ldim+1),tmpf,nel,nb,ldim)
+     $      call setgf(gf,buf(iuvw),tmpf,nel,nb,ldim)
          if (iftherm) then
-            call setops(ga(1,2),gb(1,2),gc(1,2),gt,
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),
-     $         buf(nel*lxyz*ldim+1),nel,nb,1,ldim,ifm1)
-            if (ifgf) call setgf(gf(1,1,2),
-     $         buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nb,1)
+            call setops(ga(1,2),gb(1,2),gc(1,2),gt,buf(it),buf(iuvw),
+     $         nel,nb,1,ldim,ifm1)
+            if (ifgf) call setgf(gf(1,1,2),buf(it),tmpf,nel,nb,1)
          endif
-         if (ifbuoy.and.ifm1) call setgm(gm,buf,buf(nel*lxyz*ldim+1),
-     $      buf(nel*lxyz*ldim+nel*lxyz*ldim*nsg+1),tmpf,nel,nb)
+         if (ifbuoy.and.ifm1) call setgm(gm,buf,buf(iuvw),buf(it),
+     $      tmpf,nel,nb)
          ie=ieg(2)+1
       enddo
 
