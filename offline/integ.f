@@ -765,9 +765,8 @@ c-----------------------------------------------------------------------
 
       call settranspose(qut,qu,nsg,nsg1)
 
-      do i=1,nsg
-         if (mod(i-1,mp).eq.mid) nsc=(i-1)/mp+1
-      enddo
+      nsc=nsg
+      call setnsc(nsc,mid,mp)
 
       do j=1,nsg1
       do i=1,nsc
