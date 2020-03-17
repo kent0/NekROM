@@ -687,8 +687,7 @@ c-----------------------------------------------------------------------
          tt=dnekclock()
          do j=0,nsg1-1
          do i=0,nsg1-1
-            if (mid.eq.0) write (10,*)
-     $         gt(1+i+j*(nsg1))
+            if (mid.eq.0) write (10,*) gt(1+i+j*(nsg1))
          enddo
          enddo
          time_dump=time_dump+(dnekclock()-tt)
