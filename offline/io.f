@@ -865,20 +865,26 @@ c-----------------------------------------------------------------------
          len=ltruncr(fname,128)
          call chcopy(fntrunc,fname,len)
 
-         call dump_serial_helper(a,n,fntrunc)
+         call dump_serial_helper(a,n,fntrunc,.false.)
       endif
 
       return
       end
 c-----------------------------------------------------------------------
-      subroutine dump_serial_helper(a,n,fname)
+      subroutine dump_serial_helper(a,n,fname,ifappend)
 
       include 'TIMES'
 
       real a(n)
       character*128 fname
+      logical ifappend
 
-      open (unit=12,file=fname)
+      if (ifappend) then
+         open (unit=12,file=fname,access='append')
+      else
+         open (unit=12,file=fname)
+      endif
+
       write (6,*) 'writing to ',fname
 
       tt=dnekclock()
