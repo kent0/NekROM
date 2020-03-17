@@ -78,7 +78,9 @@ c     nsg=51
             call dump_serial(gm,nsg1*nsg1,'but ',mid)
          endif
       else
-         nsc=1
+         nb=nsg
+         nsc=nb
+         call setnsc(nsc,mid,mp)
          call setg(gg,gb,gt,nsg,ifavg0)
          call setq(gvec,gvect,gvecc,gval,gg,nsg,nsc,mp,mid,ifavg0,nsg1)
          call write_ops(ga,gb,gc,nsg**2,nsc*nsg**2,mid,' gu',.true.)
@@ -96,19 +98,21 @@ c     nsg=51
             write (6,*) i,gvec(i,1),'gevec'
          enddo
 
-         nb=nsg
-         call dump_serial(gvec,nsg*nb*2,'gvec ',mid)
+         call dump_serial(gvec,nsg*nb,'gvec1 ',mid)
+         if (iftherm)
+     $      call dump_serial(gvec(nsg*nsg+1,1),nsg*nb,'gvec2 ',mid)
 
          call gengrams(ga,gb,gc,gm,gf,gt,buf,tmpf,gvec,ieg,indxr,
      $     nsg,nb,mp,neg,mel,ldim,lx1,lxyz,iftherm,ifbuoy,ifgf,.true.)
 
          call dump_serial(ga,nb*nb,'ua ',mid)
          call dump_serial(gb,nb*nb,'ub ',mid)
-         call dump_serial(gc,nb*nb*nb,'uc ',mid)
+         call dump_global_shuffle(gc,nb*nb,nb,'uc ',mid)
          if (iftherm) then
             call dump_serial(ga((nb+1)**2+1),nb*nb,'ta ',mid)
             call dump_serial(gb((nb+1)**2+1),nb*nb,'tb ',mid)
-            call dump_serial(gc((nb+1)**3+1),nb*nb*nb,'tc ',mid)
+            call dump_global_shuffle(gc(((nb-1)/mp+2)*(nb+1)**2+1),
+     $         nb*nb,nb,'tc ',mid)
          endif
       endif
 

@@ -899,6 +899,34 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine dump_global_shuffle(a,n,m,fname,nid)
+
+      real a(n,1)
+
+      character*128 fname
+      character*128 fntrunc
+      logical ifappend
+
+      ifappend=.false.
+
+      np=iglmax(nid,1)+1
+
+      call blank(fntrunc,128)
+      len=ltruncr(fname,128)
+      call chcopy(fntrunc,fname,len)
+
+      do i=1,m
+         id=mod(i-1,np)
+         k=(i-1)/np+1
+         if (nid.eq.id)
+     $      call dump_serial_helper(a(1,k),n,fntrunc,ifappend)
+         ifappend=.true.
+         call nekgsync
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine strip_pws(a,n)
 
       character*1 a(n)
