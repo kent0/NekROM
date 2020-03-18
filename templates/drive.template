@@ -114,6 +114,10 @@ c     nsg=51
             call dump_global_shuffle(gc(((nb-1)/mp+2)*(nb+1)**2+1),
      $         nb*nb,nb,'tc ',mid)
          endif
+
+         if (ifbuoy) then
+            call dump_serial(gm,nsg1*nsg1,'but ',mid)
+         endif
       endif
 
       time_off=dnekclock()-ttt
