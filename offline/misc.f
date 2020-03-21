@@ -128,3 +128,22 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine facind (kx1,kx2,ky1,ky2,kz1,kz2,nx,ny,nz,iface)
+
+      kx1=1
+      ky1=1
+      kz1=1
+      kx2=nx
+      ky2=ny
+      z2=nz
+
+      if (iface.eq.1) ky2=1
+      if (iface.eq.2) kx1=nx
+      if (iface.eq.3) ky1=ny
+      if (iface.eq.4) kx2=1
+      if (iface.eq.5) kz2=1
+      if (iface.eq.6) kz1=nz
+
+      return
+      end
+c-----------------------------------------------------------------------

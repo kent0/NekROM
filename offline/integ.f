@@ -867,3 +867,38 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine surf1(s,a,u,iel,ifc,ifreduce)
+
+      include 'LVAR'
+      include 'INTEG'
+
+      real u(lx1,ly1,lz1,1),t1(2),t2(2)
+      logical ifreduce
+
+      a=0.
+      s=0.
+
+      call facind(kx1,kx2,ky1,ky2,kz1,kz2,lx1,ly1,lz1,ifc)
+
+      l=0
+      do iz=kz1,kz2
+      do iy=ky1,ky2
+      do ix=kx1,kx2
+         l=l+1
+         a=a+area(l,1,ifc,iel)
+         s=s+area(l,1,ifc,iel)*u(ix,iy,iz,iel)
+      enddo
+      enddo
+      enddo
+
+      if (ifreduce) then
+         t1(1)=s
+         t1(2)=a
+         call gop(t1,t2,'+  ',2)
+         s=t1(1)
+         a=t1(2)
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
