@@ -386,6 +386,10 @@ c-----------------------------------------------------------------------
          endif
       endif
 
+      ! EIM
+
+      call finiparser_getbool(i_out,'eim:convection',ifnd)
+      if (ifnd.eq.1) ifeimc=i_out.eq.1
 
       if (ierr.eq.0) call finiparser_dump()
 
@@ -461,6 +465,7 @@ c-----------------------------------------------------------------------
       call bcast(ifbuoy,lsize)
 
       call bcast(ifpb,lsize)
+      call bcast(ifeimc,lsize)
 
       return
       END
