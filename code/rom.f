@@ -196,6 +196,9 @@ c-----------------------------------------------------------------------
       include 'AVG'
       include 'INPUT'
 
+      include 'MASS'
+c     include 'MOR'
+
       logical iftmp,ifexist
       integer num_ts
 
@@ -240,6 +243,35 @@ c-----------------------------------------------------------------------
 
 c     call average_in_xy
 c     call average_in_y
+
+c     call setc_eim(1)
+c     call setc_eim(2)
+
+c     call ps2b(ut,ts0,tb)
+c     call pv2b(u,us0(1,1,1),us0(1,2,1),us0(1,3,1),ub,vb,wb)
+
+c     do i=1,nb
+c        call add2s2(ts0,tb(1,i),-ut(i),n)
+c     enddo
+c     err=sqrt(glsc3(ts0,ts0,bm1,n)/volvm1)
+c     write (6,*) nb,err,'err_tb'
+
+c     do i=1,nb
+c        call add2s2(us0(1,1,1),ub(1,i),-u(i),n)
+c        call add2s2(us0(1,2,1),vb(1,i),-u(i),n)
+c        if (ldim.eq.3) call add2s2(us0(1,3,1),wb(1,i),-u(i),n)
+c     enddo
+
+c     err=sqrt(glsc3(us0(1,1,1),us0(1,1,1),bm1,n)/volvm1)
+c     write (6,*) nb,err,'err_ub1'
+c     err=sqrt(glsc3(us0(1,2,1),us0(1,2,1),bm1,n)/volvm1)
+c     write (6,*) nb,err,'err_ub2'
+
+c     if (ldim.eq.3) then
+c        err=sqrt(glsc3(us0(1,3,1),us0(1,3,1),bm1,n)/volvm1)
+c        write (6,*) nb,err,'err_ub3'
+c     endif
+
       call setops
       call setu
 
@@ -334,6 +366,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'MOR'
       include 'TSTEP'
+      include 'SOLN'
 
       common /tmpop/ ftmp0(0:lb,0:lb)
 
@@ -347,6 +380,8 @@ c-----------------------------------------------------------------------
       call nekgsync
       ops_time=dnekclock()
 
+      ifeimc=.true.
+
       jfield=ifield
       if (ifrom(1)) then
          ifield=1
@@ -357,10 +392,14 @@ c-----------------------------------------------------------------------
             inquire (file='ops/u0',exist=ifexist)
             if (ifexist) call read_serial(u,nb+1,'ops/u0 ',wk,nid)
             call set_cp(cua,cub,cuc,cp_uw,cuj0,cu0k,cul,'ops/cu ',u)
+         else if (ifeimc) then
+            call setc_eim(1)
+            call setc(cul,'ops/cu ')
          else
             call setc(cul,'ops/cu ')
          endif
       endif
+
       if (ifrom(2)) then
          ifield=2
          call seta(at,at0,'ops/at ')
@@ -370,11 +409,39 @@ c-----------------------------------------------------------------------
             inquire (file='ops/t0',exist=ifexist)
             if (ifexist) call read_serial(ut,nb+1,'ops/t0 ',wk,nid)
             call set_cp(cta,ctb,ctc,cp_tw,ctj0,ct0k,ctl,'ops/ct ',ut)
+         else if (ifeimc) then
+            call setc_eim(2)
+            call setc(ctl,'ops/ct ')
          else
             call setc(ctl,'ops/ct ')
          endif
          call sets(st0,tb,'ops/ct ')
       endif
+
+      do i=1,ncb
+         call outpost(
+     $      cbu(1,i,1),cbu(1,i,2),cbu(1,i,3),pr,cbt(1,i),'cut')
+      enddo
+
+      nv=lx1*ly1*lz1*nelv
+         call rzero(snaptmp(1,1,1),nv)
+         call rzero(snaptmp(1,2,1),nv)
+         call rzero(snaptmp(1,3,1),nv)
+         call rzero(snaptmp(1,4,1),nv)
+
+      do i=1,ncb
+         if (irks_deim(i,1).eq.nid) snaptmp(ipts_deim(i,1),1,1)=
+     $      snaptmp(ipts_deim(i,1),1,1)+1.
+         if (irks_deim(i,2).eq.nid) snaptmp(ipts_deim(i,2),2,1)=
+     $      snaptmp(ipts_deim(i,2),1,1)+1.
+         if (irks_deim(i,3).eq.nid) snaptmp(ipts_deim(i,3),3,1)=
+     $      snaptmp(ipts_deim(i,3),1,1)+1.
+         if (irks_deim(i,4).eq.nid) snaptmp(ipts_deim(i,4),4,1)=
+     $      snaptmp(ipts_deim(i,4),1,1)+1.
+
+         call outpost(snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $      pr,snaptmp(1,4,1),'pts')
+      enddo
 
       if (rmode.eq.'AEQ') call setfluc(fv_op,ft_op,'fluc')
 
@@ -1251,6 +1318,98 @@ c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
       return
       end
 c-----------------------------------------------------------------------
+      subroutine setc_eim(jfield)
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      common /scrkk_1/ tx(lt),ty(lt),tz(lt)
+      common /scrkk_2/ err(lt,3),cu1(lt),cu2(lt),cu3(lt)
+      common /scrkk_3/ rwkm1(lcb*lcb,3),rwkm2(lcb*lcb,3),wk(lt,ldim)
+
+      common /eim/ ux(lub),uy(lub),uz(lub),dxt(ltb),dyt(ltb),dzt(ltb),
+     $             w1(lb,lcb),w2(lb,lcb),wk_eim(lb,lcb)
+
+      if (nio.eq.0) write (6,*) 'start of setc_eim',jfield
+
+      nv=lx1*ly1*lz1*nelv
+
+      ifld=ifield
+      ifield=jfield
+
+c     ncb=nb*2
+c     ncb=10
+
+      if (jfield.eq.1) then
+         do idim=1,ldim
+            do is=1,ns
+               call evalcflds(
+     $            snaptmp(1,is,1),us0(1,1,is),us0(1,idim,is),1,1)
+            enddo
+            call pod(cbu(1,1,idim),evec(1,1,0),eval(1,0),ug(1,1,0),
+     $         snaptmp,1,'L2 ',ncb,ns,.true.)
+            call deim_fpts(itmp1,itmp2,cbu(1,1,idim),ncb)
+            call icopy(ipts_deim(1,idim),itmp1,ncb*nb)
+            call icopy(irks_deim(1,idim),itmp2,ncb*nb)
+
+            if (idim.eq.1) call set_intp_eim(uvw_eim(1,1),
+     $         uxyz_eim,ub,vb,wb,ub,itmp1,itmp2,wk_eim,nb,ncb)
+
+            if (idim.eq.2) call set_intp_eim(uvw_eim(1,2),
+     $         vxyz_eim,ub,vb,wb,vb,itmp1,itmp2,wk_eim,nb,ncb)
+
+            if (idim.eq.3) call set_intp_eim(uvw_eim(1,3),
+     $         wxyz_eim,ub,vb,wb,wb,itmp1,itmp2,wk_eim,nb,ncb)
+
+            if (idim.eq.1) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
+     $         ub,vb,wb,ub,wk,nb,.false.)
+
+            if (idim.eq.2) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
+     $         ub,vb,wb,vb,wk,nb,.true.)
+
+            if (idim.eq.3) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
+     $         ub,vb,wb,wb,wk,nb,.true.)
+
+            if (idim.eq.1) call set_c_eim3(
+     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
+     $         itmp1,itmp2,ipiv,nb,ncb,ub(1,1),cbu(1,1,idim),bm1,nv)
+
+            if (idim.eq.2) call set_c_eim3(
+     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
+     $         itmp1,itmp2,ipiv,nb,ncb,vb(1,1),cbu(1,1,idim),bm1,nv)
+
+            if (idim.eq.3) call set_c_eim3(
+     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
+     $         itmp1,itmp2,ipiv,nb,ncb,wb(1,1),cbu(1,1,idim),bm1,nv)
+         enddo
+      else if (jfield.eq.2) then
+         call evalcflds(snaptmp,us0,ts0,1,ns)
+         call pod(cbt,evec(1,1,0),eval(1,0),ug(1,1,0),snaptmp,
+     $      1,'L2 ',ncb,ns,.true.)
+         call deim_fpts(itmp1,itmp2,cbt,ncb)
+         call icopy(ipts_deim(1,4),itmp1,ncb*nb)
+         call icopy(irks_deim(1,4),itmp2,ncb*nb)
+
+         call set_intp_eim(uvw_eim(1,4),
+     $      txyz_eim,ub,vb,wb,tb,itmp1,itmp2,wk_eim,nb,ncb)
+
+         call set_c_eim012(ct_eim0,ct_eim1,ct_eim2,ub,vb,wb,tb,
+     $      wk,nb,.false.)
+
+        call set_c_eim3(ct_eim3,ct_eim3_,w1,w2,itmp1,itmp2,ipiv,nb,ncb,
+     $      tb(1,1),cbt,bm1,nv)
+      endif
+
+      ifield=ifld
+
+      if (nio.eq.0) write (6,*) 'end of setc_eim',jfield
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine seta(a,a0,fname)
 
       include 'SIZE'
@@ -1871,6 +2030,567 @@ c-----------------------------------------------------------------------
       call calc_dudn(dudn,tt)
       sf=1./dudn
       call cmult(tt,sf,nt)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_c_eim012(c_eim0,c_eim1,c_eim2,ub,vb,wb,tb,
+     $   wk,nb,ifcf)
+
+      include 'SIZE'
+      include 'INPUT'
+      include 'LMOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      common /morconvect/ c1v(lxd*lyd*lzd*lelm,0:lub),
+     $                    c2v(lxd*lyd*lzd*lelm,0:lub),
+     $                    c3v(lxd*lyd*lzd*lelm,0:lub),
+     $                    u1v(lxd*lyd*lzd*lelm,0:lub),
+     $                    u2v(lxd*lyd*lzd*lelm,0:lub),
+     $                    u3v(lxd*lyd*lzd*lelm,0:lub)
+
+      real c_eim0(1),c_eim1(1),c_eim2(1)
+      real ub(lt,0:nb),vb(lt,0:nb),wb(lt,0:nb)
+      real wk(lt,ldim),tb(lt,0:nb)
+
+      logical ifcf
+
+      nv=lx1*ly1*lz1*nelv
+
+      if (.not.ifaxis) then
+         do i=0,nb
+            if (.not.ifcf) then
+               call set_convect_new(c1v(1,i),c2v(1,i),c3v(1,i),
+     $                              ub(1,i),vb(1,i),wb(1,i))
+            endif
+            call intp_rstd_all(u1v(1,i),tb(1,i),nelv)
+         enddo
+      endif
+
+      if (.not.ifcf) then
+         call rzero(c_eim0,nb)
+         call rzero(c_eim1,nb*nb)
+         call rzero(c_eim2,nb*nb)
+      endif
+
+      call cct(wk,0,0)
+      do i=1,nb
+         c_eim0(i)=c_eim0(i)+glsc2(wk,tb(1,i),nv)
+      enddo
+
+      do j=1,nb
+         call cct(wk,0,j)
+         do i=1,nb
+            c_eim1(i+(j-1)*nb)=c_eim1(i+(j-1)*nb)
+     $         +glsc2(wk,tb(1,i),nv)
+         enddo
+      enddo
+
+      do j=1,nb
+         call cct(wk,j,0)
+         do i=1,nb
+            c_eim2(i+(j-1)*nb)=c_eim2(i+(j-1)*nb)
+     $         +glsc2(wk,tb(1,i),nv)
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine setc_eim3(cu_eim3,cb,uvwb,nndim,nb)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine evalcflds(cfld,us0,ts0,mdim,ns)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /scrkk3/ wk(lt,3)
+      
+      real us0(lt,ldim,ns),ts0(lt,mdim,ns)
+      real cfld(lt,mdim,ns)
+
+      nv=lx1*ly1*lz1*nelv
+
+      do is=1,ns
+         do idim=1,mdim
+            call gradm1(wk(1,1),wk(1,2),wk(1,3),ts0(1,idim,is))
+            call col3(cfld(1,idim,is),us0(1,1,is),wk(1,1),nv)
+            call add2col2(cfld(1,idim,is),us0(1,2,is),wk(1,2),nv)
+            if (ldim.eq.3)
+     $         call add2col2(cfld(1,idim,is),us0(1,3,is),wk(1,3),nv)
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine evalcflds_probe(cfld,us0,ts0,mdim,ns,ipts)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /scrttt/ wk(lt,3)
+      
+      real us0(lt,ldim,ns),ts0(lt,mdim,ns)
+      real cfld(lt,mdim,ns)
+
+      integer ipts(1)
+
+      nv=lx1*ly1*lz1*nelv
+
+      do is=1,ns
+         do idim=1,mdim
+            call gradm1(wk(1,1),wk(1,2),wk(1,3),ts0(1,idim,is))
+            call col3(cfld(1,idim,is),us0(1,1,is),wk(1,1),nv)
+            call add2col2(cfld(1,idim,is),us0(1,2,is),wk(1,2),nv)
+            if (ldim.eq.3)
+     $         call add2col2(cfld(1,idim,is),us0(1,3,is),wk(1,3),nv)
+         enddo
+      enddo
+
+      write (6,*) 'evc',wk(ipts(1),1),wk(ipts(1),2)
+      write (6,*) 'evc',us0(ipts(1),1,1),us0(ipts(1),2,1)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine ugradt(wk,uvw,gradt,mdimt)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real wk(lt,mdimt),uvw(lt,ldim),gradt(lt,ldim,mdimt)
+
+      nv=lx1*ly1*lz1*nelv
+
+      do idim=1,mdimt
+         if (ldim.eq.2) then
+            do i=1,nv
+               wk(i,idim)=gradt(i,1,idim)*uvw(i,1)
+     $                   +gradt(i,2,idim)*uvw(i,2)
+            enddo
+         else if (ldim.eq.3) then
+            do i=1,nv
+               wk(i,idim)=gradt(i,1,idim)*uvw(i,1)
+     $                   +gradt(i,2,idim)*uvw(i,2)
+     $                   +gradt(i,3,idim)*uvw(i,3)
+            enddo
+         endif
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine gradt(cscr,tb,ndimt)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real cscr(lt,ldim,ndimt),tb(lt,ndimt)
+
+      do idim=1,ndimt
+         call gradm1(
+     $      cscr(1,1,idim),cscr(1,2,idim),cscr(1,ldim,idim),tb(1,idim))
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_c_eim3(
+     $   c_eim3,c_eim3_,w1,w2,ipts,irks,ipiv,nb,ncb,ub,cb,bm1,nv)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real c_eim3(1),w1(ncb,ncb),w2(ncb,nb),ub(lt,1),cb(lt,1),bm1(1)
+      real c_eim3_(1)
+      integer irks(1),ipts(1),ipiv(1)
+
+      call rzero(w2,ncb*ncb)
+
+      do j=1,ncb
+      do i=1,ncb
+         if (irks(i).eq.nid) w2(i,j)=cb(ipts(i),j)
+         w1(i,j)=1.-min(abs(i-j),1)
+      enddo
+      enddo
+
+      call gop(w2,c_eim3,'+  ',ncb*ncb)
+
+      call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
+      call dgetrs('N',ncb,ncb,w2,ncb,ipiv,w1,ncb,info)
+
+      do j=1,ncb
+      do i=1,nb
+         w2(i+(j-1)*nb,1)=glsc3(ub(1,i),cb(1,j),bm1,nv)
+      enddo
+      enddo
+
+      call copy(c_eim3_,w2,ncb*nb)
+
+      call mxm(w2,nb,w1,ncb,c_eim3,ncb)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine evalc_eim012_lowmem(rhs,u,t,c_eim0,c_eim1,c_eim2,nb)
+
+      real rhs(nb),u(nb),t(nb)
+      real c_eim0(nb),c_eim1(nb,nb),c_eim2(nb,nb)
+
+      call rzero(rhs,nb)
+
+      do i=1,nb
+         rhs(i)=rhs(i)+c_eim0(i)
+         do j=1,nb
+            rhs(i)=rhs(i)+c_eim1(i,j)*t(j)+c_eim2(i,j)*u(j)
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine evalc_eim3_lowmem(rhs,u,t,c_eim3,dmat,zmat,nb,ncb,ndim)
+
+      real rhs(nb),u(nb),t(nb)
+      real c_eim3(nb,ncb),dmat(ncb,nb,ndim),zmat(ncb,nb,ndim)
+
+c     do i=1,ncb
+c        dti=0.
+c        zi=0.
+c        do idim=1,ndim
+c        do j=1,nb
+c           dti=dti+dmat(i,j,idim)*t(j)
+c           zi=zi+zmat(i,j,idim)*u(j)
+c        enddo
+c        enddo
+c        do j=1,nb
+c           rhs(j)=rhs(j)+c_eim3(j,i)*zi*dti
+c        enddo
+c     enddo
+
+      do i=1,ncb
+         zdti=0.
+         do idim=1,ndim
+            dti=0.
+            zi=0.
+            do j=1,nb
+               dti=dti+dmat(i,j,idim)*t(j)
+               zi=zi+zmat(i,j,idim)*u(j)
+            enddo
+            zdti=zdti+dti*zi
+         enddo
+         do j=1,nb
+            rhs(j)=rhs(j)+c_eim3(j,i)*zdti
+         enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine evalc_pts_deim(peval,u,t,dmat,zmat,nb,ncb,ndim)
+
+      real peval(nb),u(nb),t(nb)
+      real dmat(ncb,nb,ndim),zmat(ncb,nb,ndim)
+
+      call rzero(peval,nb)
+
+      do idim=1,ndim
+      do i=1,ncb
+         dti=0.
+         zi=0.
+         do j=1,nb
+            dti=dti+dmat(i,j,idim)*t(j)
+            zi=zi+zmat(i,j,idim)*u(j)
+         enddo
+         peval(i)=peval(i)+zi*dti
+      enddo
+      enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine deim_check(ifld)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'SOLN'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /deim_check2/ vxyz(lt,ldim),peval(lb,4),uc(lb,4),
+     $                     dxyz(lt,ldim,ldim),
+     $                     a1(lb),a2(lb),a3(lb),a4(lb)
+
+      n=lx1*ly1*lz1*nelv
+
+      write (6,*) 'deim_check', ifld
+      call reconv(vxyz(1,1),vxyz(1,2),vxyz(1,3),u)
+      call opsub2(vxyz(1,1),vxyz(1,2),vxyz(1,3),ub,vb,wb)
+
+      write (6,*) 'wp 0'
+
+      if (ifld.eq.1) then
+         ! evaluate points and reconstruct deim field
+         call evalc_pts_deim(
+     $      peval(1,1),u,u,uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+         call deim_coeff(uc(1,1),peval(1,1),cbu(1,1,1),
+     $      irks_deim(1,1),ipts_deim(1,1),nb,ncb)
+
+         call evalc_pts_deim(
+     $      peval(1,2),u,u,vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+         call deim_coeff(uc(1,2),peval(1,2),cbu(1,1,2),
+     $      irks_deim(1,2),ipts_deim(1,2),nb,ncb)
+
+         if (ldim.eq.3) then
+            call evalc_pts_deim(
+     $         peval(1,3),u,u,wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+            call deim_coeff(uc(1,3),peval(1,3),cbu(1,1,3),
+     $         irks_deim(1,3),ipts_deim(1,3),nb,ncb)
+         endif
+
+         call opzero(vxlag,vylag,vzlag)
+
+         do i=1,ncb
+            call add2s2(vxlag,cbu(1,i,1),uc(i,1),n)
+            call add2s2(vylag,cbu(1,i,2),uc(i,2),n)
+            if (ldim.eq.3) call add2s2(vzlag,cbu(1,i,3),uc(i,3),n)
+         enddo
+
+         ! reconstruct pod field
+         call evalcflds(vxlag(1,1,1,1,2),vxyz,vxyz(1,1),1,1)
+         call evalcflds(vylag(1,1,1,1,2),vxyz,vxyz(1,2),1,1)
+         if (ldim.eq.3)
+     $      call evalcflds(vzlag(1,1,1,1,2),vxyz,vxyz(1,3),1,1)
+
+         ! check point values match
+         do i=1,ncb
+            if (irks_deim(i,1).eq.nid) then
+               v1=peval(i,1)
+               v2=vxlag(ipts_deim(1,1),1,1,1,1)
+               v3=vxlag(ipts_deim(1,1),1,1,1,2)
+               write (6,*)
+     $            1,i,v1,v2,v3,v1-v2,v1-v3,v2-v3,'peval-check-u'
+            endif
+         enddo
+         do i=1,ncb
+            if (irks_deim(i,2).eq.nid) then
+               v1=peval(i,2)
+               v2=vylag(ipts_deim(1,2),1,1,1,1)
+               v3=vylag(ipts_deim(1,2),1,1,1,2)
+               write (6,*)
+     $            2,i,v1,v2,v3,v1-v2,v1-v3,v2-v3,'peval-check-v'
+            endif
+         enddo
+         do i=1,ncb
+            if (irks_deim(i,3).eq.nid) then
+               v1=peval(i,3)
+               v2=vzlag(ipts_deim(1,3),1,1,1,1)
+               v3=vzlag(ipts_deim(1,3),1,1,1,2)
+               write (6,*)
+     $            3,i,v1,v2,v3,v1-v2,v1-v3,v2-v3,'peval-check-w'
+            endif
+         enddo
+      else
+         call recont(t,ut)
+         call sub2(t,tb,n)
+
+         call gradm1(dxyz(1,1,1),dxyz(1,2,1),dxyz(1,3,1),t)
+
+         ! evaluate points and reconstruct deim field
+         call evalc_pts_deim(
+     $      peval,u(1),ut(1),txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+
+         call deim_coeff(
+     $      uc,peval,cbt,irks_deim(1,4),ipts_deim(1,4),nb,ncb)
+
+         call rzero(tlag,n)
+         do i=1,ncb
+            call add2s2(tlag,cbt(1,i),uc(i,1),n)
+         enddo
+
+         ! reconstruct pod field
+         call evalcflds(tlag(1,1,1,1,1,2),vxyz,t,1,1)
+
+         do i=1,ncb
+            write (6,*) i,uc(i,1),peval(i,1),'uc'
+         enddo
+
+         ! check point values match
+         do i=1,ncb
+            if (irks_deim(i,4).eq.nid) then
+               v1=peval(i,1)
+               v2=tlag(ipts_deim(i,4),1,1,1,1,1)
+               v3=tlag(ipts_deim(i,4),1,1,1,1,2)
+               peval(i,1)=v3
+               write (6,*) i,v1,v2,v3,v1-v2,v1-v3,v2-v3,'peval-check1'
+            endif
+         enddo
+
+         call mxm(txyz_eim(1+0*nb*ncb),ncb,ut(1),nb,a1,1)
+         call mxm(txyz_eim(1+1*nb*ncb),ncb,ut(1),nb,a2,1)
+
+         call mxm(uvw_eim(1+0*nb*ncb,4),ncb,u(1),nb,a3,1)
+         call mxm(uvw_eim(1+1*nb*ncb,4),ncb,u(1),nb,a4,1)
+
+         ! check convection components
+         do i=1,ncb ! at each point
+            if (irks_deim(i,4).eq.nid) then
+               dx=dxyz(ipts_deim(i,4),1,1)
+               dy=dxyz(ipts_deim(i,4),2,1)
+               ux=vxyz(ipts_deim(i,4),1)
+               uy=vxyz(ipts_deim(i,4),2)
+               ct=dx*ux+dy*uy
+
+               write (6,*) i,dx,dy,ux,uy,ct,'conv-eval-check 1'
+
+               dx=a1(i)
+               dy=a2(i)
+               ux=a3(i)
+               uy=a4(i)
+               ct=dx*ux+dy*uy
+
+               write (6,*) i,dx,dy,ux,uy,ct,'conv-eval-check 2'
+            endif
+         enddo
+
+         do i=1,nb ! at each basis
+            call gradm1(dxyz(1,1,1),dxyz(1,2,1),dxyz(1,3,1),tb(1,i))
+            do j=1,ncb ! at each point
+               tx_eim=txyz_eim(j+(i-1)*ncb+0*nb*ncb)
+               ty_eim=txyz_eim(j+(i-1)*ncb+1*nb*ncb)
+               ux_eim=uvw_eim(j+(i-1)*ncb+0*nb*ncb,4)
+               uy_eim=uvw_eim(j+(i-1)*ncb+1*nb*ncb,4)
+
+               tx_bas=dxyz(ipts_deim(j,4),1,1)
+               ty_bas=dxyz(ipts_deim(j,4),2,1)
+               ux_bas=ub(ipts_deim(j,4),i)
+               uy_bas=vb(ipts_deim(j,4),i)
+
+         write (6,*) i,j,tx_eim,tx_bas,ty_eim,ty_bas,'intp-check t'
+         write (6,*) i,j,ux_eim,ux_bas,uy_eim,uy_bas,'intp-check u'
+            enddo
+         enddo
+
+         do i=1,ncb ! at each basis
+            write (6,*) 'intp-check'
+         enddo
+
+         call outpost(tlag,tlag(1,1,1,1,1,2),vz,pr,t,'ect')
+
+         call deim_coeff(
+     $      uc,peval,cbt,irks_deim(1,4),ipts_deim(1,4),nb,ncb)
+
+         call rzero(tlag,n)
+         do i=1,ncb
+            call add2s2(tlag,cbt(1,i),uc(i,1),n)
+         enddo
+
+         do i=1,ncb
+            if (irks_deim(i,4).eq.nid) then
+               v1=peval(i,1)
+               v2=tlag(ipts_deim(i,4),1,1,1,1,1)
+               v3=tlag(ipts_deim(i,4),1,1,1,1,2)
+               peval(i,1)=v3
+               write (6,*) i,v1,v2,v3,v1-v2,v1-v3,v2-v3,'peval-check2'
+            endif
+         enddo
+         call outpost(tlag,tlag(1,1,1,1,1,2),vz,pr,t,'ect')
+
+      endif
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine deim_coeff(uc,peval,cb,irks,ipts,nb,ncb)
+
+      include 'SIZE'
+
+      common /deim_coeffr/ tmat(100**2),wk(100**2)
+      common /deim_coeffi/ i1(100),i2(100)
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real uc(ncb),peval(ncb),cb(lt,ncb)
+      integer irks(ncb),ipts(ncb)
+
+      call rzero(tmat,ncb*ncb)
+      call copy(uc,peval,ncb)
+
+      do j=1,ncb
+      do i=1,ncb
+         if (irks(i).eq.nid) tmat(i+(j-1)*ncb)=cb(ipts(i),j)
+      enddo
+      enddo
+
+      call gop(tmat,wk,'+  ',ncb*ncb)
+
+      call dgetrf(ncb,ncb,tmat,ncb,i1,info)
+c     write (6,*) info,'info'
+c     do j=1,ncb
+c     do i=1,ncb
+c        write (6,*) i,j,tmat(i+(j-1)*ncb),'rrr'
+c     enddo
+c     enddo
+c     do i=1,ncb
+c        write (6,*) i,uc(i),irks(i),ipts(i),i1(i),'sss'
+c     enddo
+      call dgetrs('N',ncb,1,tmat,ncb,i1,uc,ncb,info)
+
+c     do i=1,ncb
+c        write (6,*) i,uc(i),'ttt'
+c     enddo
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_intp_eim(
+     $   uvw,txyz,ub,vb,wb,tb,itmp1,itmp2,wk,nb,ncb)
+
+c           if (idim.eq.1) call set_intp_eim(uvw_eim(1,1),
+c    $         uxyz_eim,ub,vb,wb,ub,itmp1,itmp2,wk_eim,nb,ncb)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /scrns/ dx(lt),dy(lt),dz(lt)
+
+      real uvw(ncb,nb,ldim)
+      real txyz(ncb,nb,ldim),wk(ncb,nb)
+      real ub(lt,0:nb),vb(lt,0:nb),wb(lt,0:nb),tb(lt,0:nb)
+      integer itmp1(ncb),itmp2(ncb)
+
+      call rzero(uvw,nb*ncb*ldim)
+      call rzero(txyz,nb*ncb*ldim)
+
+      if (nid.eq.0) write (6,*) 'start set_intp_eim',nb,ncb
+      do j=1,nb
+         call gradm1(dx,dy,dz,tb(1,j))
+         do i=1,ncb
+            if (itmp2(i).eq.nid) then
+               uvw(i,j,1)=ub(itmp1(i),j)
+               uvw(i,j,2)=vb(itmp1(i),j)
+               if (ldim.eq.3) uvw(i,j,3)=wb(itmp1(i),j)
+
+               txyz(i,j,1)=dx(itmp1(i))
+               txyz(i,j,2)=dy(itmp1(i))
+               if (ldim.eq.3) txyz(i,j,3)=dz(itmp1(i))
+            endif
+         enddo
+      enddo
+
+      do i=1,ldim
+         call gop(uvw(1,1,i),wk,'+  ',ncb*nb)
+         call gop(txyz(1,1,i),wk,'+  ',ncb*nb)
+      enddo
+
+      if (nid.eq.0) write (6,*) 'end set_intp_eim'
 
       return
       end
