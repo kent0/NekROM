@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
 
       common /scrbdfext/ rhs(0:lb,2),rhstmp(0:lb),
      $                   utmp1(0:lb),utmp2(0:lb)
+      common /icmd/ icmode
 
       logical ifdebug
       integer chekbc
@@ -19,16 +20,88 @@ c-----------------------------------------------------------------------
       ulast_time = dnekclock()
 
       n=lx1*ly1*lz1*nelt
+      nv=lx1*ly1*lz1*nelv
 
       icount = min(max(1,ad_step),3)
 
       rhs(0,1)=1.
       rhs(0,2)=1.
 
+c     icmode=-1
+c     icmode=2
+c     icmode=3
+c     icmode=4
+c     icmode=5
+
+c     call opsub2(vx,vy,vz,ub,vb,wb)
+c     call sub2(t,tb,n)
+
+c     call pv2b(u,vx,vy,vz,ub,vb,wb)
+c     call ps2b(ut,t,tb)
+
+c     call opsub2(us0(1,1,1),us0(1,2,1),us0(1,3,1),ub,vb,wb)
+c     call sub2(ts0,tb,n)
+
+c     call pv2b(u,us0(1,1,1),us0(1,2,1),us0(1,3,1),ub,vb,wb)
+c     call ps2b(ut,ts0,tb)
+
+      is=1
+      idim=1
+c     call evalcflds(
+c    $   snaptmp(1,1,1),us0(1,1,1),us0(1,1,1),1,1)
+c     call evalcflds(
+c    $   snaptmp(1,2,1),us0(1,1,1),us0(1,2,1),1,1)
+
+c     call evalcflds(
+c    $   snaptmp(1,4,1),us0(1,1,1),ts0(1,1),1,1)
+
+c     call rzero(vxlag,nv)
+c     call rzero(vylag,nv)
+c     call rzero(vzlag,nv)
+
+c     do i=1,ncb
+c        uk(i,1)=glsc3(snaptmp(1,1,1),cbu(1,i,1),bm1,nv)
+c    $     /glsc3(cbu(1,i,1),cbu(1,i,1),bm1,nv)
+c        call add2s2(vxlag,cbu(1,i,1),uk(i,1),nv)
+
+c        uk(i,2)=glsc3(snaptmp(1,2,1),cbu(1,i,2),bm1,nv)
+c    $     /glsc3(cbu(1,i,2),cbu(1,i,2),bm1,nv)
+c        call add2s2(vylag,cbu(1,i,2),uk(i,2),nv)
+
+c        uk(i,4)=glsc3(snaptmp(1,4,1),cbt(1,i),bm1,nv)
+c    $     /glsc3(cbt(1,i),cbt(1,i),bm1,nv)
+c        call add2s2(vzlag,cbt(1,i),uk(i,4),nv)
+c     enddo
+
+c     do i=1,ncb
+c        tk(i,5)=glsc3(tb(1,i),vzlag,bm1,nv)
+c        write (6,*) i,tk(i,5),'glsc3'
+c     enddo
+
+c     call mxm(cu_eim3_(1,1),nb,uk(1,1),ncb,tk(1,1),1)
+c     call mxm(cu_eim3_(1,2),nb,uk(1,2),ncb,tk(1,2),1)
+
+c     call mxm(ct_eim3_(1),nb,uk(1,4),ncb,tk(1,4),1)
+
+c     ifxyo=.true.
+c     call outpost(us0(1,1,1),us0(1,2,1),us0(1,3,1),pr,ts0,'ttt')
+c     call outpost(snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+c    $   pr,snaptmp(1,4,1),'ttt')
+
+c     call outpost(
+c    $   vxlag,vylag,snaptmp(1,3,1),pr,vzlag,'ttt')
+
+c     call sub2(vxlag,snaptmp(1,1,1),nv)
+c     call sub2(vylag,snaptmp(1,2,1),nv)
+c     call sub2(vzlag,snaptmp(1,4,1),nv)
+
+c     call outpost(
+c    $   vxlag,vylag,snaptmp(1,3,1),pr,vzlag,'ttt')
+
 c     if (icount.le.2) then
       if (.false.) then
-         if (ifrom(1)) call setr_v(rhs(1,1),icount)
-         if (ifrom(2)) call setr_t(rhs(1,2),icount)
+         if (ifrom(1)) call setr_v(rhs(1,1),icount,icmode)
+         if (ifrom(2)) call setr_t(rhs(1,2),icount,icmode)
          call rk4_setup
          call copy(urki(1),u(1),nb)
          if (ifrom(2)) call copy(urki(nb+1),ut(1),nb)
@@ -76,7 +149,7 @@ c     if (icount.le.2) then
             call update_k
          endif
 
-         call setr_t(rhs(1,2),icount)
+         call setr_t(rhs(1,2),icount,icmode)
 
          ttime=dnekclock()
          if (.not.ifcomb) then
@@ -152,7 +225,7 @@ c     if (icount.le.2) then
             call update_k
          endif
 
-         call setr_v(rhs(1,1),icount)
+         call setr_v(rhs(1,1),icount,icmode)
 
          ttime=dnekclock()
          if (.not.ifcomb) then
@@ -442,8 +515,9 @@ c-----------------------------------------------------------------------
       else
          call rzero(cu,nb)
          if (ncloc.ne.0) then
-            if ((kc2-kc1).lt.64.and.(jc2-jc1).lt.64
-     $          .and.cfloc.eq.'NONE') then
+            if (.false.) then
+c           if ((kc2-kc1).lt.64.and.(jc2-jc1).lt.64
+c    $          .and.cfloc.eq.'NONE') then
                call mxm(cl,(ic2-ic1+1)*(jc2-jc1+1),
      $                  u(kc1),(kc2-kc1+1),cm,1)
                call mxm(cm,(ic2-ic1+1),uu(jc1),(jc2-jc1+1),cu(ic1),1)
@@ -462,6 +536,8 @@ c-----------------------------------------------------------------------
                do j=jc1,jc2
                do i=ic1,ic2
                   cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
+c                 if (k.eq.0.or.j.eq.0) 
+c    $               cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
                enddo
                enddo
                enddo
@@ -591,12 +667,13 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setr_t(rhs,icount)
+      subroutine setr_t(rhs,icount,icmode)
 
       include 'SIZE'
       include 'MOR'
       include 'INPUT'
       include 'TSTEP'
+      include 'MASS'
 
       common /scrrhs/ tmp(0:lb),tmp2(0:lb)
 
@@ -621,7 +698,170 @@ c-----------------------------------------------------------------------
                call evalc3(tmp(1),cta,ctb,ctc,cp_tw,ut)
             endif
          else
-            call evalc(tmp(1),ctmp,ctl,ut)
+            if (icmode.eq.0) then
+               call evalc(tmp(1),ctmp,ctl,ut)
+            else if (icmode.eq.1) then
+c              call deim_check(2)
+
+c              call exitt0
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+
+               call evalc_eim3_lowmem(tmp(1),u(1),ut(1),ct_eim3,
+     $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+
+            else if (icmode.eq.-1) then
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+
+               call rzero(tmp(1),nb)
+
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+
+               call evalc_eim3_lowmem(tmp(1),u(1),ut(1),ct_eim3,
+     $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+            else if (icmode.eq.2) then
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+               nv=lx1*ly1*lz1*nelv
+               call reconv(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+               call recont(snaptmp(1,4,1),ut)
+               call opsub2(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $            ub,vb,wb)
+               call sub2(snaptmp(1,4,1),tb,nv)
+               call set_convect_new(c1v(1,1),c2v(1,1),c3v(1,1),
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1))
+               call intp_rstd_all(u1v(1,1),snaptmp(1,4,1),nelv)
+               call cct(snaptmp(1,5,1),1,1)
+               do i=1,nb
+                  tmp(i)=tmp(i)+glsc2(snaptmp(1,5,1),tb(1,i),nv)
+               enddo
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+            else if (icmode.eq.3) then
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+               nv=lx1*ly1*lz1*nelv
+               call reconv(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+               call recont(snaptmp(1,4,1),ut)
+               call opsub2(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $            ub,vb,wb)
+               call sub2(snaptmp(1,4,1),tb,nv)
+
+               call evalcflds(
+     $            snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,4,1),1,1)
+
+               do j=1,nb
+                  tmp(j)=tmp(j)+glsc3(snaptmp(1,5,1),tb(1,j),bm1,nv)
+               enddo
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+            else if (icmode.eq.4) then
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+               nv=lx1*ly1*lz1*nelv
+               call reconv(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+               call recont(snaptmp(1,4,1),ut)
+               call opsub2(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $            ub,vb,wb)
+               call sub2(snaptmp(1,4,1),tb,nv)
+
+               call evalcflds(
+     $            snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,4,1),1,1)
+
+               do i=1,ncb
+                  ui=glsc3(snaptmp(1,5,1),cbt(1,i),bm1,nv)
+     $              /glsc3(cbt(1,i),cbt(1,i),bm1,nv)
+                  do j=1,nb
+                     tmp(j)=tmp(j)+ui*glsc3(cbt(1,i),tb(1,j),bm1,nv)
+                  enddo
+               enddo
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+            else if (icmode.eq.5) then
+               call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
+     $            ct_eim0,ct_eim1,ct_eim2,nb)
+               nv=lx1*ly1*lz1*nelv
+               call reconv(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+               call recont(snaptmp(1,4,1),ut)
+               call opsub2(
+     $            snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $            ub,vb,wb)
+               call sub2(snaptmp(1,4,1),tb,nv)
+
+               call evalcflds(
+     $            snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,4,1),1,1)
+
+               do i=1,ncb
+                  ui=glsc3(snaptmp(1,5,1),cbt(1,i),bm1,nv)
+     $              /glsc3(cbt(1,i),cbt(1,i),bm1,nv)
+                  do j=1,nb
+                     tmp(j)=tmp(j)+ct_eim3_(j+(i-1)*nb)*ui
+                  enddo
+               enddo
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+               enddo
+
+               call evalc(tmp(1),ctmp,ctl,ut)
+
+               do i=1,nb
+                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+               enddo
+
+            endif
          endif
 c        call add2(tmp(1),st0(1),nb)
          call shift(ctr,tmp(1),nb,3)
@@ -651,9 +891,10 @@ c        call add2(tmp(1),st0(1),nb)
       return
       end
 c-----------------------------------------------------------------------
-      subroutine setr_v(rhs,icount)
+      subroutine setr_v(rhs,icount,icmode)
 
       include 'SIZE'
+      include 'MASS'
       include 'MOR'
 
       common /scrrhs/ tmp1(0:lb),tmp2(0:lb)
@@ -678,7 +919,209 @@ c-----------------------------------------------------------------------
             call evalc3(tmp1(1),cua,cub,cuc,cp_uw,u)
          endif 
       else
-         call evalc(tmp1(1),ctmp,cul,u)
+         if (icmode.eq.0) then
+            call evalc(tmp1(1),ctmp,cul,u)
+         else if (icmode.eq.1) then
+            call rzero(tmp1,nb)
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+
+            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,1),
+     $         uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,2),
+     $         vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+            if (ldim.eq.3) call evalc_eim3_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+
+            call evalc(tmp1(1),ctmp,cul,u)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+         else if (icmode.eq.-1) then
+            call evalc(tmp1(1),ctmp,cul,u)
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+            call rzero(tmp1,nb)
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+
+            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,1),
+     $         uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,2),
+     $         vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+            if (ldim.eq.3) call evalc_eim3_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+         else if (icmode.eq.2) then
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+            nv=lx1*ly1*lz1*nelv
+            call reconv(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+            call opsub2(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $         ub,vb,wb)
+
+            call set_convect_new(c1v(1,1),c2v(1,1),c3v(1,1),
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1))
+
+            call intp_rstd_all(u1v(1,1),snaptmp(1,1,1),nelv)
+            call intp_rstd_all(u2v(1,1),snaptmp(1,2,1),nelv)
+            if (ldim.eq.3)
+     $         call intp_rstd_all(u3v(1,1),snaptmp(1,3,1),nelv)
+
+            call ccu(snaptmp(1,4,1),snaptmp(1,5,1),snaptmp(1,6,1),1,1)
+            do i=1,nb
+               tmp1(i)=tmp1(i)+glsc2(snaptmp(1,4,1),ub(1,i),nv)
+               tmp1(i)=tmp1(i)+glsc2(snaptmp(1,5,1),vb(1,i),nv)
+               if (ldim.eq.3)
+     $            tmp1(i)=tmp1(i)+glsc2(snaptmp(1,6,1),wb(1,i),nv)
+            enddo
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+
+            call evalc(tmp1(1),ctmp,cul,u)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+         else if (icmode.eq.3) then
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+            nv=lx1*ly1*lz1*nelv
+            call reconv(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+            call opsub2(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $         ub,vb,wb)
+
+            call set_convect_new(c1v(1,1),c2v(1,1),c3v(1,1),
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1))
+
+            call intp_rstd_all(u1v(1,1),snaptmp(1,1,1),nelv)
+            call intp_rstd_all(u2v(1,1),snaptmp(1,2,1),nelv)
+            if (ldim.eq.3)
+     $         call intp_rstd_all(u3v(1,1),snaptmp(1,3,1),nelv)
+
+            call ccu(snaptmp(1,7,1),snaptmp(1,8,1),snaptmp(1,9,1),1,1)
+
+            call evalcflds(
+     $         snaptmp(1,4,1),snaptmp(1,1,1),snaptmp(1,1,1),1,1)
+            call evalcflds(
+     $         snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,2,1),1,1)
+            if (ldim.eq.3) call evalcflds(
+     $         snaptmp(1,6,1),snaptmp(1,1,1),snaptmp(1,3,1),1,1)
+
+            do j=1,nb
+               tmp1(j)=tmp1(j)+glsc3(snaptmp(1,4,1),ub(1,j),bm1,nv)
+               tmp1(j)=tmp1(j)+glsc3(snaptmp(1,5,1),vb(1,j),bm1,nv)
+               if (ldim.eq.3) tmp1(j)=tmp1(j)
+     $            +glsc3(snaptmp(1,6,1),wb(1,j),bm1,nv)
+            enddo
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+
+            call evalc(tmp1(1),ctmp,cul,u)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+         else if (icmode.eq.4) then
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+            nv=lx1*ly1*lz1*nelv
+            call reconv(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+            call opsub2(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $         ub,vb,wb)
+            call evalcflds(
+     $         snaptmp(1,4,1),snaptmp(1,1,1),snaptmp(1,1,1),1,1)
+            call evalcflds(
+     $         snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,2,1),1,1)
+            if (ldim.eq.3) call evalcflds(
+     $         snaptmp(1,6,1),snaptmp(1,1,1),snaptmp(1,3,1),1,1)
+
+            do i=1,ncb
+               ui=glsc3(snaptmp(1,4,1),cbu(1,i,1),bm1,nv)
+     $           /glsc3(cbu(1,i,1),cbu(1,i,1),bm1,nv)
+               vi=glsc3(snaptmp(1,5,1),cbu(1,i,2),bm1,nv)
+     $           /glsc3(cbu(1,i,2),cbu(1,i,2),bm1,nv)
+              if (ldim.eq.3) wi=glsc3(snaptmp(1,6,1),cbu(1,i,3),bm1,nv)
+     $           /glsc3(cbu(1,i,3),cbu(1,i,3),bm1,nv)
+               
+               do j=1,nb
+                  tmp1(j)=tmp1(j)+ui*glsc3(ub(1,j),cbu(1,i,1),bm1,nv)
+                  tmp1(j)=tmp1(j)+vi*glsc3(vb(1,j),cbu(1,i,2),bm1,nv)
+                  if (ldim.eq.3)
+     $              tmp1(j)=tmp1(j)+wi*glsc3(wb(1,j),cbu(1,i,3),bm1,nv)
+               enddo
+            enddo
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+
+            call evalc(tmp1(1),ctmp,cul,u)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+         else if (icmode.eq.5) then
+            call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
+     $         cu_eim0,cu_eim1,cu_eim2,nb)
+            nv=lx1*ly1*lz1*nelv
+            call reconv(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),u)
+            call opsub2(
+     $         snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+     $         ub,vb,wb)
+            call evalcflds(
+     $         snaptmp(1,4,1),snaptmp(1,1,1),snaptmp(1,1,1),1,1)
+            call evalcflds(
+     $         snaptmp(1,5,1),snaptmp(1,1,1),snaptmp(1,2,1),1,1)
+            if (ldim.eq.3) call evalcflds(
+     $         snaptmp(1,6,1),snaptmp(1,1,1),snaptmp(1,3,1),1,1)
+
+            do i=1,ncb
+               ui=glsc3(snaptmp(1,4,1),cbu(1,i,1),bm1,nv)
+     $           /glsc3(cbu(1,i,1),cbu(1,i,1),bm1,nv)
+               vi=glsc3(snaptmp(1,5,1),cbu(1,i,2),bm1,nv)
+     $           /glsc3(cbu(1,i,2),cbu(1,i,2),bm1,nv)
+              if (ldim.eq.3) wi=glsc3(snaptmp(1,6,1),cbu(1,i,3),bm1,nv)
+     $           /glsc3(cbu(1,i,3),cbu(1,i,3),bm1,nv)
+               
+               do j=1,nb
+                  tmp1(j)=tmp1(j)+cu_eim3_(j+(i-1)*nb,1)*ui
+                  tmp1(j)=tmp1(j)+cu_eim3_(j+(i-1)*nb,2)*vi
+                  if (ldim.eq.3)
+     $               tmp1(j)=tmp1(j)+cu_eim3_(j+(i-1)*nb,3)*wi
+               enddo
+            enddo
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+            enddo
+
+            call evalc(tmp1(1),ctmp,cul,u)
+
+            do i=1,nb
+               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+            enddo
+         endif
       endif
 
       call chsign(tmp1(1),nb)
