@@ -1348,6 +1348,12 @@ c     ncb=10
             enddo
             call pod(cbu(1,1,idim),evec(1,1,0),eval(1,0),ug(1,1,0),
      $         snaptmp,1,'L2 ',ncb,ns,.true.)
+            if (idim.eq.1)
+     $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu1 ',nid)
+            if (idim.eq.2)
+     $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu2 ',nid)
+            if (idim.eq.3)
+     $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu3 ',nid)
             call deim_fpts(itmp1,itmp2,cbu(1,1,idim),ncb)
             call icopy(ipts_deim(1,idim),itmp1,ncb*nb)
             call icopy(irks_deim(1,idim),itmp2,ncb*nb)
@@ -1386,6 +1392,8 @@ c     ncb=10
          call evalcflds(snaptmp,us0,ts0,1,ns)
          call pod(cbt,evec(1,1,0),eval(1,0),ug(1,1,0),snaptmp,
      $      1,'L2 ',ncb,ns,.true.)
+
+         call dump_serial(ug(1,1,0),ls*ls,'ops/gct ',nid)
          call deim_fpts(itmp1,itmp2,cbt,ncb)
          call icopy(ipts_deim(1,4),itmp1,ncb*nb)
          call icopy(irks_deim(1,4),itmp2,ncb*nb)
