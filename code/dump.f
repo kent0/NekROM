@@ -305,7 +305,8 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             call dump_serial(cu_eim0,nb,'ops/cu_eim0 ',nid)
             call dump_serial(cu_eim1,nb*nb,'ops/cu_eim1 ',nid)
             call dump_serial(cu_eim2,nb*nb,'ops/cu_eim2 ',nid)
-            call dump_serial(cu_eim3,nb*ncb*ldim,'ops/cu_eim3 ',nid)
+            call dump_serial(cu_eim3(1,1),nb*ncb,'ops/cu_eim3_1 ',nid)
+            call dump_serial(cu_eim3(1,2),nb*ncb,'ops/cu_eim3_2 ',nid)
 
             n2=nb*ncb*ldim
 
@@ -316,6 +317,8 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             call dump_serial(vxyz_eim,n2,'ops/vxyz_eim ',nid)
 
             if (ldim.eq.3) then
+               call dump_serial(
+     $            cu_eim3(1,3),nb*ncb,'ops/cu_eim3_3 ',nid)
                call dump_serial(uvw_eim(1,3),n2,'ops/uvw_eim3 ',nid)
                call dump_serial(wxyz_eim,n2,'ops/wxyz_eim ',nid)
             endif
