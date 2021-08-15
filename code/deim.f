@@ -53,7 +53,6 @@ c-----------------------------------------------------------------------
          irks(iter)=iproc
          ipts(iter)=ind
          if (irks(iter).eq.nid) rpts(ipts(iter))=rpts(ipts(iter))+1.
-         write (6,*) iter,emax,'emax'
          call outpost(err,rpts,vz,pr,t,'err')
       enddo
 

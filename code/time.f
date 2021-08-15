@@ -711,13 +711,14 @@ c              call exitt0
      $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
 
             else if (icmode.eq.-1) then
@@ -725,7 +726,8 @@ c              call exitt0
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
 
                call rzero(tmp(1),nb)
@@ -737,7 +739,8 @@ c              call exitt0
      $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
             else if (icmode.eq.2) then
@@ -760,13 +763,14 @@ c              call exitt0
                enddo
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
             else if (icmode.eq.3) then
                call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
@@ -788,13 +792,14 @@ c              call exitt0
                enddo
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
             else if (icmode.eq.4) then
                call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
@@ -820,13 +825,14 @@ c              call exitt0
                enddo
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
             else if (icmode.eq.5) then
                call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
@@ -852,13 +858,14 @@ c              call exitt0
                enddo
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-deim'
+                  if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
                call evalc(tmp(1),ctmp,ctl,ut)
 
                do i=1,nb
-                  write (6,*) ad_step,i,tmp(i),'ct-standard'
+                  if (nio.eq.0)
+     $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
 
             endif
@@ -934,18 +941,20 @@ c-----------------------------------------------------------------------
      $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
             call evalc(tmp1(1),ctmp,cul,u)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          else if (icmode.eq.-1) then
             call evalc(tmp1(1),ctmp,cul,u)
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
             call rzero(tmp1,nb)
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
@@ -959,7 +968,7 @@ c-----------------------------------------------------------------------
      $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
          else if (icmode.eq.2) then
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
@@ -988,13 +997,14 @@ c-----------------------------------------------------------------------
             enddo
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
             call evalc(tmp1(1),ctmp,cul,u)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          else if (icmode.eq.3) then
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
@@ -1031,13 +1041,14 @@ c-----------------------------------------------------------------------
             enddo
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
             call evalc(tmp1(1),ctmp,cul,u)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          else if (icmode.eq.4) then
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
@@ -1072,13 +1083,14 @@ c-----------------------------------------------------------------------
             enddo
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
             call evalc(tmp1(1),ctmp,cul,u)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          else if (icmode.eq.5) then
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
@@ -1113,13 +1125,14 @@ c-----------------------------------------------------------------------
             enddo
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-deim'
+               if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
             call evalc(tmp1(1),ctmp,cul,u)
 
             do i=1,nb
-               write (6,*) ad_step,i,tmp1(i),'cu-standard'
+               if (nio.eq.0)
+     $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          endif
       endif
