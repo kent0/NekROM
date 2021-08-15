@@ -5,6 +5,8 @@ c     parameters and common blocks for MOR
       common /morgram/ ug(ls,ls,0:ldimt1)
       common /moreig/ evec(ls,lb,0:ldimt1),eval(ls,0:ldimt1)
 
+      parameter (lcb=2*lb)
+
       common /morconvect/ c1v(lxd*lyd*lzd*lelm,0:lub),
      $                    c2v(lxd*lyd*lzd*lelm,0:lub),
      $                    c3v(lxd*lyd*lzd*lelm,0:lub),
@@ -16,6 +18,8 @@ c     parameters and common blocks for MOR
      $                  vb(lx1*ly1*lz1*lelm,0:lub),
      $                  wb(lx1*ly1*lz1*lelm,0:lub),
      $                  uvwb(lx1*ly1*lz1*lelm,ldim,0:lub),
+     $                  cbu(lx1*ly1*lz1*lelm,lcb,ldim),
+     $                  cbt(lx1*ly1*lz1*lelm,lcb),
      $                  pb(lx2*ly2*lz2*lelm,0:lpb),
      $                  tb(lx1*ly1*lz1*lelm,0:ltb)
 
@@ -30,7 +34,11 @@ c     parameters and common blocks for MOR
 
       common /morusnap/ us0(lx1*ly1*lz1*lelm,ldim,lsu)
       common /morpsnap/ prs(lx2*ly2*lz2*lelm,lsp)
-      common /mortsnap/ ts0(lx1*ly1*lz1*lelm,lst)
+      common /mortsnap/ ts0(lx1*ly1*lz1*lelm,lst),
+     $                  ss0(lx1*ly1*lz1*lelm,ldimt,lst)
+
+      common /morsnaptmp/ snaptmp(lx1*ly1*lz1*lelm,lsu,ldim)
+      common /morsnaptmp2/ snaptmp2(lx1*ly1*lz1*lelm,lsu,ldim)
 
       common /morforce/ fx(lx1*ly1*lz1*lelm),
      $                  fy(lx1*ly1*lz1*lelm),
@@ -57,13 +65,30 @@ c     parameters and common blocks for MOR
       common /morifops/ ihlu(lb,2),ihlu2(lb,2)
 
       common /morvops/ au0((lub+1)**2),bu0((lub+1)**2),
-     $                 au(lub**2),bu(lub**2),cul((lcloc-1)*lmu+1)
+     $                 au(lub**2),bu(lub**2),cul((lcloc-1)*lmu+1),
+     $                 cu_eim0(lub+1),
+     $                 cu_eim1((lub+1)**2),
+     $                 cu_eim2((lub+1)**2),
+     $                 cu_eim3((lcb+1)*(lub+1),ldim),
+     $                 cu_eim3_((lcb+1)*(lub+1),3),
+     $                 uvw_eim(lb*lcb*ldim,4),
+     $                 uxyz_eim(lb*lcb*ldim),
+     $                 vxyz_eim(lb*lcb*ldim),
+     $                 wxyz_eim(lb*lcb*ldim),
+     $                 putxi(lub*lub),putyi(lub*lub),putzi(lub*lub)
 
       common /mortops/ at0((ltb+1)**2),bt0((ltb+1)**2),
      $                 at(ltb**2),bt(ltb**2),
      $                 ctl((lcloc-1)*lmt+1),
+     $                 ct_eim0(ltb+1),
+     $                 ct_eim1((lub+1)*(ltb+1)),
+     $                 ct_eim2((lub+1)*(ltb+1)),
+     $                 ct_eim3((lcb+1)*(ltb+1)),
+     $                 ct_eim3_((lcb+1)*(ltb+1)),
      $                 st0(0:ltb),
-     $                 e1(0:ltb),e2(0:ltb),e3(0:lub,0:ltb)
+     $                 e1(0:ltb),e2(0:ltb),e3(0:lub,0:ltb),
+     $                 txyz_eim(lb*lcb*ldim),
+     $                 ptti(ltb*ltb)
 
       common /moreops/ aue((lub+1)**3),ate((ltb+1)**3)
 
@@ -98,11 +123,13 @@ c     parameters and common blocks for MOR
       common /morth_diag/ tha_diag(0:lub),thb_diag(0:lub),
      $                    thc_diag(0:lub,0:lub)
 
+      common /morideim/ ipts_deim(lub,4),irks_deim(lub,4)
+
       common /mortmp/ ctmp((lub*(lub+1)*(lub+1))/lpmin+1)
 
       common /morftmp/ fldtmp(lx1*ly1*lz1*lelm,ldim+1)
 
-      common /moritmp/ itmp1(lub),itmp2(lub)
+      common /moritmp/ itmp1(lub),itmp2(lub),itmp3(lub,lub)
       common /morrtmp/ rtmp1(lub,lub),rtmp2(lb,lb),rtmp3(lb,lb)
       common /morstmp/ stmp(lb+1,ls)
 
@@ -120,7 +147,7 @@ c     parameters and common blocks for MOR
 
       integer ad_nsteps,ad_iostep,ad_step,ad_qstep
       common /moripar/ ad_nsteps,ad_iostep,ad_step,ad_qstep,inus,
-     $                 navg_step,mb,nb,nplay,nintp
+     $                 navg_step,mb,nb,nplay,nintp,neim,ncb
 
       common /morivars/ i0,j0,k0,i1,j1,k1,ns,navg,ncloc,npr,npart,
      $                  isolve,ic1,ic2,jc1,jc2,kc1,kc2,idirf
