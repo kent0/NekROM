@@ -300,6 +300,27 @@ c-----------------------------------------------------------------------
      $      call dump_serial(aue,nb*(nb+1)**2,'ops/aue ',nid)
          call dump_serial(bu0,(nb+1)**2,'ops/bu ',nid)
 c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
+
+         if (ifeimc) then
+            call dump_serial(cu_eim0,nb,'ops/cu_eim0 ',nid)
+            call dump_serial(cu_eim1,nb*nb,'ops/cu_eim1 ',nid)
+            call dump_serial(cu_eim2,nb*nb,'ops/cu_eim2 ',nid)
+            call dump_serial(cu_eim3,nb*ncb*ldim,'ops/cu_eim3 ',nid)
+
+            n2=nb*ncb*ldim
+
+            call dump_serial(uvw_eim(1,1),n2,'ops/uvw_eim1 ',nid)
+            call dump_serial(uvw_eim(1,2),n2,'ops/uvw_eim2 ',nid)
+
+            call dump_serial(uxyz_eim,n2,'ops/uxyz_eim ',nid)
+            call dump_serial(vxyz_eim,n2,'ops/vxyz_eim ',nid)
+
+            if (ldim.eq.3) then
+               call dump_serial(uvw_eim(1,3),n2,'ops/uvw_eim3 ',nid)
+               call dump_serial(wxyz_eim,n2,'ops/wxyz_eim ',nid)
+            endif
+         endif
+
       endif
 
       if (ifrom(2)) then
@@ -309,6 +330,19 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
          call dump_serial(bt0,(nb+1)**2,'ops/bt ',nid)
          call dump_serial(st0,nb+1,'ops/st ',nid)
 c        call dump_global(ctl,ncloc,'ops/ct ',wk1,wk2,nid)
+
+         if (ifeimc) then
+            call dump_serial(ct_eim0,nb,'ops/ct_eim0 ',nid)
+            call dump_serial(ct_eim1,nb*nb,'ops/ct_eim1 ',nid)
+            call dump_serial(ct_eim2,nb*nb,'ops/ct_eim2 ',nid)
+            call dump_serial(ct_eim3,nb*ncb,'ops/ct_eim3 ',nid)
+
+            n2=nb*ncb*ldim
+
+            call dump_serial(uvw_eim(1,4),n2,'ops/uvw_eim3 ',nid)
+            call dump_serial(txyz_eim,n2,'ops/txyz_eim ',nid)
+         endif
+
       endif
 
       call nekgsync
