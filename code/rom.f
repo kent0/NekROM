@@ -2236,14 +2236,60 @@ c-----------------------------------------------------------------------
 
       call gop(w2,c_eim3,'+  ',ncb*ncb)
 
+      if (nid.eq.0) then
+         do j=1,ncb
+         do i=1,ncb
+            write (6,*) i,j,w2(i,j),'w2 pre-dgetrf'
+         enddo
+         enddo
+      endif
+      if (nid.eq.0) write (6,*) ' '
+
       call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
+
+      if (nid.eq.0) then
+         do j=1,ncb
+         do i=1,ncb
+            write (6,*) i,j,w2(i,j),'w2 post-dgetrf'
+         enddo
+         enddo
+      endif
+      if (nid.eq.0) write (6,*) ' '
+
+      if (nid.eq.0) then
+         do j=1,ncb
+         do i=1,ncb
+            write (6,*) i,j,w1(i,j),'w1 pre-dgetrs'
+         enddo
+         enddo
+      endif
+      if (nid.eq.0) write (6,*) ' '
+
       call dgetrs('N',ncb,ncb,w2,ncb,ipiv,w1,ncb,info)
+
+      if (nid.eq.0) then
+         do j=1,ncb
+         do i=1,ncb
+            write (6,*) i,j,w1(i,j),'w1 post-dgetrs'
+         enddo
+         enddo
+      endif
+
+      if (nid.eq.0) write (6,*) ' '
 
       do j=1,ncb
       do i=1,nb
          w2(i+(j-1)*nb,1)=glsc3(ub(1,i),cb(1,j),bm1,nv)
       enddo
       enddo
+
+      if (nid.eq.0) then
+         do j=1,ncb
+         do i=1,nb
+            write (6,*) i,j,w2(i+(j-1)*nb,1),'w2 post-dgetrs'
+         enddo
+         enddo
+      endif
 
       call copy(c_eim3_,w2,ncb*nb)
 
