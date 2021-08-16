@@ -22,6 +22,8 @@ c-----------------------------------------------------------------------
       n=lx1*ly1*lz1*nelt
 
       call rzero(rpts,n)
+      call izero(ipts,nflds)
+      call izero(irks,nflds)
 
       iftmp=ifxyo
 
