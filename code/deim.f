@@ -89,14 +89,12 @@ c-----------------------------------------------------------------------
 
       include 'SIZE'
 
-      common /cube1/ node,pid,np,nullpid,node0
-
       real vec(1)
 
       vmax_loc=vlamax(vec,n)
-      vmax=glamax(vmax_loc,1)
+      vmax=glmax(vmax_loc,1)
 
-      iproc=np
+      iproc=iglmax(nid,1)+1
       ind=0
 
       if (vmax.eq.vmax_loc) iproc=nid
