@@ -2237,13 +2237,17 @@ c-----------------------------------------------------------------------
       call gop(w2,c_eim3,'+  ',ncb*ncb)
 
       if (nid.eq.0) then
+         do i=1,ncb
+            write (6,*) i,ipts(i),irks(i),'ipts irks'
+         enddo
+         if (nid.eq.0) write (6,*) ' '
          do j=1,ncb
          do i=1,ncb
             write (6,*) i,j,w2(i,j),'w2 pre-dgetrf'
          enddo
          enddo
+         if (nid.eq.0) write (6,*) ' '
       endif
-      if (nid.eq.0) write (6,*) ' '
 
       call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
 
