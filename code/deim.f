@@ -23,6 +23,8 @@ c-----------------------------------------------------------------------
 
       call rzero(rpts,n)
 
+      ifxyo=.true.
+
       do iter=1,nflds
          call copy(err,flds(1,1,1,1,iter),n)
          if (iter.ge.2) then
@@ -53,8 +55,10 @@ c-----------------------------------------------------------------------
          irks(iter)=iproc
          ipts(iter)=ind
          if (irks(iter).eq.nid) rpts(ipts(iter))=rpts(ipts(iter))+1.
-c        call outpost(err,rpts,vz,pr,t,'err')
+         call outpost(err,rpts,vz,pr,t,'err')
       enddo
+
+      call exitt0
 
       return
       end
