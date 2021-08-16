@@ -436,8 +436,8 @@ c-----------------------------------------------------------------------
          if (irks_deim(i,4).eq.nid) snaptmp(ipts_deim(i,4),4,1)=
      $      snaptmp(ipts_deim(i,4),1,1)+1.
 
-         call outpost(snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
-     $      pr,snaptmp(1,4,1),'pts')
+c        call outpost(snaptmp(1,1,1),snaptmp(1,2,1),snaptmp(1,3,1),
+c    $      pr,snaptmp(1,4,1),'pts')
       enddo
 
       if (rmode.eq.'AEQ') call setfluc(fv_op,ft_op,'fluc')
