@@ -2235,50 +2235,50 @@ c-----------------------------------------------------------------------
 
       call gop(w2,c_eim3,'+  ',ncb*ncb)
 
-      if (nid.eq.0) then
-         do i=1,ncb
-            write (6,*) i,ipts(i),irks(i),'ipts irks'
-         enddo
-         if (nid.eq.0) write (6,*) ' '
-         do j=1,ncb
-         do i=1,ncb
-            write (6,*) i,j,w2(i,j),'w2 pre-dgetrf'
-         enddo
-         enddo
-         if (nid.eq.0) write (6,*) ' '
-      endif
+c     if (nid.eq.0) then
+c        do i=1,ncb
+c           write (6,*) i,ipts(i),irks(i),'ipts irks'
+c        enddo
+c        if (nid.eq.0) write (6,*) ' '
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,w2(i,j),'w2 pre-dgetrf'
+c        enddo
+c        enddo
+c        if (nid.eq.0) write (6,*) ' '
+c     endif
 
       call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
 
-      if (nid.eq.0) then
-         do j=1,ncb
-         do i=1,ncb
-            write (6,*) i,j,w2(i,j),'w2 post-dgetrf'
-         enddo
-         enddo
-      endif
-      if (nid.eq.0) write (6,*) ' '
+c     if (nid.eq.0) then
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,w2(i,j),'w2 post-dgetrf'
+c        enddo
+c        enddo
+c     endif
+c     if (nid.eq.0) write (6,*) ' '
 
-      if (nid.eq.0) then
-         do j=1,ncb
-         do i=1,ncb
-            write (6,*) i,j,w1(i,j),'w1 pre-dgetrs'
-         enddo
-         enddo
-      endif
-      if (nid.eq.0) write (6,*) ' '
+c     if (nid.eq.0) then
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,w1(i,j),'w1 pre-dgetrs'
+c        enddo
+c        enddo
+c     endif
+c     if (nid.eq.0) write (6,*) ' '
 
       call dgetrs('N',ncb,ncb,w2,ncb,ipiv,w1,ncb,info)
 
-      if (nid.eq.0) then
-         do j=1,ncb
-         do i=1,ncb
-            write (6,*) i,j,w1(i,j),'w1 post-dgetrs'
-         enddo
-         enddo
-      endif
+c     if (nid.eq.0) then
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,w1(i,j),'w1 post-dgetrs'
+c        enddo
+c        enddo
+c     endif
 
-      if (nid.eq.0) write (6,*) ' '
+c     if (nid.eq.0) write (6,*) ' '
 
       do j=1,ncb
       do i=1,nb
@@ -2286,13 +2286,13 @@ c-----------------------------------------------------------------------
       enddo
       enddo
 
-      if (nid.eq.0) then
-         do j=1,ncb
-         do i=1,nb
-            write (6,*) i,j,w2(i+(j-1)*nb,1),'w2 post-dgetrs'
-         enddo
-         enddo
-      endif
+c     if (nid.eq.0) then
+c        do j=1,ncb
+c        do i=1,nb
+c           write (6,*) i,j,w2(i+(j-1)*nb,1),'w2 post-dgetrs'
+c        enddo
+c        enddo
+c     endif
 
       call copy(c_eim3_,w2,ncb*nb)
 
