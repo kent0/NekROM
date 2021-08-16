@@ -364,6 +364,7 @@ c-----------------------------------------------------------------------
       include 'MOR'
       include 'TSTEP'
       include 'SOLN'
+      include 'INPUT'
 
       common /tmpop/ ftmp0(0:lb,0:lb)
 
@@ -415,7 +416,13 @@ c-----------------------------------------------------------------------
          call sets(st0,tb,'ops/ct ')
       endif
 
+      iftmp=ifxyo
       do i=1,ncb
+         if (i.eq.1) then
+            ifxyo=.true.
+         else
+            ifxyo=iftmp
+         endif
          call outpost(
      $      cbu(1,i,1),cbu(1,i,2),cbu(1,i,3),pr,cbt(1,i),'cut')
       enddo
