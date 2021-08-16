@@ -54,6 +54,7 @@ c-----------------------------------------------------------------------
          endif
 
          call glamax_ind(emax,iproc,ind,err,n)
+         if (nid.eq.iproc) write (6,*) iter,emax,iproc,ind,'glamax_ind'
 
          irks(iter)=iproc
          ipts(iter)=ind
