@@ -23,9 +23,10 @@ c-----------------------------------------------------------------------
 
       call rzero(rpts,n)
 
-      ifxyo=.true.
+      iftmp=ifxyo
 
       do iter=1,nflds
+         ifxyo=(iter.eq.1).or.iftmp
          call copy(err,flds(1,1,1,1,iter),n)
          if (iter.ge.2) then
             call rzero(rtmp1,(iter-1)**2)
@@ -58,7 +59,7 @@ c-----------------------------------------------------------------------
          call outpost(err,rpts,vz,pr,t,'err')
       enddo
 
-      call exitt0
+      ifxyo=iftmp
 
       return
       end
