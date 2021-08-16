@@ -1344,8 +1344,7 @@ c-----------------------------------------------------------------------
       ifld=ifield
       ifield=jfield
 
-c     ncb=nb*2
-c     ncb=10
+      ncb=min(ncb,lb)
 
       if (jfield.eq.1) then
          do idim=1,ldim
