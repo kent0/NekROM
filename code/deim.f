@@ -34,10 +34,10 @@ c-----------------------------------------------------------------------
 
             do j=1,iter-1
                do i=1,iter-1
-                  if (ipts(i).ne.0)
+                  if (irks(i).eq.nid)
      $               rtmp1(i+(j-1)*(iter-1),1)=flds(ipts(i),1,1,1,j)
                enddo
-               rtmp2(j,1)=flds(ipts(j),1,1,1,i)
+               if (irks(j).eq.nid) rtmp2(j,1)=flds(ipts(j),1,1,1,i)
             enddo
 
             call gop(rtmp1,rtmp3,'+  ',(iter-1)**2)
