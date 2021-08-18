@@ -535,9 +535,9 @@ c    $          .and.cfloc.eq.'NONE') then
                do k=kc1,kc2
                do j=jc1,jc2
                do i=ic1,ic2
-                  cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
-c                 if (k.eq.0.or.j.eq.0) 
-c    $               cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
+c                 cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
+                  if (k.eq.0.or.j.eq.0) 
+     $               cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
                enddo
                enddo
                enddo
@@ -707,8 +707,8 @@ c              call exitt0
                call evalc_eim012_lowmem(tmp(1),u(1),ut(1),
      $            ct_eim0,ct_eim1,ct_eim2,nb)
 
-               call evalc_eim3_lowmem(tmp(1),u(1),ut(1),ct_eim3,
-     $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+c              call evalc_eim3_lowmem(tmp(1),u(1),ut(1),ct_eim3,
+c    $            txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
 
                do i=1,nb
                   if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
@@ -933,12 +933,12 @@ c-----------------------------------------------------------------------
             call evalc_eim012_lowmem(tmp1(1),u(1),u(1),
      $         cu_eim0,cu_eim1,cu_eim2,nb)
 
-            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,1),
-     $         uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
-            call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,2),
-     $         vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
-            if (ldim.eq.3) call evalc_eim3_lowmem(tmp1(1),u(1),u(1),
-     $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+c           call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,1),
+c    $         uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+c           call evalc_eim3_lowmem(tmp1(1),u(1),u(1),cu_eim3(1,2),
+c    $         vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+c           if (ldim.eq.3) call evalc_eim3_lowmem(tmp1(1),u(1),u(1),
+c    $         cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
 
             do i=1,nb
                if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
