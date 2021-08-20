@@ -2,6 +2,7 @@ $(OBJDIR)/ana.o    :$(MOR_DIR)/code/ana.f    MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/aux.o    :$(MOR_DIR)/code/aux.f    MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/conv.o   :$(MOR_DIR)/code/conv.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/const.o  :$(MOR_DIR)/code/const.f  MOR LMOR;  $(FC) -c $(FL2) $< -o $@
+$(OBJDIR)/deim.o   :$(MOR_DIR)/code/deim.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/dump.o   :$(MOR_DIR)/code/dump.f   MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/ei.o     :$(MOR_DIR)/code/ei.f     MOR LMOR;  $(FC) -c $(FL2) $< -o $@
 $(OBJDIR)/filter.o :$(MOR_DIR)/code/filter.f MOR LMOR;  $(FC) -c $(FL2) $< -o $@
