@@ -355,20 +355,7 @@ c-----------------------------------------------------------------------
       call gop(tmat,wk,'+  ',ncb*ncb)
 
       call dgetrf(ncb,ncb,tmat,ncb,i1,info)
-c     write (6,*) info,'info'
-c     do j=1,ncb
-c     do i=1,ncb
-c        write (6,*) i,j,tmat(i+(j-1)*ncb),'rrr'
-c     enddo
-c     enddo
-c     do i=1,ncb
-c        write (6,*) i,uc(i),irks(i),ipts(i),i1(i),'sss'
-c     enddo
       call dgetrs('N',ncb,1,tmat,ncb,i1,uc,ncb,info)
-
-c     do i=1,ncb
-c        write (6,*) i,uc(i),'ttt'
-c     enddo
 
       return
       end
@@ -459,64 +446,14 @@ c-----------------------------------------------------------------------
 
       call gop(w2,c_eim3,'+  ',ncb*ncb)
 
-c     if (nid.eq.0) then
-c        do i=1,ncb
-c           write (6,*) i,ipts(i),irks(i),'ipts irks'
-c        enddo
-c        if (nid.eq.0) write (6,*) ' '
-c        do j=1,ncb
-c        do i=1,ncb
-c           write (6,*) i,j,w2(i,j),'w2 pre-dgetrf'
-c        enddo
-c        enddo
-c        if (nid.eq.0) write (6,*) ' '
-c     endif
-
       call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
-
-c     if (nid.eq.0) then
-c        do j=1,ncb
-c        do i=1,ncb
-c           write (6,*) i,j,w2(i,j),'w2 post-dgetrf'
-c        enddo
-c        enddo
-c     endif
-c     if (nid.eq.0) write (6,*) ' '
-
-c     if (nid.eq.0) then
-c        do j=1,ncb
-c        do i=1,ncb
-c           write (6,*) i,j,w1(i,j),'w1 pre-dgetrs'
-c        enddo
-c        enddo
-c     endif
-c     if (nid.eq.0) write (6,*) ' '
-
       call dgetrs('N',ncb,ncb,w2,ncb,ipiv,w1,ncb,info)
-
-c     if (nid.eq.0) then
-c        do j=1,ncb
-c        do i=1,ncb
-c           write (6,*) i,j,w1(i,j),'w1 post-dgetrs'
-c        enddo
-c        enddo
-c     endif
-
-c     if (nid.eq.0) write (6,*) ' '
 
       do j=1,ncb
       do i=1,nb
          w2(i+(j-1)*nb,1)=glsc3(ub(1,i),cb(1,j),bm1,nv)
       enddo
       enddo
-
-c     if (nid.eq.0) then
-c        do j=1,ncb
-c        do i=1,nb
-c           write (6,*) i,j,w2(i+(j-1)*nb,1),'w2 post-dgetrs'
-c        enddo
-c        enddo
-c     endif
 
       call copy(c_eim3_,w2,ncb*nb)
 
@@ -547,20 +484,6 @@ c-----------------------------------------------------------------------
       real rhs(nb),u(nb),t(nb)
       real c_eim3(nb,ncb),dmat(ncb,nb,ndim),zmat(ncb,nb,ndim)
 
-c     do i=1,ncb
-c        dti=0.
-c        zi=0.
-c        do idim=1,ndim
-c        do j=1,nb
-c           dti=dti+dmat(i,j,idim)*t(j)
-c           zi=zi+zmat(i,j,idim)*u(j)
-c        enddo
-c        enddo
-c        do j=1,nb
-c           rhs(j)=rhs(j)+c_eim3(j,i)*zi*dti
-c        enddo
-c     enddo
-
       do i=1,ncb
          zdti=0.
          do idim=1,ndim
@@ -582,9 +505,6 @@ c     enddo
 c-----------------------------------------------------------------------
       subroutine set_intp_eim(
      $   uvw,txyz,ub,vb,wb,tb,itmp1,itmp2,wk,nb,ncb)
-
-c           if (idim.eq.1) call set_intp_eim(uvw_eim(1,1),
-c    $         uxyz_eim,ub,vb,wb,ub,itmp1,itmp2,wk_eim,nb,ncb)
 
       include 'SIZE'
 
