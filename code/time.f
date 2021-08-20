@@ -307,6 +307,8 @@ c     if (icount.le.2) then
       if (ifrom(1)) call shift(u,rhs,nb+1,5)
 
       ustep_time=ustep_time+dnekclock()-ulast_time
+      
+      call exitt0
 
       return
       end
