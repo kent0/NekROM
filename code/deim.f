@@ -153,11 +153,9 @@ c-----------------------------------------------------------------------
 
       n=lx1*ly1*lz1*nelv
 
-      write (6,*) 'deim_check', ifld
+      if (nid.eq.0) write (6,*) 'deim_check', ifld
       call reconv(vxyz(1,1),vxyz(1,2),vxyz(1,3),u)
       call opsub2(vxyz(1,1),vxyz(1,2),vxyz(1,3),ub,vb,wb)
-
-      write (6,*) 'wp 0'
 
       if (ifld.eq.1) then
          ! evaluate points and reconstruct deim field
@@ -242,7 +240,7 @@ c-----------------------------------------------------------------------
          call evalcflds(tlag(1,1,1,1,1,2),vxyz,t,1,1)
 
          do i=1,ncb
-            write (6,*) i,uc(i,1),peval(i,1),'uc'
+            if (nid.eq.0) write (6,*) i,uc(i,1),peval(i,1),'uc'
          enddo
 
          ! check point values match
@@ -296,8 +294,12 @@ c-----------------------------------------------------------------------
                ux_bas=ub(ipts_deim(j,4),i)
                uy_bas=vb(ipts_deim(j,4),i)
 
-         write (6,*) i,j,tx_eim,tx_bas,ty_eim,ty_bas,'intp-check t'
-         write (6,*) i,j,ux_eim,ux_bas,uy_eim,uy_bas,'intp-check u'
+					if (nid.eq.0) then
+						write (6,*)
+     $               i,j,tx_eim,tx_bas,ty_eim,ty_bas,'intp-check t'
+						write (6,*)
+     $               i,j,ux_eim,ux_bas,uy_eim,uy_bas,'intp-check u'
+					endif
             enddo
          enddo
 
