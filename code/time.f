@@ -689,6 +689,8 @@ c-----------------------------------------------------------------------
       do i=1,nb
          rhs(i)=rhs(i)+s*at0(1+i)
       enddo
+      
+      call deim_check(2)
 
       if (ifadvc(2)) then
          if (rmode.eq.'CP ') then
@@ -918,6 +920,8 @@ c-----------------------------------------------------------------------
       do i=1,nb
          rhs(i)=rhs(i)+s*au0(1+i)
       enddo
+      
+      call deim_check(1)
 
       if (rmode.eq.'CP ') then
          if (ifcore) then 
