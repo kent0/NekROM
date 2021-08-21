@@ -23,9 +23,14 @@ c-----------------------------------------------------------------------
                call opcopy(ub(1,ib),vb(1,ib),wb(1,ib),
      $            uvwb(1,1,ib),uvwb(1,2,ib),uvwb(1,ldim,ib))
             enddo
-            if (.not.ifcomb.and.ifpb) call vnorm(ub,vb,wb)
+            if (.not.ifcomb.and.ifpb) then
+               call vnorm(ub,vb,wb)
+               call vnorm_(uvwb)
+            endif
          else
             call opcopy(ub,vb,wb,uic,vic,wic)
+            call opcopy(
+     $         uvwb(1,1,0),uvwb(1,2,0),uvwb(1,ldim,0),uic,vic,wic)
          endif
          if (ifrom(2)) then
             call pod(tb(1,1),evec(1,1,2),eval(1,2),ug(1,1,2),
@@ -866,6 +871,35 @@ c-----------------------------------------------------------------------
       if (nio.eq.0) write (6,*) 'evec_time:',evec_time-eval_time
 
       if (nio.eq.0) write (6,*) 'exiting genevec'
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine vnorm_(uvwbb)
+
+      ! normalizes vector field
+
+      ! uub,vvb,wwb := x,y,z components of vector field
+
+      include 'SIZE'
+      include 'TOTAL'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real uvwbb(lt,ldim,0:nb)
+
+      jfield=ifield
+      ifield=1
+      nio=-1
+      do i=1,nb
+         p=vip(uvwbb(1,1,i),uvwbb(1,2,i),uvwbb(1,ldim,i),
+     $         uvwbb(1,1,i),uvwbb(1,2,i),uvwbb(1,ldim,i))
+         s=1./sqrt(p)
+         call opcmult(uvwbb(1,1,i),uvwbb(1,2,i),uvwbb(1,3,i),s)
+      enddo
+      nio=nid
+      ifield=jfield
 
       return
       end
