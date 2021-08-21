@@ -1349,6 +1349,14 @@ c-----------------------------------------------------------------------
       ifield=jfield
 
       ncb=min(ncb,lb)
+      
+      if (nio.eq.0) write (6,*) 'ncb 0',ncb
+      
+      if (rmode.eq.'ON '.or.rmode.eq.'ONB') then
+         if (nio.eq.0) write (6,*) 'reading eim...'
+         call read_mat_serial(b0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
+         return
+      endif
 
       if (jfield.eq.1) then
          do idim=1,ldim
