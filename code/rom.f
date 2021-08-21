@@ -1404,8 +1404,8 @@ c-----------------------------------------------------------------------
      $         wb(1,1),cbu(1,1,idim),bm1)
 
             call set_j_eim3(ju_eim(1,idim),w1,itmp1,itmp2,ncb,cb)
-            call set_c_eim3(cu_eim3(1,idim),c_eim3_(1,idim),
-               ju_eim(1,idim),w1,ipiv,nb,ncb)
+            call set_c_eim3(cu_eim3(1,idim),cu_eim3_(1,idim),
+     $         ju_eim(1,idim),w1,ipiv,nb,ncb)
          enddo
       else if (jfield.eq.2) then
          call evalcflds(snaptmp,us0,ts0,1,ns)
