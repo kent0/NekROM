@@ -1394,17 +1394,18 @@ c-----------------------------------------------------------------------
             if (idim.eq.3) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
      $         ub,vb,wb,wb,wk,nb,.true.)
 
-            if (idim.eq.1) call set_c_eim3(
-     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
-     $         itmp1,itmp2,ipiv,nb,ncb,ub(1,1),cbu(1,1,idim),bm1,nv)
+            if (idim.eq.1) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
+     $         ub(1,1),cbu(1,1,idim),bm1)
 
-            if (idim.eq.2) call set_c_eim3(
-     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
-     $         itmp1,itmp2,ipiv,nb,ncb,vb(1,1),cbu(1,1,idim),bm1,nv)
+            if (idim.eq.2) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
+     $         vb(1,1),cbu(1,1,idim),bm1)
 
-            if (idim.eq.3) call set_c_eim3(
-     $         cu_eim3(1,idim),cu_eim3_(1,idim),w1,w2,
-     $         itmp1,itmp2,ipiv,nb,ncb,wb(1,1),cbu(1,1,idim),bm1,nv)
+            if (idim.eq.3) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
+     $         wb(1,1),cbu(1,1,idim),bm1)
+
+            call set_j_eim3(ju_eim(1,idim),w1,itmp1,itmp2,ncb,cb)
+            call set_c_eim3(cu_eim3(1,idim),c_eim3_(1,idim),
+               ju_eim(1,idim),w1,ipiv,nb,ncb)
          enddo
       else if (jfield.eq.2) then
          call evalcflds(snaptmp,us0,ts0,1,ns)

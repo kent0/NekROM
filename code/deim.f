@@ -426,40 +426,67 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_c_eim3(
-     $   c_eim3,c_eim3_,w1,w2,ipts,irks,ipiv,nb,ncb,ub,cb,bm1,nv)
+      subroutine set_j_eim3(j_eim,w1,ipts,irks,ncb,cb)
 
       include 'SIZE'
 
       parameter (lt=lx1*ly1*lz1*lelt)
 
-      real c_eim3(1),w1(ncb,ncb),w2(ncb,nb),ub(lt,1),cb(lt,1),bm1(1)
-      real c_eim3_(1)
+      real w1(ncb,ncb),cb(lt,1),j_eim(ncb,ncb)
+      integer irks(1),ipts(1)
+       
+		call rzero(j_eim,ncb*ncb)
+
+		do j=1,ncb
+		do i=1,ncb
+			if (irks(i).eq.nid) j_eim(i,j)=cb(ipts(i),j)
+		enddo
+		enddo
+
+		call gop(j_eim,w1,'+  ',ncb*ncb)
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb,bm1)
+
+      include 'SIZE'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real ub(lt,1),cb(lt,1),bm1(1),c_eim3_(nb,ncb)
       integer irks(1),ipts(1),ipiv(1)
 
-      call rzero(w2,ncb*ncb)
+		do j=1,ncb
+		do i=1,nb
+			c_eim3_(i,j)=glsc3(ub(1,i),cb(1,j),bm1,lx1*ly1*lz1*nelv)
+		enddo
+		enddo
 
-      do j=1,ncb
-      do i=1,ncb
-         if (irks(i).eq.nid) w2(i,j)=cb(ipts(i),j)
-         w1(i,j)=1.-min(abs(i-j),1)
-      enddo
-      enddo
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine set_c_eim3(c_eim3,c_eim3_,j_eim,w1,ipiv,nb,ncb)
 
-      call gop(w2,c_eim3,'+  ',ncb*ncb)
+      include 'SIZE'
 
-      call dgetrf(ncb,ncb,w2,ncb,ipiv,info)
-      call dgetrs('N',ncb,ncb,w2,ncb,ipiv,w1,ncb,info)
+      parameter (lt=lx1*ly1*lz1*lelt)
 
-      do j=1,ncb
-      do i=1,nb
-         w2(i+(j-1)*nb,1)=glsc3(ub(1,i),cb(1,j),bm1,nv)
-      enddo
-      enddo
+      real c_eim3(1),w1(ncb,ncb),c_eim3_(1),j_eim(1)
+      integer ipiv(1)
+      
+		do j=1,ncb
+		do i=1,ncb
+			w1(i,j)=1.-min(abs(i-j),1)
+		enddo
+		enddo
 
-      call copy(c_eim3_,w2,ncb*nb)
+		call copy(c_eim3,j_eim,ncb*ncb)
 
-      call mxm(w2,nb,w1,ncb,c_eim3,ncb)
+		call dgetrf(ncb,ncb,c_eim3,ncb,ipiv,info)
+		call dgetrs('N',ncb,ncb,c_eim3,ncb,ipiv,w1,ncb,info)
+		
+		call mxm(c_eim3_,nb,w1,ncb,c_eim3,ncb)
 
       return
       end
