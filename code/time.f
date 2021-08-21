@@ -627,6 +627,8 @@ c-----------------------------------------------------------------------
          rhs(i)=rhs(i)+s*at0(1+i)
       enddo
       
+      nio=-1
+      
 c     call deim_check(2)
 
       if (ifadvc(2)) then
@@ -816,6 +818,8 @@ c        call add2(tmp(1),st0(1),nb)
 
          call sub2(rhs,tmp(1),nb)
       endif
+      
+      nio=nid
 
       if (ifsource) then
          call add2(rhs,rq,nb)
@@ -857,6 +861,8 @@ c-----------------------------------------------------------------------
       do i=1,nb
          rhs(i)=rhs(i)+s*au0(1+i)
       enddo
+      
+      nio=-1
       
 c     call deim_check(1)
 
@@ -1077,6 +1083,8 @@ c     call deim_check(1)
             enddo
          endif
       endif
+      
+      nio=nid
 
       call chsign(tmp1(1),nb)
 
