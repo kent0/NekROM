@@ -68,7 +68,7 @@ c     parameters and common blocks for MOR
      $                 cu_eim1((lub+1)**2),
      $                 cu_eim2((lub+1)**2),
      $                 cu_eim3((lub+1)*(lub+1),ldim),
-     $                 cu_eim3_((lub+1)*(lub+1),3),
+     $                 cu_eim3_((lub+1)*(lub+1),ldim),
      $                 ju_eim((lub+1)*(lub+1),ldim),
      $                 uvw_eim(lb*lb*ldim,4),
      $                 uxyz_eim(lub*lub*ldim),
