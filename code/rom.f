@@ -1361,8 +1361,8 @@ c-----------------------------------------------------------------------
             if (idim.eq.3)
      $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu3 ',nid)
             call deim_fpts(itmp1,itmp2,cbu(1,1,idim),ncb)
-            call icopy(ipts_deim(1,idim),itmp1,ncb*nb)
-            call icopy(irks_deim(1,idim),itmp2,ncb*nb)
+            call icopy(ipts_deim(1,idim),itmp1,ncb)
+            call icopy(irks_deim(1,idim),itmp2,ncb)
 
             if (idim.eq.1) call set_intp_eim(uvw_eim(1,1),
      $         uxyz_eim,ub,vb,wb,ub,itmp1,itmp2,wk_eim,nb,ncb)
@@ -1401,8 +1401,8 @@ c-----------------------------------------------------------------------
 
          call dump_serial(ug(1,1,0),ls*ls,'ops/gct ',nid)
          call deim_fpts(itmp1,itmp2,cbt,ncb)
-         call icopy(ipts_deim(1,4),itmp1,ncb*nb)
-         call icopy(irks_deim(1,4),itmp2,ncb*nb)
+         call icopy(ipts_deim(1,4),itmp1,ncb)
+         call icopy(irks_deim(1,4),itmp2,ncb)
 
          call set_intp_eim(uvw_eim(1,4),
      $      txyz_eim,ub,vb,wb,tb,itmp1,itmp2,wk_eim,nb,ncb)
