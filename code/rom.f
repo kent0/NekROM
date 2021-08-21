@@ -1336,10 +1336,10 @@ c-----------------------------------------------------------------------
 
       common /scrkk_1/ tx(lt),ty(lt),tz(lt)
       common /scrkk_2/ err(lt,3),cu1(lt),cu2(lt),cu3(lt)
-      common /scrkk_3/ rwkm1(lcb*lcb,3),rwkm2(lcb*lcb,3),wk(lt,ldim)
+      common /scrkk_3/ rwkm1(lb*lb,3),rwkm2(lb*lb,3),wk(lt,ldim)
 
       common /eim/ ux(lub),uy(lub),uz(lub),dxt(ltb),dyt(ltb),dzt(ltb),
-     $             w1(lb,lcb),w2(lb,lcb),wk_eim(lb,lcb)
+     $             w1(lb,lb),w2(lb,lb),wk_eim(lb,lb)
 
       if (nio.eq.0) write (6,*) 'start of setc_eim',jfield
 
