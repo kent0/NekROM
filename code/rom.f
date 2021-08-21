@@ -1423,8 +1423,10 @@ c-----------------------------------------------------------------------
          call set_c_eim012(ct_eim0,ct_eim1,ct_eim2,ub,vb,wb,tb,
      $      wk,nb,.false.)
 
-        call set_c_eim3(ct_eim3,ct_eim3_,w1,w2,itmp1,itmp2,ipiv,nb,ncb,
-     $      tb(1,1),cbt,bm1,nv)
+         call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt,bm1)
+
+         call set_j_eim3(jt_eim,w1,itmp1,itmp2,ncb,cb)
+         call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
       endif
 
       ifield=ifld
