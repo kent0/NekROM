@@ -1389,72 +1389,72 @@ c-----------------------------------------------------------------------
 
             ! velocity evaluations
             fname='ops/uvw_eim11 '
-            call read_mat_serial(uvw_eim(1+0*ncb*ncb,1),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+0*ncb*nb,1),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uvw_eim21 '
-            call read_mat_serial(uvw_eim(1+1*ncb*ncb,1),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+1*ncb*nb,1),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
 
             fname='ops/uvw_eim12 '
-            call read_mat_serial(uvw_eim(1+0*ncb*ncb,2),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+0*ncb*nb,2),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uvw_eim22 '
-            call read_mat_serial(uvw_eim(1+1*ncb*ncb,2),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+1*ncb*nb,2),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
 
             if (ldim.eq.3) then                           
                fname='ops/uvw_eim31 '
-               call read_mat_serial(uvw_eim(1+2*ncb*ncb,1),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uvw_eim(1+2*ncb*nb,1),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
      
                fname='ops/uvw_eim32 '
-               call read_mat_serial(uvw_eim(1+2*ncb*ncb,2),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uvw_eim(1+2*ncb*nb,2),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
 
                fname='ops/uvw_eim13 '
-               call read_mat_serial(uvw_eim(1+0*ncb*ncb,3),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uvw_eim(1+0*ncb*nb,3),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/uvw_eim23 '
-               call read_mat_serial(uvw_eim(1+1*ncb*ncb,3),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uvw_eim(1+1*ncb*nb,3),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/uvw_eim33 '
-               call read_mat_serial(uvw_eim(1+2*ncb*ncb,3),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uvw_eim(1+2*ncb*nb,3),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
             endif
 
             ! gradient evaluations
             fname='ops/uxyz_eim1 '
-            call read_mat_serial(uxyz_eim(1+0*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uxyz_eim(1+0*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uxyz_eim2 '
-            call read_mat_serial(uxyz_eim(1+1*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uxyz_eim(1+1*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uxyz_eim3 '
-            if (ldim.eq.3) call read_mat_serial(uxyz_eim(1+2*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)  
-     
+            if (ldim.eq.3) call read_mat_serial(uxyz_eim(1+2*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)  
+
             fname='ops/vxyz_eim1 '
-            call read_mat_serial(vxyz_eim(1+0*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(vxyz_eim(1+0*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/vxyz_eim2 '
-            call read_mat_serial(vxyz_eim(1+1*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(vxyz_eim(1+1*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/vxyz_eim3 '
-            if (ldim.eq.3) call read_mat_serial(vxyz_eim(1+2*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid) 
-     
+            if (ldim.eq.3) call read_mat_serial(vxyz_eim(1+2*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid) 
+
             if (ldim.eq.3) then
                fname='ops/wxyz_eim1 '
-               call read_mat_serial(uxyz_eim(1+0*ncb*ncb),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uxyz_eim(1+0*ncb*nb),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/wxyz_eim2 '
-               call read_mat_serial(uxyz_eim(1+1*ncb*ncb),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uxyz_eim(1+1*ncb*nb),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/wxyz_eim3 '
-               call read_mat_serial(uxyz_eim(1+2*ncb*ncb),
-     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               call read_mat_serial(uxyz_eim(1+2*ncb*nb),
+     $            ncb,nb,fname,mcb,nb,rtmp1,nid)
             endif
-            
+
             ! set c
             call set_c_eim3(
      $         cu_eim3(1,1),cu_eim3_(1,1),ju_eim(1,1),w1,ipiv,nb,ncb)
@@ -1481,25 +1481,25 @@ c-----------------------------------------------------------------------
 
             ! velocity evaluations
             fname='ops/uvw_eim14 '
-            call read_mat_serial(uvw_eim(1+0*ncb*ncb,4),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+0*ncb*nb,4),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uvw_eim24 '
-            call read_mat_serial(uvw_eim(1+1*ncb*ncb,4),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(uvw_eim(1+1*ncb*nb,4),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/uvw_eim34 '
-            if (ldim.eq.3) call read_mat_serial(uvw_eim(1+2*ncb*ncb,4),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            if (ldim.eq.3) call read_mat_serial(uvw_eim(1+2*ncb*nb,4),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
 
             ! gradient evaluations
             fname='ops/txyz_eim1 '
-            call read_mat_serial(txyz_eim(1+0*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(txyz_eim(1+0*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/txyz_eim2 '
-            call read_mat_serial(txyz_eim(1+1*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            call read_mat_serial(txyz_eim(1+1*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
             fname='ops/txyz_eim3 '
-            if (ldim.eq.3) call read_mat_serial(txyz_eim(1+2*ncb*ncb),
-     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            if (ldim.eq.3) call read_mat_serial(txyz_eim(1+2*ncb*nb),
+     $         ncb,nb,fname,mcb,nb,rtmp1,nid)
      
             ! set c
             call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
