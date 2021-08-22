@@ -1340,6 +1340,8 @@ c-----------------------------------------------------------------------
 
       common /eim/ ux(lub),uy(lub),uz(lub),dxt(ltb),dyt(ltb),dzt(ltb),
      $             w1(lb,lb),w2(lb,lb),wk_eim(lb,lb)
+     
+      character*127 fname
 
       if (nio.eq.0) write (6,*) 'start of setc_eim',jfield
 
@@ -1351,8 +1353,159 @@ c-----------------------------------------------------------------------
       if (nio.eq.0) write (6,*) 'ncb 0',ncb
       
       if (rmode.eq.'ON '.or.rmode.eq.'ONB') then
-         if (nio.eq.0) write (6,*) 'reading eim...'
-         call read_mat_serial(b0,nb+1,nb+1,fname,mb+1,nb+1,tab,nid)
+         if (nio.eq.0) write (6,*) 'reading eim ops...'
+         if (jfield.eq.1) then
+            ! exact operators
+            fname='ops/cu_eim0 '
+            call read_serial(cu_eim0,nb,fname,rtmp1,nid)
+            fname='ops/cu_eim1 '
+            call read_mat_serial(cu_eim1,nb,nb,fname,mb,nb,rtmp1,nid)
+            fname='ops/cu_eim2 '
+            call read_mat_serial(cu_eim2,nb,nb,fname,mb,nb,rtmp1,nid)
+
+            ! inner products
+            fname='ops/cu_eim3_1 '
+            call read_mat_serial(cu_eim3_(1,1),
+     $         nb,ncb,fname,mb,ncb,rtmp1,nid)
+            fname='ops/cu_eim3_2 '
+            call read_mat_serial(cu_eim3_(1,2),
+     $         nb,ncb,fname,mb,ncb,rtmp1,nid)
+            fname='ops/cu_eim3_3 '
+            if (ldim.eq.3) call read_mat_serial(cu_eim3_(1,3),
+     $         nb,ncb,fname,mb,ncb,rtmp1,nid)
+  
+            ! interpolation
+            fname='ops/ju_eim1 '
+            call read_mat_serial(
+     $         ju_eim(1,1),ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            fname='ops/ju_eim2 '
+            call read_mat_serial(
+     $         ju_eim(1,2),ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            fname='ops/ju_eim3 '
+            if (ldim.eq.3) call read_mat_serial(
+     $         ju_eim(1,3),ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            ! velocity evaluations
+            fname='ops/uvw_eim11 '
+            call read_mat_serial(uvw_eim(1+0*ncb*ncb,1),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uvw_eim21 '
+            call read_mat_serial(uvw_eim(1+1*ncb*ncb,1),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            fname='ops/uvw_eim12 '
+            call read_mat_serial(uvw_eim(1+0*ncb*ncb,2),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uvw_eim22 '
+            call read_mat_serial(uvw_eim(1+1*ncb*ncb,2),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            if (ldim.eq.3) then                           
+               fname='ops/uvw_eim31 '
+               call read_mat_serial(uvw_eim(1+2*ncb*ncb,1),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+     
+               fname='ops/uvw_eim32 '
+               call read_mat_serial(uvw_eim(1+2*ncb*ncb,2),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+               fname='ops/uvw_eim13 '
+               call read_mat_serial(uvw_eim(1+0*ncb*ncb,3),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               fname='ops/uvw_eim23 '
+               call read_mat_serial(uvw_eim(1+1*ncb*ncb,3),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               fname='ops/uvw_eim33 '
+               call read_mat_serial(uvw_eim(1+2*ncb*ncb,3),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            endif
+
+            ! gradient evaluations
+            fname='ops/uxyz_eim1 '
+            call read_mat_serial(uxyz_eim(1+0*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uxyz_eim2 '
+            call read_mat_serial(uxyz_eim(1+1*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uxyz_eim3 '
+            if (ldim.eq.3) call read_mat_serial(uxyz_eim(1+2*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)  
+     
+            fname='ops/vxyz_eim1 '
+            call read_mat_serial(vxyz_eim(1+0*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/vxyz_eim2 '
+            call read_mat_serial(vxyz_eim(1+1*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/vxyz_eim3 '
+            if (ldim.eq.3) call read_mat_serial(vxyz_eim(1+2*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid) 
+     
+            if (ldim.eq.3) then
+               fname='ops/wxyz_eim1 '
+               call read_mat_serial(uxyz_eim(1+0*ncb*ncb),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               fname='ops/wxyz_eim2 '
+               call read_mat_serial(uxyz_eim(1+1*ncb*ncb),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+               fname='ops/wxyz_eim3 '
+               call read_mat_serial(uxyz_eim(1+2*ncb*ncb),
+     $            ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            endif
+            
+            ! set c
+            call set_c_eim3(
+     $         cu_eim3(1,1),cu_eim3_(1,1),ju_eim(1,1),w1,ipiv,nb,ncb)
+            call set_c_eim3(
+     $         cu_eim3(1,2),cu_eim3_(1,2),ju_eim(1,2),w1,ipiv,nb,ncb)
+            if (ldim.eq.3) call set_c_eim3(
+     $         cu_eim3(1,3),cu_eim3_(1,3),ju_eim(1,3),w1,ipiv,nb,ncb)
+         else
+            ! exact operators
+            fname='ops/ct_eim0 '
+            call read_serial(ct_eim0,nb,fname,rtmp1,nid)
+            fname='ops/ct_eim1 '
+            call read_mat_serial(ct_eim1,nb,nb,fname,mb,nb,rtmp1,nid)
+            fname='ops/ct_eim2 '
+            call read_mat_serial(ct_eim2,nb,nb,fname,mb,nb,rtmp1,nid)
+
+            ! inner products
+            fname='ops/ct_eim3 '
+            call read_mat_serial(ct_eim3_(1+0*nb*ncb),
+     $         nb,ncb,fname,mb,ncb,rtmp1,nid)
+      
+            ! interpolation
+            fname='ops/jt_eim '
+            call read_mat_serial(jt_eim,ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            ! velocity evaluations
+            fname='ops/uvw_eim14 '
+            call read_mat_serial(uvw_eim(1+0*ncb*ncb,4),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uvw_eim24 '
+            call read_mat_serial(uvw_eim(1+1*ncb*ncb,4),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/uvw_eim34 '
+            if (ldim.eq.3) call read_mat_serial(uvw_eim(1+2*ncb*ncb,4),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+
+            ! gradient evaluations
+            fname='ops/txyz_eim1 '
+            call read_mat_serial(txyz_eim(1+0*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/txyz_eim2 '
+            call read_mat_serial(txyz_eim(1+1*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+            fname='ops/txyz_eim3 '
+            if (ldim.eq.3) call read_mat_serial(txyz_eim(1+2*ncb*ncb),
+     $         ncb,ncb,fname,mcb,ncb,rtmp1,nid)
+     
+            ! set c
+            call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
+         endif
+
          return
       endif
 
