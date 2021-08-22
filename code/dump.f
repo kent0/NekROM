@@ -374,11 +374,7 @@ c        call dump_global(ctl,ncloc,'ops/ct ',wk1,wk2,nid)
             call dump_serial(ct_eim1,nb*nb,'ops/ct_eim1 ',nid)
             call dump_serial(ct_eim2,nb*nb,'ops/ct_eim2 ',nid)
             call dump_serial(
-     $         ct_eim3(1+0*nb*ncb),nb*ncb,'ops/ct_eim3_1 ',nid)
-            call dump_serial(
-     $         ct_eim3(1+1*nb*ncb),nb*ncb,'ops/ct_eim3_2 ',nid)
-            if (ldim.eq.3) call dump_serial(
-     $         ct_eim3(1+2*nb*ncb),nb*ncb,'ops/ct_eim3_3 ',nid)
+     $         ct_eim3_,nb*ncb,'ops/ct_eim3_ ',nid)
 
             call dump_serial(jt_eim,ncb*ncb,'ops/jt_eim ',nid)
 
