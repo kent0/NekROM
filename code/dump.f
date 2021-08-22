@@ -307,8 +307,8 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             call dump_serial(cu_eim2,nb*nb,'ops/cu_eim2 ',nid)
             call dump_serial(cu_eim3_(1,1),nb*ncb,'ops/cu_eim3_1 ',nid)
             call dump_serial(cu_eim3_(1,2),nb*ncb,'ops/cu_eim3_2 ',nid)
-            call dump_serial(ju_eim(1,1),ncb*ncb,'ops/ju_eim_1 ',nid)
-            call dump_serial(ju_eim(1,2),ncb*ncb,'ops/ju_eim_2 ',nid)
+            call dump_serial(ju_eim(1,1),ncb*ncb,'ops/ju_eim1 ',nid)
+            call dump_serial(ju_eim(1,2),ncb*ncb,'ops/ju_eim2 ',nid)
 
             call dump_serial(
      $         uvw_eim(1+0*ncb*ncb,1),ncb*ncb,'ops/uvw_eim11 ',nid)
@@ -331,7 +331,7 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             if (ldim.eq.3) then
                call dump_serial(
      $            cu_eim3_(1,3),nb*ncb,'ops/cu_eim3_3 ',nid)
-               call dump_serial(ju_eim(1,3),ncb*ncb,'ops/ju_eim_3 ',nid)
+               call dump_serial(ju_eim(1,3),ncb*ncb,'ops/ju_eim3 ',nid)
 
                call dump_serial(
      $            uvw_eim(1+2*ncb*ncb,1),ncb*ncb,'ops/uvw_eim31 ',nid)
