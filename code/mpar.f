@@ -384,7 +384,7 @@ c-----------------------------------------------------------------------
          endif
          if (ifeimc) then
             call read_serial(rtmp1(1,1),1,'ops/ncb ',b,nid)
-            mcb=rtmp(1,1)
+            mcb=rtmp1(1,1)
             rtmp1(1,1)=ncb*1.
             if (mcb.lt.ncb) then
                write (6,*) 'mcb less than ncb... ',mcb
