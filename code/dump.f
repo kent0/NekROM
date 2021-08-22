@@ -373,12 +373,26 @@ c        call dump_global(ctl,ncloc,'ops/ct ',wk1,wk2,nid)
             call dump_serial(ct_eim0,nb,'ops/ct_eim0 ',nid)
             call dump_serial(ct_eim1,nb*nb,'ops/ct_eim1 ',nid)
             call dump_serial(ct_eim2,nb*nb,'ops/ct_eim2 ',nid)
-            call dump_serial(ct_eim3,nb*ncb,'ops/ct_eim3 ',nid)
+            call dump_serial(
+     $         ct_eim3(1+0*nb*ncb),nb*ncb,'ops/ct_eim3_1 ',nid)
+            call dump_serial(
+     $         ct_eim3(1+1*nb*ncb),nb*ncb,'ops/ct_eim3_2 ',nid)
+            if (ldim.eq.3) call dump_serial(
+     $         ct_eim3(1+2*nb*ncb),nb*ncb,'ops/ct_eim3_3 ',nid)
 
-            n2=nb*ncb*ldim
+            call dump_serial(
+     $         uvw_eim(1+0*nb*ncb,4),nb*ncb,'ops/uvw_eim14 ',nid)
+            call dump_serial(
+     $         uvw_eim(1+1*nb*ncb,4),nb*ncb,'ops/uvw_eim24 ',nid)
+            call dump_serial(
+     $         uvw_eim(1+2*nb*ncb,4),nb*ncb,'ops/uvw_eim34 ',nid)
 
-            call dump_serial(uvw_eim(1,4),n2,'ops/uvw_eim3 ',nid)
-            call dump_serial(txyz_eim,n2,'ops/txyz_eim ',nid)
+            call dump_serial(
+     $         txyz_eim(1+0*nb*ncb),nb*ncb,'ops/txyz_eim1 ',nid)
+            call dump_serial(
+     $         txyz_eim(1+1*nb*ncb),nb*ncb,'ops/txyz_eim2 ',nid)
+            if (ldim.eq.3) call dump_serial(
+     $         txyz_eim(1+2*nb*ncb),nb*ncb,'ops/txyz_eim3 ',nid)
          endif
 
       endif
