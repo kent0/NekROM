@@ -315,7 +315,7 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             call dump_serial(
      $         uvw_eim(1+1*ncb*ncb,1),ncb*ncb,'ops/uvw_eim21 ',nid)
             call dump_serial(
-     $         uvw_eim(1+0*ncb*ncb,2),ncb*ncb,'ops/uvw_eim21 ',nid)
+     $         uvw_eim(1+0*ncb*ncb,2),ncb*ncb,'ops/uvw_eim12 ',nid)
             call dump_serial(
      $         uvw_eim(1+1*ncb*ncb,2),ncb*ncb,'ops/uvw_eim22 ',nid)
 
