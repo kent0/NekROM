@@ -627,7 +627,9 @@ c-----------------------------------------------------------------------
          rhs(i)=rhs(i)+s*at0(1+i)
       enddo
       
+      nnio=nio
       nio=-1
+      if (mod(ad_step,ad_iostep).eq.0) nio=nid
       
 c     call deim_check(2)
 
@@ -818,8 +820,6 @@ c        call add2(tmp(1),st0(1),nb)
 
          call sub2(rhs,tmp(1),nb)
       endif
-      
-      nio=nid
 
       if (ifsource) then
          call add2(rhs,rq,nb)
@@ -837,6 +837,8 @@ c        call add2(tmp(1),st0(1),nb)
             call add2s2(rhs,rqt,rqttcext,nb)
          endif
       endif
+
+      nio=nnio
 
       return
       end
@@ -862,7 +864,9 @@ c-----------------------------------------------------------------------
          rhs(i)=rhs(i)+s*au0(1+i)
       enddo
       
+      nnio=nio
       nio=-1
+      if (mod(ad_step,ad_iostep).eq.0) nio=nid
       
 c     call deim_check(1)
 
@@ -1083,8 +1087,6 @@ c     call deim_check(1)
             enddo
          endif
       endif
-      
-      nio=nid
 
       call chsign(tmp1(1),nb)
 
@@ -1155,6 +1157,8 @@ c              tmp2(i)=log(d)
 
          call addcol3(rhs,tmp1(1),tmp2(1),nb)
       endif
+
+      nio=nnio
 
       return
       end
