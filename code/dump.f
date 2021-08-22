@@ -311,22 +311,22 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
             call dump_serial(ju_eim(1,2),ncb*ncb,'ops/ju_eim_2 ',nid)
 
             call dump_serial(
-     $         uvw_eim(1+0*nb*ncb,1),nb*ncb,'ops/uvw_eim11 ',nid)
+     $         uvw_eim(1+0*ncb*ncb,1),ncb*ncb,'ops/uvw_eim11 ',nid)
             call dump_serial(
-     $         uvw_eim(1+1*nb*ncb,1),nb*ncb,'ops/uvw_eim21 ',nid)
+     $         uvw_eim(1+1*ncb*ncb,1),ncb*ncb,'ops/uvw_eim21 ',nid)
             call dump_serial(
-     $         uvw_eim(1+0*nb*ncb,2),nb*ncb,'ops/uvw_eim21 ',nid)
+     $         uvw_eim(1+0*ncb*ncb,2),ncb*ncb,'ops/uvw_eim21 ',nid)
             call dump_serial(
-     $         uvw_eim(1+1*nb*ncb,2),nb*ncb,'ops/uvw_eim22 ',nid)
+     $         uvw_eim(1+1*ncb*ncb,2),ncb*ncb,'ops/uvw_eim22 ',nid)
 
             call dump_serial(
-     $         uxyz_eim(1+0*nb*ncb),nb*ncb,'ops/uxyz_eim1 ',nid)
+     $         uxyz_eim(1+0*ncb*ncb),ncb*ncb,'ops/uxyz_eim1 ',nid)
             call dump_serial(
-     $         uxyz_eim(1+1*nb*ncb),nb*ncb,'ops/uxyz_eim2 ',nid)
+     $         uxyz_eim(1+1*ncb*ncb),ncb*ncb,'ops/uxyz_eim2 ',nid)
             call dump_serial(
-     $         vxyz_eim(1+0*nb*ncb),nb*ncb,'ops/vxyz_eim1 ',nid)
+     $         vxyz_eim(1+0*ncb*ncb),ncb*ncb,'ops/vxyz_eim1 ',nid)
             call dump_serial(
-     $         vxyz_eim(1+1*nb*ncb),nb*ncb,'ops/vxyz_eim2 ',nid)
+     $         vxyz_eim(1+1*ncb*ncb),ncb*ncb,'ops/vxyz_eim2 ',nid)
 
             if (ldim.eq.3) then
                call dump_serial(
@@ -334,28 +334,28 @@ c        call dump_global(cul,ncloc,'ops/cu ',wk1,wk2,nid)
                call dump_serial(ju_eim(1,3),ncb*ncb,'ops/ju_eim_3 ',nid)
 
                call dump_serial(
-     $            uvw_eim(1+2*nb*ncb,1),nb*ncb,'ops/uvw_eim31 ',nid)
+     $            uvw_eim(1+2*ncb*ncb,1),ncb*ncb,'ops/uvw_eim31 ',nid)
                call dump_serial(
-     $            uvw_eim(1+2*nb*ncb,2),nb*ncb,'ops/uvw_eim32 ',nid)
+     $            uvw_eim(1+2*ncb*ncb,2),ncb*ncb,'ops/uvw_eim32 ',nid)
 
                call dump_serial(
-     $            uvw_eim(1+0*nb*ncb,3),nb*ncb*ldim,'ops/uvw_eim13 ',nid)
+     $            uvw_eim(1+0*ncb*ncb,3),ncb*ncb,'ops/uvw_eim13 ',nid)
                call dump_serial(
-     $            uvw_eim(1+1*nb*ncb,3),nb*ncb*ldim,'ops/uvw_eim23 ',nid)
+     $            uvw_eim(1+1*ncb*ncb,3),ncb*ncb,'ops/uvw_eim23 ',nid)
                call dump_serial(
-     $            uvw_eim(1+2*nb*ncb,3),nb*ncb*ldim,'ops/uvw_eim33 ',nid)
+     $            uvw_eim(1+2*ncb*ncb,3),ncb*ncb,'ops/uvw_eim33 ',nid)
 
                call dump_serial(
-     $            uxyz_eim(1+2*nb*ncb),nb*ncb,'ops/uxyz_eim3 ',nid)
+     $            uxyz_eim(1+2*ncb*ncb),ncb*ncb,'ops/uxyz_eim3 ',nid)
                call dump_serial(
-     $            vxyz_eim(1+2*nb*ncb),nb*ncb,'ops/vxyz_eim3 ',nid)
+     $            vxyz_eim(1+2*ncb*ncb),ncb*ncb,'ops/vxyz_eim3 ',nid)
 
                call dump_serial(
-     $            wxyz_eim(1+0*nb*ncb),nb*ncb,'ops/wxyz_eim1 ',nid)
+     $            wxyz_eim(1+0*ncb*ncb),ncb*ncb,'ops/wxyz_eim1 ',nid)
                call dump_serial(
-     $            wxyz_eim(1+1*nb*ncb),nb*ncb,'ops/wxyz_eim2 ',nid)
+     $            wxyz_eim(1+1*ncb*ncb),ncb*ncb,'ops/wxyz_eim2 ',nid)
                call dump_serial(
-     $            wxyz_eim(1+2*nb*ncb),nb*ncb,'ops/wxyz_eim3 ',nid)
+     $            wxyz_eim(1+2*ncb*ncb),ncb*ncb,'ops/wxyz_eim3 ',nid)
             endif
          endif
 
@@ -380,19 +380,21 @@ c        call dump_global(ctl,ncloc,'ops/ct ',wk1,wk2,nid)
             if (ldim.eq.3) call dump_serial(
      $         ct_eim3(1+2*nb*ncb),nb*ncb,'ops/ct_eim3_3 ',nid)
 
-            call dump_serial(
-     $         uvw_eim(1+0*nb*ncb,4),nb*ncb,'ops/uvw_eim14 ',nid)
-            call dump_serial(
-     $         uvw_eim(1+1*nb*ncb,4),nb*ncb,'ops/uvw_eim24 ',nid)
-            call dump_serial(
-     $         uvw_eim(1+2*nb*ncb,4),nb*ncb,'ops/uvw_eim34 ',nid)
+            call dump_serial(jt_eim,ncb*ncb,'ops/jt_eim ',nid)
 
             call dump_serial(
-     $         txyz_eim(1+0*nb*ncb),nb*ncb,'ops/txyz_eim1 ',nid)
+     $         uvw_eim(1+0*ncb*ncb,4),ncb*ncb,'ops/uvw_eim14 ',nid)
             call dump_serial(
-     $         txyz_eim(1+1*nb*ncb),nb*ncb,'ops/txyz_eim2 ',nid)
+     $         uvw_eim(1+1*ncb*ncb,4),ncb*ncb,'ops/uvw_eim24 ',nid)
+            call dump_serial(
+     $         uvw_eim(1+2*ncb*ncb,4),ncb*ncb,'ops/uvw_eim34 ',nid)
+
+            call dump_serial(
+     $         txyz_eim(1+0*ncb*ncb),ncb*ncb,'ops/txyz_eim1 ',nid)
+            call dump_serial(
+     $         txyz_eim(1+1*ncb*ncb),ncb*ncb,'ops/txyz_eim2 ',nid)
             if (ldim.eq.3) call dump_serial(
-     $         txyz_eim(1+2*nb*ncb),nb*ncb,'ops/txyz_eim3 ',nid)
+     $         txyz_eim(1+2*ncb*ncb),ncb*ncb,'ops/txyz_eim3 ',nid)
          endif
 
       endif
