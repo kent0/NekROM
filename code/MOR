@@ -62,6 +62,8 @@ c     parameters and common blocks for MOR
      $                 wt(lb**2,2)
       common /morifops/ ihlu(lb,2),ihlu2(lb,2)
 
+      real ju_eim,jt_eim
+
       common /morvops/ au0((lub+1)**2),bu0((lub+1)**2),
      $                 au(lub**2),bu(lub**2),cul((lcloc-1)*lmu+1),
      $                 cu_eim0(lub+1),
