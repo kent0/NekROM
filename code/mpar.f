@@ -92,6 +92,10 @@ c-----------------------------------------------------------------------
       if (ifnd.eq.1) nb=min(nint(d_out),lb)
       if (nb.eq.0) nb=lb
 
+      call finiparser_getdbl(d_out,'general:ncb',ifnd)
+      if (ifnd.eq.1) ncb=min(nint(d_out),lb)
+      if (ncb.eq.0) ncb=lb
+
       if (ifavg0.and.(nb.eq.ls)) then
          write (6,*) 'nb == ls results in linear dependent bases',nb
          ierr=ierr+1
@@ -367,6 +371,10 @@ c-----------------------------------------------------------------------
       if (rmode.eq.'ALL'.or.rmode.eq.'OFF'.or.rmode.eq.'AEQ') then
          rtmp1(1,1)=nb*1.
          call dump_serial(rtmp1(1,1),1,'ops/nb ',nid)
+         if (ifeimc) then
+            rtmp1(1,1)=ncb*1.
+            call dump_serial(rtmp1(1,1),1,'ops/ncb ',nid)
+         endif
       else
          call read_serial(rtmp1(1,1),1,'ops/nb ',b,nid)
          mb=rtmp1(1,1)
@@ -415,6 +423,7 @@ c-----------------------------------------------------------------------
 
       call bcast(max_tr,isize)
       call bcast(nb,isize)
+      call bcast(ncb,isize)
       call bcast(navg_step,isize)
       call bcast(nplay,isize)
       call bcast(ad_qstep,isize)

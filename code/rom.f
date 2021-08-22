@@ -1347,8 +1347,6 @@ c-----------------------------------------------------------------------
 
       ifld=ifield
       ifield=jfield
-
-      ncb=min(ncb,lb)
       
       if (nio.eq.0) write (6,*) 'ncb 0',ncb
       
