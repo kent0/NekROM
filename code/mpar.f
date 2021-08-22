@@ -382,6 +382,15 @@ c-----------------------------------------------------------------------
             write (6,*) 'mb less than nb... ',mb
             ierr=ierr+1
          endif
+         if (ifeimc) then
+            call read_serial(rtmp1(1,1),1,'ops/ncb ',b,nid)
+            mcb=rtmp(1,1)
+            rtmp1(1,1)=ncb*1.
+            if (mcb.lt.ncb) then
+               write (6,*) 'mcb less than ncb... ',mcb
+               ierr=ierr+1
+            endif
+         endif
       endif
 
       if (rmode.eq.'ON '.or.rmode.eq.'ONB'.or.rmode.eq.'CP ') then
@@ -424,6 +433,7 @@ c-----------------------------------------------------------------------
       call bcast(max_tr,isize)
       call bcast(nb,isize)
       call bcast(ncb,isize)
+      call bcast(mcb,isize)
       call bcast(navg_step,isize)
       call bcast(nplay,isize)
       call bcast(ad_qstep,isize)
