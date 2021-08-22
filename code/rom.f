@@ -1554,7 +1554,8 @@ c-----------------------------------------------------------------------
             if (idim.eq.3) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
      $         wb(1,1),cbu(1,1,idim),bm1)
 
-            call set_j_eim3(ju_eim(1,idim),w1,itmp1,itmp2,ncb,cb)
+            call set_j_eim3(ju_eim(1,idim),
+     $         w1,itmp1,itmp2,ncb,cbu(1,1,idim))
             call set_c_eim3(cu_eim3(1,idim),cu_eim3_(1,idim),
      $         ju_eim(1,idim),w1,ipiv,nb,ncb)
          enddo
@@ -1576,7 +1577,7 @@ c-----------------------------------------------------------------------
 
          call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt,bm1)
 
-         call set_j_eim3(jt_eim,w1,itmp1,itmp2,ncb,cb)
+         call set_j_eim3(jt_eim,w1,itmp1,itmp2,ncb,cbt)
          call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
       endif
 
