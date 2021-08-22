@@ -433,6 +433,7 @@ c-----------------------------------------------------------------------
       call bcast(max_tr,isize)
       call bcast(nb,isize)
       call bcast(ncb,isize)
+      call bcast(mb,isize)
       call bcast(mcb,isize)
       call bcast(navg_step,isize)
       call bcast(nplay,isize)
