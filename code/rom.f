@@ -1472,9 +1472,8 @@ c-----------------------------------------------------------------------
             call read_mat_serial(ct_eim2,nb,nb,fname,mb,nb,rtmp1,nid)
 
             ! inner products
-            fname='ops/ct_eim3 '
-            call read_mat_serial(ct_eim3_(1+0*nb*ncb),
-     $         nb,ncb,fname,mb,ncb,rtmp1,nid)
+            fname='ops/ct_eim3_ '
+            call read_mat_serial(ct_eim3_,nb,ncb,fname,mb,ncb,rtmp1,nid)
       
             ! interpolation
             fname='ops/jt_eim '
