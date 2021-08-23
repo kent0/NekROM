@@ -215,6 +215,7 @@ c     parameters and common blocks for MOR
      $     cp_time
 
       common /mortime/ step_time,last_time,misc_time,evalc_time,
+     $                 evalc_eim_time,
      $                 solve_time,lu_time,
      $                 copt_time,quasi_time,lnsrch_time,
      $                 tstep_time,tlast_time,tsolve_time,

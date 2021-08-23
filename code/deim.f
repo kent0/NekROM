@@ -532,6 +532,47 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine evalc_eim(rhs,uu,tt,ifld)
+
+      include 'SIZE'
+      include 'MOR'
+
+      integer icalld
+      save    icalld
+      data    icalld /0/
+
+      real rhs(1),uu(1),tt(1)
+
+      if (icalld.eq.0) then
+         evalc_eim_time=0.
+         icalld=1
+      endif
+
+      stime=dnekclock()
+
+      if (ifld.eq.1) then
+         call evalc_eim012_lowmem(rhs(1),uu(1),uu(1),
+     $      cu_eim0,cu_eim1,cu_eim2,nb)
+
+         call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),cu_eim3(1,1),
+     $      uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+         call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),cu_eim3(1,2),
+     $      vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+         if (ldim.eq.3) call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),
+     $      cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+      else if (ifld.eq.2) then
+         call evalc_eim012_lowmem(rhs(1),uu(1),tt(1),
+     $      ct_eim0,ct_eim1,ct_eim2,nb)
+
+         call evalc_eim3_lowmem(rhs(1),uu(1),tt(1),ct_eim3,
+     $      txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+      endif
+
+      evalc_eim_time=evalc_eim_time+dnekclock()-stime
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine set_intp_eim(
      $   uvw,txyz,ub,vb,wb,tb,itmp1,itmp2,wk,nb,ncb)
 

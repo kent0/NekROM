@@ -29,7 +29,6 @@ c-----------------------------------------------------------------------
 
       ifmult=.not.ifrom(2).and.ifheat
 
-
       if (rmode.ne.'OFF'.or.rmode.eq.'AEQ') then
       if (ifmult) then
          if (ifflow) call exitti(
@@ -2007,6 +2006,7 @@ c-----------------------------------------------------------------------
       if (nio.eq.0) write (6,*) 'final...'
       if (nid.eq.0) then
          write (6,*) 'evalc_time:  ',evalc_time
+         write (6,*) 'evalce_time: ',evalc_eim_time
          write (6,*) 'lu_time:     ',lu_time
          write (6,*) 'solve_time:  ',solve_time
          write (6,*) 'ustep_time:  ',ustep_time
