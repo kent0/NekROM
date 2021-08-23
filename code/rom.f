@@ -1426,6 +1426,7 @@ c-----------------------------------------------------------------------
             fname='ops/uxyz_eim1 '
             call read_mat_serial(uxyz_eim(1+0*ncb*nb),
      $         ncb,nb,fname,mcb,nb,rtmp1,nid)
+
             fname='ops/uxyz_eim2 '
             call read_mat_serial(uxyz_eim(1+1*ncb*nb),
      $         ncb,nb,fname,mcb,nb,rtmp1,nid)
@@ -1445,13 +1446,13 @@ c-----------------------------------------------------------------------
 
             if (ldim.eq.3) then
                fname='ops/wxyz_eim1 '
-               call read_mat_serial(uxyz_eim(1+0*ncb*nb),
+               call read_mat_serial(wxyz_eim(1+0*ncb*nb),
      $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/wxyz_eim2 '
-               call read_mat_serial(uxyz_eim(1+1*ncb*nb),
+               call read_mat_serial(wxyz_eim(1+1*ncb*nb),
      $            ncb,nb,fname,mcb,nb,rtmp1,nid)
                fname='ops/wxyz_eim3 '
-               call read_mat_serial(uxyz_eim(1+2*ncb*nb),
+               call read_mat_serial(wxyz_eim(1+2*ncb*nb),
      $            ncb,nb,fname,mcb,nb,rtmp1,nid)
             endif
 
