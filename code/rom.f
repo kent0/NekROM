@@ -1535,6 +1535,9 @@ c-----------------------------------------------------------------------
             if (idim.eq.3) call set_intp_eim(uvw_eim(1,3),
      $         wxyz_eim,ub,vb,wb,wb,itmp1,itmp2,wk_eim,nb,ncb)
 
+            call set_j_eim3(ju_eim(1,idim),
+     $         w1,itmp1,itmp2,ncb,cbu(1,1,idim))
+
             if (idim.eq.1) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
      $         ub,vb,wb,ub,wk,nb,.false.)
 
@@ -1544,17 +1547,23 @@ c-----------------------------------------------------------------------
             if (idim.eq.3) call set_c_eim012(cu_eim0,cu_eim1,cu_eim2,
      $         ub,vb,wb,wb,wk,nb,.true.)
 
+            do is=1,ns
+               call convect_new(snaptmp(1,is,1),,us0(1,idim,is),.false.,
+     $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
+            enddo
+
+            call dgemm('N','N',nv,ncb,ns,1.,
+     $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,1),lt)
+
             if (idim.eq.1) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         ub(1,1),cbu(1,1,idim),bm1)
+     $         ub(1,1),cbu(1,1,idim))
 
             if (idim.eq.2) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         vb(1,1),cbu(1,1,idim),bm1)
+     $         vb(1,1),cbu(1,1,idim))
 
             if (idim.eq.3) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         wb(1,1),cbu(1,1,idim),bm1)
+     $         wb(1,1),cbu(1,1,idim))
 
-            call set_j_eim3(ju_eim(1,idim),
-     $         w1,itmp1,itmp2,ncb,cbu(1,1,idim))
             call set_c_eim3(cu_eim3(1,idim),cu_eim3_(1,idim),
      $         ju_eim(1,idim),w1,ipiv,nb,ncb)
          enddo
@@ -1571,12 +1580,21 @@ c-----------------------------------------------------------------------
          call set_intp_eim(uvw_eim(1,4),
      $      txyz_eim,ub,vb,wb,tb,itmp1,itmp2,wk_eim,nb,ncb)
 
+         call set_j_eim3(jt_eim,w1,itmp1,itmp2,ncb,cbt)
+
          call set_c_eim012(ct_eim0,ct_eim1,ct_eim2,ub,vb,wb,tb,
      $      wk,nb,.false.)
 
-         call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt,bm1)
+            do is=1,ns
+               call convect_new(snaptmp(1,is,1),,ts0(1,is),.false.,
+     $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
+            enddo
 
-         call set_j_eim3(jt_eim,w1,itmp1,itmp2,ncb,cbt)
+            call dgemm('N','N',nv,ncb,ns,1.,
+     $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbt(1,1),lt)
+
+         call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt)
+
          call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
       endif
 
