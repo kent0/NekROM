@@ -1548,7 +1548,7 @@ c-----------------------------------------------------------------------
      $         ub,vb,wb,wb,wk,nb,.true.)
 
             do is=1,ns
-               call convect_new(snaptmp(1,is,1),,us0(1,idim,is),.false.,
+               call convect_new(snaptmp(1,is,1),us0(1,idim,is),.false.,
      $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
@@ -1586,7 +1586,7 @@ c-----------------------------------------------------------------------
      $      wk,nb,.false.)
 
             do is=1,ns
-               call convect_new(snaptmp(1,is,1),,ts0(1,is),.false.,
+               call convect_new(snaptmp(1,is,1),ts0(1,is),.false.,
      $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
