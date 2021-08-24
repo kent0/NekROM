@@ -656,7 +656,6 @@ c     call deim_check(2)
                   if (nio.eq.0)
      $               write (6,*) ad_step,i,tmp(i),'ct-standard'
                enddo
-
             else if (icmode.eq.-1) then
 
                call evalc(tmp(1),ctmp,ctl,ut)
