@@ -448,14 +448,14 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb)
-c     subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb,bm1)
+c     subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb)
+      subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb,bm1)
 
       include 'SIZE'
 
       parameter (lt=lx1*ly1*lz1*lelt)
 
-      real ub(lt,1),cb(lt,1),c_eim3_(nb,ncb)!,bm1(1)
+      real ub(lt,1),cb(lt,1),c_eim3_(nb,ncb),bm1(1)
       integer irks(1),ipts(1),ipiv(1)
 
       do j=1,ncb

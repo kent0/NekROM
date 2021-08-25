@@ -1549,7 +1549,7 @@ c-----------------------------------------------------------------------
 
             do is=1,ns
                call convect_new(snaptmp(1,is,1),us0(1,idim,is),.false.,
-     $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
+     $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
             call dgemm('N','N',nv,ncb,ns,1.,
@@ -1587,7 +1587,7 @@ c-----------------------------------------------------------------------
 
             do is=1,ns
                call convect_new(snaptmp(1,is,1),ts0(1,is),.false.,
-     $            us0(1,2,is),us0(1,2,is),us0(1,ldim,is),.false.)
+     $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
             call dgemm('N','N',nv,ncb,ns,1.,
