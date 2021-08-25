@@ -1552,17 +1552,20 @@ c-----------------------------------------------------------------------
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
-            call dgemm('N','N',nv,ncb,ns,1.,
-     $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,1),lt)
+c           call dgemm('N','N',nv,ncb,ns,1.,
+c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,idim),lt)
+            do i=1,ncb
+               call col2(cbu(1,i,idim),bm1,nv)
+            enddo
 
             if (idim.eq.1) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         ub(1,1),cbu(1,1,idim))
+     $         ub(1,1),cbu(1,1,idim),bm1)
 
             if (idim.eq.2) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         vb(1,1),cbu(1,1,idim))
+     $         vb(1,1),cbu(1,1,idim),bm1)
 
             if (idim.eq.3) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
-     $         wb(1,1),cbu(1,1,idim))
+     $         wb(1,1),cbu(1,1,idim),bm1)
 
             call set_c_eim3(cu_eim3(1,idim),cu_eim3_(1,idim),
      $         ju_eim(1,idim),w1,ipiv,nb,ncb)
@@ -1590,10 +1593,13 @@ c-----------------------------------------------------------------------
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
-            call dgemm('N','N',nv,ncb,ns,1.,
-     $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbt(1,1),lt)
+c           call dgemm('N','N',nv,ncb,ns,1.,
+c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbt(1,1),lt)
+            do i=1,ncb
+               call col2(cbt(1,i),bm1,nv)
+            enddo
 
-         call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt)
+         call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt,bm1)
 
          call set_c_eim3(ct_eim3,ct_eim3_,jt_eim,w1,ipiv,nb,ncb)
       endif
