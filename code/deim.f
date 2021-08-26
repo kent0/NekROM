@@ -333,6 +333,276 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine deim_conv_check(ifld)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'SOLN'
+      include 'MASS'
+      include 'INPUT'
+      include 'TSTEP'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /deim_check2/ vxyz(lt,ldim),peval(lb,4),uc(lb,4),
+     $                     dxyz(lt,ldim,ldim),s(lt),
+     $                     a1(lb),a2(lb),a3(lb),a4(lb)
+
+      n=lx1*ly1*lz1*nelv
+      ifxyo=.true.
+
+      jfield=ifield
+      ifield=ifld
+      ifield=1
+
+      if (nid.eq.0) write (6,*) 'deim_conv_check', ifld,ncb
+
+      do i=0,nb
+         call outpost(ub(1,i),vb(1,i),wb(1,i),pr,tb(1,i),'bbb')
+      enddo
+
+      call opcopy(vxyz(1,1),vxyz(1,2),vxyz(1,3),
+     $   us0(1,1,1),us0(1,2,1),us0(1,3,1))
+
+      call reconv(vxyz(1,1),vxyz(1,2),vxyz(1,3),u)
+      call opsub2(vxyz(1,1),vxyz(1,2),vxyz(1,3),ub,vb,wb)
+
+      call recont(s,ut)
+      call sub2(s,tb,n)
+
+c     call opcopy(vxyz(1,1),vxyz(1,2),vxyz(1,3),
+c    $   us0(1,1,1),us0(1,2,1),us0(1,3,1))
+
+c     call copy(s,ts0,n)
+
+      do i=0,nb
+         if (nio.eq.0) write (6,*) i,u(i),'u'
+      enddo
+
+      do i=0,nb
+         if (nio.eq.0) write (6,*) i,uk(i,1),'uk'
+      enddo
+
+      if (ifld.eq.1) then
+         ! reconstruct pod field
+         call evalcflds(vxlag,vxyz,vxyz(1,1),1,1)
+         call evalcflds(vylag,vxyz,vxyz(1,2),1,1)
+         if (ldim.eq.3) call evalcflds(vzlag,vxyz,vxyz(1,3),1,1)
+
+         call evalc_pts_deim(
+     $      peval(1,1),u(1),u(1),uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
+
+         call evalc_pts_deim(
+     $      peval(1,2),u(1),u(1),vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
+
+         if (ldim.eq.3) call evalc_pts_deim(
+     $      peval(1,3),u(1),u(1),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+
+c        do i=1,ncb
+c           peval(i,1)=vxlag(ipts_deim(i,1),1,1,1,1)
+c           peval(i,2)=vylag(ipts_deim(i,2),1,1,1,1)
+c           if (ldim.eq.3) peval(i,3)=vzlag(ipts_deim(i,3),1,1,1,1)
+c        enddo
+
+         do icb=1,ncb
+            call rzero(vxlag(1,1,1,1,2),n)
+            call rzero(vylag(1,1,1,1,2),n)
+            if (ldim.eq.3) call rzero(vzlag(1,1,1,1,2),n)
+
+            call rzero(vxlag(1,1,1,1,3),n)
+            call rzero(vylag(1,1,1,1,3),n)
+            if (ldim.eq.3) call rzero(vzlag(1,1,1,1,3),n)
+
+            do jcb=1,icb
+               cj=glsc3(vxlag,cbu(1,jcb,1),bm1,n)
+     $           /glsc3(cbu(1,jcb,1),cbu(1,jcb,1),bm1,n)
+               call add2s2(vxlag(1,1,1,1,2),cbu(1,jcb,1),cj,n)
+
+               write (6,*) jcb,icb,cj,'cj-1'
+
+               cj=glsc3(vylag,cbu(1,jcb,2),bm1,n)
+     $           /glsc3(cbu(1,jcb,2),cbu(1,jcb,2),bm1,n)
+               call add2s2(vylag(1,1,1,1,2),cbu(1,jcb,2),cj,n)
+
+               write (6,*) jcb,icb,cj,'cj-2'
+
+               if (ldim.eq.3) then
+                  cj=glsc3(vzlag,cbu(1,jcb,3),bm1,n)
+     $              /glsc3(cbu(1,jcb,3),cbu(1,jcb,3),bm1,n)
+                  call add2s2(vzlag(1,1,1,1,2),cbu(1,jcb,3),cj,n)
+               endif
+
+            enddo
+
+            call deim_coeff(uc(1,1),peval(1,1),cbu(1,1,1),
+     $         irks_deim(1,1),ipts_deim(1,1),nb,icb)
+            call deim_coeff(uc(1,2),peval(1,2),cbu(1,1,2),
+     $         irks_deim(1,2),ipts_deim(1,2),nb,icb)
+            if (ldim.eq.3) call deim_coeff(uc(1,3),peval(1,3),
+     $         cbu(1,1,3),
+     $         irks_deim(1,3),ipts_deim(1,3),nb,icb)
+
+            write (6,*) icb,uc(1,1),uc(1,2),uc(1,3),'uc'
+
+            do i=1,icb
+               call add2s2(vxlag(1,1,1,1,3),cbu(1,i,1),uc(i,1),n)
+               call add2s2(vylag(1,1,1,1,3),cbu(1,i,2),uc(i,2),n)
+               if (ldim.eq.3) call add2s2(
+     $            vzlag(1,1,1,1,3),cbu(1,i,3),uc(i,3),n)
+            enddo
+
+c           call outpost(vxlag(1,1,1,1,2),vxlag(1,1,1,1,3),
+c    $         vz,pr,t,'err')
+c           call exitt0
+
+            call sub2(vxlag(1,1,1,1,2),vxlag,n)
+            call sub2(vxlag(1,1,1,1,3),vxlag,n)
+
+            call sub2(vylag(1,1,1,1,2),vylag,n)
+            call sub2(vylag(1,1,1,1,3),vylag,n)
+
+            if (ldim.eq.3) then
+               call sub2(vzlag(1,1,1,1,2),vzlag,n)
+               call sub2(vzlag(1,1,1,1,3),vzlag,n)
+            endif
+
+            ex1=sqrt(glsc3(vxlag(1,1,1,1,2),vxlag(1,1,1,1,2),bm1,n)
+     $              /glsc3(vxlag,vxlag,bm1,n))
+            ex2=sqrt(glsc3(vxlag(1,1,1,1,3),vxlag(1,1,1,1,3),bm1,n)
+     $              /glsc3(vxlag,vxlag,bm1,n))
+
+            ey1=sqrt(glsc3(vylag(1,1,1,1,2),vylag(1,1,1,1,2),bm1,n)
+     $              /glsc3(vylag,vylag,bm1,n))
+            ey2=sqrt(glsc3(vylag(1,1,1,1,3),vylag(1,1,1,1,3),bm1,n)
+     $              /glsc3(vylag,vylag,bm1,n))
+
+            if (ldim.eq.3) then
+               ez1=sqrt(glsc3(vzlag(1,1,1,1,2),vzlag(1,1,1,1,2),bm1,n)
+     $                 /glsc3(vzlag,vzlag,bm1,n))
+               ez2=sqrt(glsc3(vzlag(1,1,1,1,3),vzlag(1,1,1,1,3),bm1,n)
+     $                 /glsc3(vzlag,vzlag,bm1,n))
+            endif
+
+            if (nio.eq.0) then
+               write (6,*) icb,ex1,ex2,'x-err'
+               write (6,*) icb,ey1,ey2,'y-err'
+               if (ldim.eq.3) write (6,*) icb,ez1,ez2,'z-err'
+            endif
+         enddo
+      else if (ifld.eq.2) then
+         ! reconstruct pod field
+         call evalcflds(vxlag,vxyz,s,1,1)
+
+         call outpost(vxlag,vy,vz,pr,t,'ttt')
+
+         call evalc_pts_deim(
+     $      peval(1,1),u(1),ut(1),txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+
+c        do i=1,ncb
+c           peval(i,1)=vxlag(ipts_deim(i,4),1,1,1,1)
+c        enddo
+
+         do icb=1,ncb
+            call rzero(vxlag(1,1,1,1,2),n)
+            call rzero(vxlag(1,1,1,1,3),n)
+
+            do jcb=1,icb
+               cj=glsc3(vxlag,cbt(1,jcb),bm1,n)
+     $           /glsc3(cbt(1,jcb),cbt(1,jcb),bm1,n)
+               call add2s2(vxlag(1,1,1,1,2),cbt(1,jcb),cj,n)
+
+               write (6,*) jcb,icb,cj,'cj'
+            enddo
+c           call deim_coeff_j(uc(1,1),peval(1,1),ju_eim(1,4),icb,ncb)
+            call deim_coeff_j(uc(1,1),peval(1,1),jt_eim,icb,ncb)
+
+            do i=1,icb
+               write (6,*) i,icb,uc(i,1),'uc_j'
+            enddo
+
+c           call deim_coeff(uc(1,1),peval(1,1),cbt(1,1),
+c    $         irks_deim(1,4),ipts_deim(1,4),nb,icb)
+
+c           do i=1,icb
+c              write (6,*) i,icb,uc(i,1),'uc_std'
+c           enddo
+
+            do i=1,icb
+               call add2s2(vxlag(1,1,1,1,3),cbt(1,i),uc(i,1),n)
+            enddo
+
+            call outpost(vxlag(1,1,1,1,2),vxlag(1,1,1,1,3),
+     $         vz,pr,t,'err')
+
+            call sub2(vxlag(1,1,1,1,2),vxlag,n)
+            call sub2(vxlag(1,1,1,1,3),vxlag,n)
+
+            et1=sqrt(glsc3(vxlag(1,1,1,1,2),vxlag(1,1,1,1,2),bm1,n)
+     $              /glsc3(vxlag,vxlag,bm1,n))
+            et2=sqrt(glsc3(vxlag(1,1,1,1,3),vxlag(1,1,1,1,3),bm1,n)
+     $              /glsc3(vxlag,vxlag,bm1,n))
+
+            if (nio.eq.0) write (6,*) icb,et1,et2,'t-err'
+         enddo
+      endif
+
+      ifield=jfield
+
+      return
+      end
+c-----------------------------------------------------------------------
+      subroutine pod_conv_check(basis,snaps,ms)
+
+      include 'SIZE'
+      include 'MOR'
+      include 'SOLN'
+      include 'MASS'
+      include 'INPUT'
+      include 'TSTEP'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+      common /deim_check2/ vxyz(lt,ldim),peval(lb,4),uc(lb,4),
+     $                     dxyz(lt,ldim,ldim),
+     $                     a1(lb),a2(lb),a3(lb),a4(lb)
+
+      real basis(lt,ms),snaps(lt,ms)
+
+      n=lx1*ly1*lz1*nelv
+
+      if (nid.eq.0) write (6,*) 'pod_conv_check',ms
+
+      call pod(basis,evec,eval,ug,snaps,1,'L2 ',ms,ms,.true.)
+
+c     do i=1,ms
+c        call ps2b1(evec,snaps(1,i),basis)
+c        call dgemm('N','N',n,1,ms,1.,basis,lt,evec,ms,0.,vxlag,lt)
+c        call sub3(vylag,snaps(1,i),vxlag,n)
+c        ifxyo=.true.
+c        time=i*1.0
+c        call outpost(snaps(1,i),vxlag,vz,pr,vylag,'pcd')
+c        call outpost(snaps(1,i),basis(1,i),vz,pr,vylag,'pcb')
+c        err=sqrt(glsc3(vylag,vylag,bm1,n)
+c    $           /glsc3(snaps(1,i),snaps(1,i),bm1,n))
+c        if (nio.eq.0) write (6,*) i,ms,err,'pcc_err'
+c     enddo
+
+      do i=1,ms
+         call ps2b1(evec,snaps(1,1),basis,i)
+         call dgemm('N','N',n,1,i,1.,basis,lt,evec,i,0.,vxlag,lt)
+         call sub3(vylag,snaps(1,1),vxlag,n)
+         ifxyo=.true.
+         time=i*1.0
+         call outpost(snaps(1,1),vxlag,vz,pr,vylag,'pcd')
+         call outpost(snaps(1,1),basis(1,i),vz,pr,vylag,'pcb')
+         err=sqrt(glsc3(vylag,vylag,bm1,n)
+     $           /glsc3(snaps(1,1),snaps(1,1),bm1,n))
+         if (nio.eq.0) write (6,*) i,ms,err,'pcc_err'
+      enddo
+
+      call exitt0
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine deim_coeff(uc,peval,cb,irks,ipts,nb,ncb)
 
       include 'SIZE'
