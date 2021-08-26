@@ -396,8 +396,6 @@ c-----------------------------------------------------------------------
       call nekgsync
       ops_time=dnekclock()
 
-      ifeimc=.true.
-
       jfield=ifield
       if (ifrom(1)) then
          ifield=1
