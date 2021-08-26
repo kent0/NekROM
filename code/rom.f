@@ -1554,9 +1554,10 @@ c-----------------------------------------------------------------------
 
 c           call dgemm('N','N',nv,ncb,ns,1.,
 c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,idim),lt)
-            do i=1,ncb
-               call col2(cbu(1,i,idim),bm1,nv)
-            enddo
+
+c           do i=1,ncb
+c              call col2(cbu(1,i,idim),bm1,nv)
+c           enddo
 
             if (idim.eq.1) call set_c_eim3_(cu_eim3_(1,idim),nb,ncb,
      $         ub(1,1),cbu(1,1,idim),bm1)
@@ -1595,9 +1596,9 @@ c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,idim),lt)
 
 c           call dgemm('N','N',nv,ncb,ns,1.,
 c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbt(1,1),lt)
-            do i=1,ncb
-               call col2(cbt(1,i),bm1,nv)
-            enddo
+c           do i=1,ncb
+c              call col2(cbt(1,i),bm1,nv)
+c           enddo
 
          call set_c_eim3_(ct_eim3_,nb,ncb,tb(1,1),cbt,bm1)
 

@@ -460,8 +460,8 @@ c     subroutine set_c_eim3_(c_eim3_,nb,ncb,ub,cb)
 
       do j=1,ncb
       do i=1,nb
-         c_eim3_(i,j)=glsc2(ub(1,i),cb(1,j),lx1*ly1*lz1*nelv)
-c        c_eim3_(i,j)=glsc3(ub(1,i),cb(1,j),bm1,lx1*ly1*lz1*nelv)
+c        c_eim3_(i,j)=glsc2(ub(1,i),cb(1,j),lx1*ly1*lz1*nelv)
+         c_eim3_(i,j)=glsc3(ub(1,i),cb(1,j),bm1,lx1*ly1*lz1*nelv)
       enddo
       enddo
 
