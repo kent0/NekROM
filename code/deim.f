@@ -362,6 +362,46 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine deim_coeff_j(uc,peval,jmat,ncb,mcb)
+
+      include 'SIZE'
+
+      common /deim_coeffr/ tmat(100**2),wk(100**2)
+      common /deim_coeffi/ i1(100),i2(100)
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real uc(ncb),peval(ncb),cb(lt,ncb),jmat(mcb,mcb)
+      integer irks(ncb),ipts(ncb)
+
+      call copy(uc,peval,ncb)
+
+      do j=1,ncb
+      do i=1,ncb
+         tmat(i+(j-1)*ncb)=jmat(i,j)
+      enddo
+      enddo
+
+c     if (mcb.eq.ncb) then
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,jmat(i,j),'jmat'
+c        enddo
+c        enddo
+c        do j=1,ncb
+c        do i=1,ncb
+c           write (6,*) i,j,tmat(i+(j-1)*ncb),'tmat'
+c        enddo
+c        enddo
+c        call exitt0
+c     endif
+
+      call dgetrf(ncb,ncb,tmat,ncb,i1,info)
+      call dgetrs('N',ncb,1,tmat,ncb,i1,uc,ncb,info)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine set_c_eim012(c_eim0,c_eim1,c_eim2,ub,vb,wb,tb,
      $   wk,nb,ifcf)
 
