@@ -169,6 +169,39 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
+      subroutine ps2b1(coef,tt,sb,nb2)
+
+      ! get coordinates of a scalar field for a given basis w/o 0th mode
+
+      ! ck  := coordinates of <ux> in <uub>
+      ! ux  := FOM scalar field
+      ! uub := basis functions
+
+      include 'SIZE'
+      include 'MOR'
+
+      parameter (lt=lx1*ly1*lz1*lelt)
+
+      real coef(nb),tt(lt),sb(lt,nb)
+
+      if (nio.eq.0) write (6,*) 'inside ps2b1'
+
+      n=lx1*ly1*lz1*nelt
+
+      do i=1,nb2
+         ww=sip(sb(1,i),sb(1,i))
+         vv=sip(sb(1,i),tt)
+         coef(i) = vv/ww
+         if (nio.eq.0) write (6,1) coef(i),vv,ww,ips
+      enddo
+
+      if (nio.eq.0) write (6,*) 'exiting ps2b1'
+
+    1 format(' coef',1p3e16.8,1x,a3)
+
+      return
+      end
+c-----------------------------------------------------------------------
       subroutine pv2b(coef,ux,uy,uz,uub,vvb,wwb)
 
       ! get coordinates of a vector field for a given basis
