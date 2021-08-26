@@ -288,6 +288,25 @@ c        call set_sigma
       if (rmode.eq.'ALL'.or.rmode.eq.'OFF'.or.rmode.eq.'AEQ')
      $   call dump_misc
 
+c     call deim_conv_check(1)
+c     call deim_conv_check(2)
+c     call exitt0
+c     call pod_conv_check(tb,ts0,ns-1)
+c     do i=1,ns
+c        call evalcflds(snaptmp2(1,i,1),us0(1,1,i),ts0(1,i),1,ns)
+c     enddo
+
+c     call pod_conv_check(snaptmp,snaptmp2,ns)
+c     call pod_conv_check(snaptmp,snaptmp2,ns)
+c     call ps2b(ut,ts0,tb)
+c     call recont(t,ut)
+c     call sub2(t,tb,n)
+c     call sub3(tlag,t,ts0,n)
+
+c     call outpost(ts0,t,vz,pr,tlag,'ter')
+
+c     call exitt0
+
       time=ttime
 
       call nekgsync
@@ -462,6 +481,9 @@ c    $      pr,snaptmp(1,4,1),'pts')
       if (nio.eq.0) write (6,*) 'ops_time:',dnekclock()-ops_time
 
       if (nio.eq.0) write (6,*) 'exiting setops'
+
+c     call deim_check(1)
+c     call deim_check(2)
 
       return
       end
