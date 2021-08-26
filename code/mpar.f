@@ -133,6 +133,9 @@ c-----------------------------------------------------------------------
          ifplay=.false.
       endif
 
+      call finiparser_getbool(i_out,'general:decoupled',ifnd)
+      if (ifnd.eq.1) ifdecpl=i_out.eq.1
+
       ibuoy=0
 
       call finiparser_getdbl(d_out,'buoyancy:magnitude',ifnd)
@@ -486,6 +489,7 @@ c-----------------------------------------------------------------------
 
       call bcast(ifpb,lsize)
       call bcast(ifeimc,lsize)
+      call bcast(ifdecpl,lsize)
 
       return
       END
