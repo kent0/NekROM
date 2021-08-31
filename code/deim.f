@@ -59,7 +59,7 @@ c-----------------------------------------------------------------------
          irks(iter)=iproc
          ipts(iter)=ind
          if (irks(iter).eq.nid) rpts(ipts(iter))=rpts(ipts(iter))+1.
-c        call outpost(err,rpts,vz,pr,t,'err')
+         if (ifpdump) call outpost(err,rpts,vz,pr,t,'pts')
       enddo
 
       ifxyo=iftmp

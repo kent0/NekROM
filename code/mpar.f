@@ -426,6 +426,8 @@ c-----------------------------------------------------------------------
          endif
          call finiparser_getbool(i_out,'eim:proj',ifnd)
          if (ifnd.eq.1) ifproj=i_out.eq.1
+         call finiparser_getbool(i_out,'eim:pdump',ifnd)
+         if (ifnd.eq.1) ifpdump=i_out.eq.1
       endif
 
       if (ierr.eq.0) call finiparser_dump()
@@ -508,6 +510,7 @@ c-----------------------------------------------------------------------
       call bcast(ifeimc,lsize)
       call bcast(ifdecpl,lsize)
       call bcast(ifproj,lsize)
+      call bcast(ifpdump,lsize)
 
       return
       END
