@@ -206,7 +206,7 @@ c     parameters and common blocks for MOR
      $                  ifbuoy,ifrom,ifcintp,iffastc,ifcnuss,ifctke,
      $                  iffasth,ifavisc,ifsource,ifei,ifsub0,ifrecon,
      $                  iftneu,ifdecpl,ifcore,ifquad,ifhelm,ifsrct,
-     $                  iftflux,ifcomb,ifpb,ifeimc
+     $                  iftflux,ifcomb,ifpb,ifeimc,ifproj
 
       real last_time,misc_time,lu_time,
      $     copt_time,quasi_time,lnsrch_time,
