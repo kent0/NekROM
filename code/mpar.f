@@ -411,6 +411,21 @@ c-----------------------------------------------------------------------
       call finiparser_getbool(i_out,'eim:convection',ifnd)
       if (ifnd.eq.1) ifeimc=i_out.eq.1
 
+      if (ifeimc) then
+         if (rmode.eq.'ALL'.or.rmode.eq.'OFF'.or.rmode.eq.'AEQ') then
+            rtmp1(1,1)=ncb*1.
+            call dump_serial(rtmp1(1,1),1,'ops/ncb ',nid)
+         else
+            call read_serial(rtmp1(1,1),1,'ops/ncb ',b,nid)
+            mcb=rtmp1(1,1)
+            rtmp1(1,1)=ncb*1.
+            if (mcb.lt.ncb) then
+               write (6,*) 'mcb less than ncb... ',mcb
+               ierr=ierr+1
+            endif
+         endif
+      endif
+
       if (ierr.eq.0) call finiparser_dump()
 
       return
