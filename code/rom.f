@@ -1359,6 +1359,7 @@ c-----------------------------------------------------------------------
 
       common /eim/ ux(lub),uy(lub),uz(lub),dxt(ltb),dyt(ltb),dzt(ltb),
      $             w1(lb,lb),w2(lb,lb),wk_eim(lb,lb)
+      common /scrns/ wkf(lt,ldim),wks(lt)
      
       character*127 fname
 
@@ -1531,8 +1532,17 @@ c-----------------------------------------------------------------------
       if (jfield.eq.1) then
          do idim=1,ldim
             do is=1,ns
-               call evalcflds(
-     $            snaptmp(1,is,1),us0(1,1,is),us0(1,idim,is),1,1)
+               if (ifproj) then
+                  call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),us0(1,ldim,is),
+                     ub,vb,wb)
+                  rtmp1(1,1)=0.
+                  call reconv(wkf(1,1),wkf(1,2),wkf(1,ldim),rtmp1)
+                  call evalcflds(
+     $               snaptmp(1,is,1),wkf,wkf(1,idim),1,1)
+               else
+                  call evalcflds(
+     $               snaptmp(1,is,1),us0(1,1,is),us0(1,idim,is),1,1)
+               endif
             enddo
             call pod(cbu(1,1,idim),evec(1,1,0),eval(1,0),ug(1,1,0),
      $         snaptmp,1,'L2 ',ncb,ns,.true.)
@@ -1592,7 +1602,20 @@ c           enddo
      $         ju_eim(1,idim),w1,ipiv,nb,ncb)
          enddo
       else if (jfield.eq.2) then
-         call evalcflds(snaptmp,us0,ts0,1,ns)
+         if (ifproj) then
+            do i=1,ns
+               call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),us0(1,ldim,is),
+                  ub,vb,wb)
+               rtmp1(1,1)=0.
+               call reconv(wkf(1,1),wkf(1,2),wkf(1,ldim),rtmp1)
+               call pv2s(rtmp1,ts0(1,is),tb)
+               rtmp1(1,1)=0.
+               call recont(wks,rtmp1)
+               call evalcflds(snaptmp(1,is,1),wkf,wks,1,1)
+            enddo
+         else
+            call evalcflds(snaptmp,us0,ts0,1,ns)
+         endif
          call pod(cbt,evec(1,1,0),eval(1,0),ug(1,1,0),snaptmp,
      $      1,'L2 ',ncb,ns,.true.)
 

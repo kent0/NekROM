@@ -199,7 +199,7 @@ c     parameters and common blocks for MOR
      $        ifbuoy,ifrom(0:ldimt1),ifcintp,iffastc,ifcnuss,ifctke,
      $        iffasth,ifavisc,ifsource,ifei,ifsub0,ifrecon,iftneu,
      $        ifdecpl,ifcore,ifquad,ifhelm,ifsrct,iftflux,ifcomb,ifpb,
-     $        ifeimc
+     $        ifeimc,ifproj
 
       common /morflags/ ifl2,ifvort,ifstep,ifavg0,ifplay,
      $                  ifcdrag,ifrms,ifread,ifforce,ifpod,

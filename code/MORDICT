@@ -4,7 +4,7 @@ c     Note: Keys have to be in capital letters
 c
       integer MORDICT_NKEYS
 
-      parameter (MORDICT_NKEYS = 51)
+      parameter (MORDICT_NKEYS = 52)
 
       character*132 mordictkey(MORDICT_NKEYS)
       data
@@ -59,3 +59,4 @@ c
      &  mordictkey(49) / 'EIM' /
      &  mordictkey(50) / 'EIM:CONVECTION' /
      &  mordictkey(51) / 'EIM:NCB' /
+     &  mordictkey(52) / 'EIM:PROJ' /
