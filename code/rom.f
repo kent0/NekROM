@@ -1533,8 +1533,8 @@ c-----------------------------------------------------------------------
          do idim=1,ldim
             do is=1,ns
                if (ifproj) then
-                  call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),us0(1,ldim,is),
-                     ub,vb,wb)
+                  call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),
+     $               us0(1,ldim,is),ub,vb,wb)
                   rtmp1(1,1)=0.
                   call reconv(wkf(1,1),wkf(1,2),wkf(1,ldim),rtmp1)
                   call evalcflds(
@@ -1605,10 +1605,10 @@ c           enddo
          if (ifproj) then
             do i=1,ns
                call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),us0(1,ldim,is),
-                  ub,vb,wb)
+     $            ub,vb,wb)
                rtmp1(1,1)=0.
                call reconv(wkf(1,1),wkf(1,2),wkf(1,ldim),rtmp1)
-               call pv2s(rtmp1,ts0(1,is),tb)
+               call ps2b(rtmp1,ts0(1,is),tb)
                rtmp1(1,1)=0.
                call recont(wks,rtmp1)
                call evalcflds(snaptmp(1,is,1),wkf,wks,1,1)
