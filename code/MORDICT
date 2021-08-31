@@ -16,7 +16,7 @@ c
      &  mordictkey(6)  / 'GENERAL:AVGINIT' /
      &  mordictkey(7)  / 'GENERAL:RKTOL' /
      &  mordictkey(8)  / 'GENERAL:TNEUBC' /
-     &  mordictkey(9)) / 'GENERAL:NPLAY' /
+     &  mordictkey(9)  / 'GENERAL:NPLAY' /
      &  mordictkey(10) / 'GENERAL:DECOUPLED' /
      &  mordictkey(11) / 'POD' /
      &  mordictkey(12) / 'POD:TYPE' /
