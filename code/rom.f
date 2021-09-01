@@ -1362,6 +1362,7 @@ c-----------------------------------------------------------------------
       common /scrns/ wkf(lt,ldim),wks(lt)
      
       character*127 fname
+      logical iftmp
 
       if (nio.eq.0) write (6,*) 'start of setc_eim',jfield
 
@@ -1544,6 +1545,18 @@ c-----------------------------------------------------------------------
      $               snaptmp(1,is,1),us0(1,1,is),us0(1,idim,is),1,1)
                endif
             enddo
+
+            iftmp=ifxyo
+            ifxyo=.true.
+            if (idim.eq.1) then
+               call outpost(snaptmp,vy,vz,pr,t,'cu1')
+            else if (idim.eq.2) then
+               call outpost(snaptmp,vy,vz,pr,t,'cu2')
+            else if (idim.eq.3) then
+               call outpost(snaptmp,vy,vz,pr,t,'cu3')
+            endif
+            ifxyo=iftmp
+
             call pod(cbu(1,1,idim),evec(1,1,0),eval(1,0),ug(1,1,0),
      $         snaptmp,1,'L2 ',ncb,ns,.true.)
             if (idim.eq.1)
@@ -1616,6 +1629,12 @@ c           enddo
          else
             call evalcflds(snaptmp,us0,ts0,1,ns)
          endif
+
+         iftmp=ifxyo
+         ifxyo=.true.
+         call outpost(snaptmp,vy,vz,pr,t,'ct0')
+         ifxyo=iftmp
+
          call pod(cbt,evec(1,1,0),eval(1,0),ug(1,1,0),snaptmp,
      $      1,'L2 ',ncb,ns,.true.)
 
