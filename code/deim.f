@@ -14,7 +14,7 @@ c-----------------------------------------------------------------------
       parameter (lt=lx1*ly1*lz1*lelt)
 
       common /romup/ rom_time
-      common /scrns/ err(lt),rpts(lt)
+      common /scr_k1/ err(lt),rpts(lt)
 
       real flds(lx1,ly1,lz1,lelt,nflds)
       integer ipts(nflds),irks(nflds)
