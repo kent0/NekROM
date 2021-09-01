@@ -1603,7 +1603,7 @@ c           enddo
          enddo
       else if (jfield.eq.2) then
          if (ifproj) then
-            do i=1,ns
+            do is=1,ns
                call pv2b(rtmp1,us0(1,1,is),us0(1,2,is),us0(1,ldim,is),
      $            ub,vb,wb)
                rtmp1(1,1)=0.
