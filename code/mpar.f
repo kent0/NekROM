@@ -507,14 +507,10 @@ c-----------------------------------------------------------------------
       call bcast(ifbuoy,lsize)
 
       call bcast(ifpb,lsize)
-<<<<<<< HEAD
       call bcast(ifeimc,lsize)
       call bcast(ifdecpl,lsize)
       call bcast(ifproj,lsize)
       call bcast(ifpdump,lsize)
-=======
-      call bcast(ifdecpl,lsize)
->>>>>>> master
 
       return
       END
