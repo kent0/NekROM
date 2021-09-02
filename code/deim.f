@@ -570,7 +570,7 @@ c-----------------------------------------------------------------------
 
       if (nid.eq.0) write (6,*) 'pod_conv_check',ms
 
-      call pod(basis,evec,eval,ug,snaps,1,'L2 ',ms,ms,.true.)
+      call pod(basis,evec,eval,ug,snaps,1,'L2 ',ms,ms,.true.,'    ')
 
 c     do i=1,ms
 c        call ps2b1(evec,snaps(1,i),basis)
