@@ -712,21 +712,31 @@ c-----------------------------------------------------------------------
          call rzero(c_eim2,nb*nb)
       endif
 
-      call cct(wk,0,0)
+      call setcnv_c(ub(1,0),vb(1,0),wb(1,0))
+      call setcnv_u(tb(1,0),vb(1,0),wb(1,0))
+
+      call cc(wk,1)
+
       do i=1,nb
          c_eim0(i)=c_eim0(i)+glsc2(wk,tb(1,i),nv)
       enddo
 
+      call setcnv_c(ub(1,0),vb(1,0),wb(1,0))
+
       do j=1,nb
-         call cct(wk,0,j)
+         call setcnv_u(tb(1,j),vb(1,j),wb(1,j))
+         call cc(wk,1)
          do i=1,nb
             c_eim1(i+(j-1)*nb)=c_eim1(i+(j-1)*nb)
      $         +glsc2(wk,tb(1,i),nv)
          enddo
       enddo
 
+      call setcnv_u(tb(1,0),vb(1,0),wb(1,0))
+
       do j=1,nb
-         call cct(wk,j,0)
+         call setcnv_c(ub(1,j),vb(1,j),wb(1,j))
+         call cc(wk,1)
          do i=1,nb
             c_eim2(i+(j-1)*nb)=c_eim2(i+(j-1)*nb)
      $         +glsc2(wk,tb(1,i),nv)
