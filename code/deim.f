@@ -872,22 +872,49 @@ c-----------------------------------------------------------------------
 
       stime=dnekclock()
 
+      sfac=0.3
+      sfac=1.0
+
       if (ifld.eq.1) then
          call evalc_eim012_lowmem(rhs(1),uu(1),uu(1),
      $      cu_eim0,cu_eim1,cu_eim2,nb)
+         call rzero(rtmp1(1,1),nb)
 
-         call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),cu_eim3(1,1),
+         call evalc_eim3_lowmem(rtmp1(1,1),uu(1),uu(1),cu_eim3(1,1),
      $      uxyz_eim,uvw_eim(1,1),nb,ncb,ldim)
-         call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),cu_eim3(1,2),
+         call evalc_eim3_lowmem(rtmp1(1,1),uu(1),uu(1),cu_eim3(1,2),
      $      vxyz_eim,uvw_eim(1,2),nb,ncb,ldim)
-         if (ldim.eq.3) call evalc_eim3_lowmem(rhs(1),uu(1),uu(1),
+         if (ldim.eq.3) call evalc_eim3_lowmem(rtmp1(1,1),uu(1),uu(1),
      $      cu_eim3(1,3),wxyz_eim,uvw_eim(1,3),nb,ncb,ldim)
+
+         ee1=vlsc2(rtmp1(1,1),uu(1),nb)
+         call mxm(bu,nb,uu(1),nb,rtmp2(1,1),1)
+         ee2=vlsc2(rtmp2(1,1),uu(1),nb)
+c        call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+
+c        if (ee1.lt.0.) then
+c           write (6,*) 'WARNING: ee1 < 0',ifld,ee1,ee2
+c           call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+c        endif
+         call add2(rhs(1),rtmp1(1,1),nb)
+
       else if (ifld.eq.2) then
          call evalc_eim012_lowmem(rhs(1),uu(1),tt(1),
      $      ct_eim0,ct_eim1,ct_eim2,nb)
 
-         call evalc_eim3_lowmem(rhs(1),uu(1),tt(1),ct_eim3,
+         call rzero(rtmp1(1,1),nb)
+         call evalc_eim3_lowmem(rtmp1(1,1),uu(1),tt(1),ct_eim3,
      $      txyz_eim,uvw_eim(1,4),nb,ncb,ldim)
+
+         ee1=vlsc2(rtmp1(1,1),tt(1),nb)
+         call mxm(bt,nb,tt(1),nb,rtmp2(1,1),1)
+         ee2=vlsc2(rtmp2(1,1),tt(1),nb)
+c        call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+c        if (ee1.lt.0.) then
+c           write (6,*) 'WARNING: ee1 < 0',ifld,ee1,ee2
+c           call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+c        endif
+         call add2(rhs(1),rtmp1(1,1),nb)
       endif
 
       evalc_eim_time=evalc_eim_time+dnekclock()-stime
