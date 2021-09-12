@@ -1588,8 +1588,8 @@ c    $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu3 ',nid)
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
-c           call dgemm('N','N',nv,ncb,ns,1.,
-c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbu(1,1,idim),lt)
+            call dgemm('N','N',nv,ncb,ns,1.,
+     $         snaptmp(1,1,1),lt,ug,ns,0.,cbu(1,1,idim),lt)
 
 c           do i=1,ncb
 c              call col2(cbu(1,i,idim),bm1,nv)
@@ -1648,8 +1648,9 @@ c        call dump_serial(ug(1,1,0),ls*ls,'ops/gct ',nid)
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
-c           call dgemm('N','N',nv,ncb,ns,1.,
-c    $         snaptmp(1,1,1),lt,evec(1,1,0),ns,0.,cbt(1,1),lt)
+            call dgemm('N','N',nv,ncb,ns,1.,
+     $         snaptmp(1,1,1),lt,ug,ns,0.,cbt(1,1),lt)
+
 c           do i=1,ncb
 c              call col2(cbt(1,i),bm1,nv)
 c           enddo
