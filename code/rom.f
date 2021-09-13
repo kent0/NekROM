@@ -1535,6 +1535,24 @@ c-----------------------------------------------------------------------
                endif
             enddo
 
+            if (idim.eq.1) call pv2k(uk,us0,ub,vb,wb)
+            call rzero(rtmp1,nb)
+
+            do is=1,ns
+               call addcol3(rtmp1,uk(1,is),uk(1,is),nb)
+            enddo
+
+            js=1
+            do j=1,nb
+            do i=1,nb
+               call evalcflds(snaptmp(1,js,1),
+     $            uvwb(1,1,j),uvwb(1,idim,i),1,1)
+               scx=sqrt(rtmp1(i,1)*rtmp1(j,1))
+               call cmult(snaptmp(1,js,1),scx,nv)
+               js=js+1
+            enddo
+            enddo
+
             iftmp=ifxyo
             ifxyo=.true.
             if (idim.eq.1) then
@@ -1588,6 +1606,23 @@ c    $         call dump_serial(ug(1,1,0),ls*ls,'ops/gcu3 ',nid)
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
             enddo
 
+            call rzero(rtmp1,nb)
+
+            do is=1,ns
+               call addcol3(rtmp1,uk(1,is),uk(1,is),nb)
+            enddo
+
+            js=1
+            do j=1,nb
+            do i=1,nb
+               call convect_new(snaptmp(1,js,1),uvwb(1,idim,i),.false.,
+     $            ub(1,j),vb(1,j),wb(1,j),.false.)
+               scx=sqrt(rtmp1(i,1)*rtmp1(j,1))
+               call cmult(snaptmp(1,js,1),scx,nv)
+               js=js+1
+            enddo
+            enddo
+
             call dgemm('N','N',nv,ncb,ns,1.,
      $         snaptmp(1,1,1),lt,ug,ns,0.,cbu(1,1,idim),lt)
 
@@ -1623,6 +1658,24 @@ c           enddo
             call evalcflds(snaptmp,us0,ts0,1,ns)
          endif
 
+         call ps2k(tk,ts0,tb)
+         call rzero(rtmp1,nb)
+
+         do is=1,ns
+            call addcol3(rtmp1,tk(1,is),tk(1,is),nb)
+         enddo
+
+         js=1
+         do j=1,nb
+         do i=1,nb
+            call evalcflds(snaptmp(1,js,1),
+     $         uvwb(1,1,j),tb(1,i),1,1)
+            scx=sqrt(rtmp1(i,1)*rtmp1(j,1))
+            call cmult(snaptmp(1,js,1),scx,nv)
+            js=js+1
+         enddo
+         enddo
+
          iftmp=ifxyo
          ifxyo=.true.
          call outpost(snaptmp,vy,vz,pr,t,'ct0')
@@ -1646,6 +1699,23 @@ c        call dump_serial(ug(1,1,0),ls*ls,'ops/gct ',nid)
             do is=1,ns
                call convect_new(snaptmp(1,is,1),ts0(1,is),.false.,
      $            us0(1,1,is),us0(1,2,is),us0(1,ldim,is),.false.)
+            enddo
+
+            call rzero(rtmp1,nb)
+
+            do is=1,ns
+               call addcol3(rtmp1,uk(1,is),uk(1,is),nb)
+            enddo
+
+            js=1
+            do j=1,nb
+            do i=1,nb
+               call convect_new(snaptmp(1,js,1),tb(1,i),.false.,
+     $            ub(1,j),vb(1,j),wb(1,j),.false.)
+               scx=sqrt(rtmp1(i,1)*rtmp1(j,1))
+               call cmult(snaptmp(1,js,1),scx,nv)
+               js=js+1
+            enddo
             enddo
 
             call dgemm('N','N',nv,ncb,ns,1.,
