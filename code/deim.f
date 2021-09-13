@@ -890,7 +890,7 @@ c-----------------------------------------------------------------------
          ee1=vlsc2(rtmp1(1,1),uu(1),nb)
          call mxm(bu,nb,uu(1),nb,rtmp2(1,1),1)
          ee2=vlsc2(rtmp2(1,1),uu(1),nb)
-c        call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+         call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
 
 c        if (ee1.lt.0.) then
 c           write (6,*) 'WARNING: ee1 < 0',ifld,ee1,ee2
@@ -909,7 +909,7 @@ c        endif
          ee1=vlsc2(rtmp1(1,1),tt(1),nb)
          call mxm(bt,nb,tt(1),nb,rtmp2(1,1),1)
          ee2=vlsc2(rtmp2(1,1),tt(1),nb)
-c        call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
+         call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
 c        if (ee1.lt.0.) then
 c           write (6,*) 'WARNING: ee1 < 0',ifld,ee1,ee2
 c           call add2s2(rtmp1(1,1),rtmp2(1,1),-sfac*ee1/ee2,nb)
