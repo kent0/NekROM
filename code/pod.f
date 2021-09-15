@@ -44,6 +44,7 @@ c-----------------------------------------------------------------------
 c     return
 
       ifaug=.true.
+c     ifaug=.false.
 
       if (ifaug) then
       call pv2k(uk,us0,ub,vb,wb)
@@ -100,8 +101,8 @@ c        if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
      $      uvwb(1,1,ib),uvwb(1,2,ib),uvwb(1,ldim,ib))
       enddo
 
-      call vnorm(ub(1,nb+1),vb(1,nb+1),wb(1,nb+1))
-      call vnorm_(uvwb(1,1,nb+1))
+      call vnorm(ub(1,nb),vb(1,nb),wb(1,nb))
+      call vnorm_(uvwb(1,1,nb))
 
       nb=nb*2
       endif
