@@ -135,15 +135,13 @@ c-----------------------------------------------------------------------
 
       if (ifexist) then
          nn=nb+1
-         nsu=1
-         nsp=1
-         nst=1
-         if (ifrom(0)) nsp=nn
-         if (ifrom(1)) nsu=nn
-         if (ifrom(2)) nst=nn
+         ifreads(1)=ifrom(1)
+         ifreads(2)=ifrom(0)
+         ifreads(3)=ifrom(2)
 
-         call get_saved_fields(us0,prs,ts0,nsu,nsp,nst,
-     $                         timek,'bas.list ')
+         call read_fields(
+     $      us0,prs,ts0,nn,0,ifreads,tk,'bas.list ',.false.)
+
          do i=0,nb
             if (ifrom(0)) call copy(pb(1,i),prs(1,i+1),n2)
             if (ifrom(1)) call opcopy(ub(1,i),vb(1,i),wb(1,i),
@@ -181,12 +179,14 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine read_fields(usave,psave,tsave,nsu,nsp,nst,tk,fn,ifa)
+      subroutine read_fields(usave,psave,tsave,ns,nskp,ifread,tk,fn,ifa)
 
       ! Reads and stores field files in given arrays
 
       ! usave,psave,tsave := velocity, pressure, temperature storage
-      ! nsu,nsp,nst       := number of fields to save in each field
+      ! ns                := number of fields to save
+      ! nskp              := skipping interval
+      ! ifread            := flags for reading each field
       ! tk                := time at each snapshot
       ! fn                := file name of the list file
       ! ifa               := to average or not to average
@@ -199,13 +199,13 @@ c-----------------------------------------------------------------------
       parameter (lt=lx1*ly1*lz1*lelt)
       parameter (lt2=lx2*ly2*lz2*lelt)
 
-      real usave(lt,ldim,nsu),psave(lt2,nsp),tsave(lt,nst)
-      real tk(nsu)
+      real usave(lt,ldim,1),psave(lt2,1),tsave(lt,1)
+      real tk(1)
 
       character*128 fn
       character*128 fnlint
 
-      logical ifa
+      logical ifa,ifread(3)
 
       common /scrk2/ t4(lt),t5(lt),t6(lt)
 
@@ -231,18 +231,18 @@ c-----------------------------------------------------------------------
 
       call opcopy(t4,t5,t6,xm1,ym1,zm1)
 
-      nsave=max(max(nsu,nsp),nst)
-
-      if (nio.eq.0) write (6,*) 'nu,np,nt:',nsu,nsp,nst
+      if (nio.eq.0) write (6,*) 'ns:',ns
 
       icount = 0
-      do ip=1,nsave
-         call blank(initc,127)
-         initc(1) = 'done '
-         if (nid.eq.0) read(77,127,end=998) initc(1)
-  998    call bcast(initc,127)
-  127    format(a127)
-         if (nio.eq.0) write (6,*) ipass,' '
+      do ip=1,ns
+         do i=1,nskp+1
+            call blank(initc,127)
+            initc(1) = 'done '
+            if (nid.eq.0) read(77,127,end=998) initc(1)
+  998       call bcast(initc,127)
+  127       format(a127)
+         enddo
+         if (nio.eq.0) write (6,*) ip,' '
 
          if (indx1(initc,'done ',5).eq.0) then ! We're not done
             icount = icount+1
@@ -263,12 +263,12 @@ c-----------------------------------------------------------------------
                if (ldim.eq.3) call add2col2(uvms,vz,t,n)
             endif
 
-            if (icount.le.nsu)
+            if (ifread(1))
      $         call opcopy(usave(1,1,ip),usave(1,2,ip),usave(1,ldim,ip),
      $                    vx,vy,vz)
 
-            if (icount.le.nsp) call copy(psave(1,ip),pr,n2)
-            if (icount.le.nst) call copy(tsave(1,ip),t,n)
+            if (ifread(2)) call copy(psave(1,ip),pr,n2)
+            if (ifread(3)) call copy(tsave(1,ip),t,n)
          else
             goto 999
          endif
@@ -277,18 +277,16 @@ c-----------------------------------------------------------------------
   999 continue  ! clean up averages
       if (nid.eq.0) close(77)
 
-      nsave = icount ! Actual number of files read
+      ns = icount ! Actual number of files read
 
       call pop_sol(vx,vy,vz,pr,t)
 
       if (ifa) then
-         su=1./real(min(nsave,nsu))
-         sp=1./real(min(nsave,nsp))
-         st=1./real(min(nsave,nst))
+         s=1./real(ns)
 
-         call scale_sol(uavg,vavg,wavg,pavg,tavg,su)
-         call scale_sol(urms,vrms,wrms,prms,trms,su)
-         call opcmult(vwms,wums,uvms,su,n)
+         call scale_sol(uavg,vavg,wavg,pavg,tavg,s)
+         call scale_sol(urms,vrms,wrms,prms,trms,s)
+         call opcmult(vwms,wums,uvms,s,n)
       endif
 
       call opcopy(xm1,ym1,zm1,t4,t5,t6)
