@@ -17,7 +17,8 @@ c-----------------------------------------------------------------------
          call loadbases
       else if (rmode.eq.'ALL'.or.rmode.eq.'OFF'.or.rmode.eq.'AEQ') then
          if (ifrom(1)) then
-            call pod(uvwb(1,1,1),eval,ug,us0,ldim,ips,nb,ns,ifpb,'gu  ')
+            call pod(
+     $         uvwb(1,1,1),eval,ug,us0,ldim,ips,nb,ns,ifpb,'ops/gu  ')
             do ib=1,nb
                call opcopy(ub(1,ib),vb(1,ib),wb(1,ib),
      $            uvwb(1,1,ib),uvwb(1,2,ib),uvwb(1,ldim,ib))
@@ -32,7 +33,7 @@ c-----------------------------------------------------------------------
      $         uvwb(1,1,0),uvwb(1,2,0),uvwb(1,ldim,0),uic,vic,wic)
          endif
          if (ifrom(2)) then
-            call pod(tb(1,1),eval,ug,ts0,1,ips,nb,ns,ifpb,'gt  ')
+            call pod(tb(1,1),eval,ug,ts0,1,ips,nb,ns,ifpb,'ops/gt  ')
             if (.not.ifcomb.and.ifpb) call snorm(tb)
          endif
 
@@ -1225,7 +1226,7 @@ c-----------------------------------------------------------------------
      $   eval(ns),gram(ns,ns)
 
       character*3 cips
-      character*4 cop
+      character*8 cop
 
       logical ifpod
 
