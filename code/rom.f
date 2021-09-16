@@ -22,6 +22,7 @@ c-----------------------------------------------------------------------
          rom_time=0.
          icalld=1
          call rom_setup
+         if (ifcp) call cp_setup
       endif
 
       ad_step = istep
@@ -128,14 +129,9 @@ c        cts='rkck  '
 
     2 continue
 
-      if (ifei.and.(rmode.ne.'OFF'.and.rmode.ne.'AEQ')
-     $   .and.nint(param(175)).eq.1) then
-         call cres_uns(sigma_u,sigma_t)
+      if (ifei.and.(rmode.ne.'OFF'.and.rmode.ne.'AEQ')) then
+         call cdres
 c        call cres
-      endif
-
-      if (nint(param(175)).eq.2) then
-         call c_rieszrd_uns
       endif
 
       ifield=jfield
@@ -269,8 +265,7 @@ c     endif
       call setmisc
 
       if (ifei) then
-c        call set_sigma
-         call set_sigma_new
+         call set_sigma
       endif
 
       if (ifplay) call set_trace
@@ -380,8 +375,7 @@ c-----------------------------------------------------------------------
 
       real visc(10)
 
-      logical iftmp,ifexist
-      real wk(lb+1)
+      logical iftmp
 
       if (nio.eq.0) write (6,*) 'inside setops'
 
@@ -394,11 +388,7 @@ c-----------------------------------------------------------------------
          call seta(au,au0,'ops/au ')
          if (rmode.eq.'AEQ') call setae(aue,'ops/aue ')
          call setb(bu,bu0,'ops/bu ')
-         if (rmode.eq.'CP ') then 
-            inquire (file='ops/u0',exist=ifexist)
-            if (ifexist) call read_serial(u,nb+1,'ops/u0 ',wk,nid)
-            call set_cp(cua,cub,cuc,cp_uw,cuj0,cu0k,cul,'ops/cu ',u)
-         else if (ifeimc) then
+         if (ifeimc) then
             call setc_eim(1)
             call setc(cul,'ops/cu ')
          else
@@ -411,11 +401,7 @@ c-----------------------------------------------------------------------
          call seta(at,at0,'ops/at ')
          if (rmode.eq.'AEQ') call setae(ate,'ops/ate ')
          call setb(bt,bt0,'ops/bt ')
-         if (rmode.eq.'CP ') then 
-            inquire (file='ops/t0',exist=ifexist)
-            if (ifexist) call read_serial(ut,nb+1,'ops/t0 ',wk,nid)
-            call set_cp(cta,ctb,ctc,cp_tw,ctj0,ct0k,ctl,'ops/ct ',ut)
-         else if (ifeimc) then
+         if (ifeimc) then
             call setc_eim(2)
             call setc(ctl,'ops/ct ')
          else
@@ -518,6 +504,12 @@ c-----------------------------------------------------------------------
          call dump_serial(yintp,nintp*(nb+1),'qoi/yintp',nid)
          call dump_serial(zintp,nintp*(nb+1),'qoi/zintp',nid)
          call dump_serial(tbintp,nintp*(nb+1),'qoi/tintp',nid)
+      endif
+
+      if (cftype.eq.'POLY') then
+         call set_les_imp(aules,atles)
+      else if (cftype.eq.'SMAG') then
+         call exitti('invalid filter type SMAG$',1)
       endif
 
       if (nio.eq.0) write (6,*) 'end setup for qoi'
@@ -725,6 +717,7 @@ c-----------------------------------------------------------------------
       ifsub0=.true.
       ifcomb=.false.
       ifpb=.true.
+      ifcp=.false.
 
       do i=0,ldimt1
          ifpod(i)=.false.
@@ -737,7 +730,7 @@ c-----------------------------------------------------------------------
       ifcintp=.false.
 
       ifcore=.true.
-      ifquad=.true.
+      ifquad=.false.
 
       ips='L2 '
       isolve=0
@@ -809,10 +802,6 @@ c-----------------------------------------------------------------------
          rmode='ON '
       else if (np173.eq.3) then
          rmode='ONB'
-      else if (np173.eq.4) then
-         rmode='CP '
-         max_tr = ltr
-      else
          call exitti('unsupported param(173), exiting...$',np173)
       endif
 
@@ -827,6 +816,25 @@ c-----------------------------------------------------------------------
       ifrecon=(rmode.ne.'ON '.and.rmode.ne.'CP ')
 
       ifei=nint(param(175)).ne.0
+      if (nint(param(175)).eq.0) then
+         continue
+      else if (nint(param(175)).eq.1) then
+         eqn='NS  '
+      else if (nint(param(175)).eq.2) then
+         eqn='SNS '
+      else if (nint(param(175)).eq.3) then
+         eqn='POIS'
+      else if (nint(param(175)).eq.4) then
+         eqn='HEAT'
+      else if (nint(param(175)).eq.5) then
+         eqn='ADVE'
+      else if (nint(param(175)).eq.6) then
+         eqn='VNS '
+      else if (nint(param(175)).eq.7) then
+         eqn='VSNS'
+      else
+         call exitti('invalid option for eqn$',eqn)
+      endif
 
       navg_step=nint(max(1.,param(176)))
       do i=1,3
@@ -996,6 +1004,7 @@ c-----------------------------------------------------------------------
          write (6,*) 'mp_ls         ',ls
          write (6,*) 'mp_lsu        ',lsu
          write (6,*) 'mp_lst        ',lst
+         write (6,*) 'mp_ltr        ',ltr
          write (6,*) 'mp_ns         ',ns
          write (6,*) 'mp_nskip      ',nskip
          write (6,*) ' '
@@ -1024,6 +1033,7 @@ c-----------------------------------------------------------------------
          write (6,*) 'mp_ifvort     ',ifvort
          write (6,*) 'mp_ifcintp    ',ifcintp
          write (6,*) 'mp_ifdecpl    ',ifdecpl
+         write (6,*) 'mp_ifcp       ',ifcp
          write (6,*) ' '
          do i=0,ldimt1
             write (6,*) 'mp_ifpod(',i,')   ',ifpod(i)
@@ -1049,7 +1059,6 @@ c-----------------------------------------------------------------------
          write (6,*) 'mp_rbf         ',rbf
          write (6,*) 'mp_rdft        ',rdft
          write (6,*) ' '
-         write (6,*) 'mp_max_tr      ',max_tr
          write (6,*) 'mp_navg_step   ',navg_step
          write (6,*) 'mp_rk_tol      ',rk_tol
          write (6,*) 'mp_iftneu      ',iftneu
