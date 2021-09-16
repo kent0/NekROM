@@ -42,10 +42,6 @@ c-----------------------------------------------------------------------
 
          if (ifcomb.and.ifpb) call cnorm(ub,vb,wb,tb)
       endif
-c     return
-
-      ifaug=.true.
-c     ifaug=.false.
 
       if (ifaug) then
       call pv2k(uk,us0,ub,vb,wb)

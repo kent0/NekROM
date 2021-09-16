@@ -228,6 +228,9 @@ c-----------------------------------------------------------------------
       call finiparser_getdbl(d_out,'pod:ratio',ifnd)
       if (ifnd.eq.1) podrat=d_out
 
+      call finiparser_getbool(i_out,'pod:augment',ifnd)
+      if (ifnd.eq.1) ifaug=i_out.eq.1
+
       ! QOI
 
       call finiparser_getdbl(d_out,'qoi:freq',ifnd)
@@ -559,6 +562,7 @@ c-----------------------------------------------------------------------
       call bcast(ifdecpl,lsize)
       call bcast(ifproj,lsize)
       call bcast(ifpdump,lsize)
+      call bcast(ifaug,lsize)
 
       return
       END

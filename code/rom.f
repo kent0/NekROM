@@ -718,6 +718,7 @@ c-----------------------------------------------------------------------
       ifcomb=.false.
       ifpb=.true.
       ifcp=.false.
+      ifaug=.false.
 
       do i=0,ldimt1
          ifpod(i)=.false.
