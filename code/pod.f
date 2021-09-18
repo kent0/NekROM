@@ -6,8 +6,7 @@ c-----------------------------------------------------------------------
       include 'SIZE'
       include 'MOR'
       include 'SOLN'
-
-      logical ifaug
+      include 'MASS'
 
       if (nio.eq.0) write (6,*) 'inside setbases'
 
