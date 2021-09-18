@@ -85,8 +85,6 @@ c     parameters and common blocks for MOR
      $                 ct_eim3((ltb+1)*(ltb+1)),
      $                 ct_eim3_((ltb+1)*(ltb+1)),
      $                 jt_eim((lub+1)*(lub+1)),
-     $                 st0(0:ltb),
-     $                 e1(0:ltb),e2(0:ltb),e3(0:lub,0:ltb),
      $                 txyz_eim(ltb*ltb*ldim),
      $                 ptti(ltb*ltb)
 
