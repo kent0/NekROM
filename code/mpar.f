@@ -421,7 +421,7 @@ c-----------------------------------------------------------------------
             call dump_serial(rtmp1(1,1),1,'ops/ncb ',nid)
          endif
       else
-         call read_serial(rtmp1(1,1),1,'ops/nb ',b,nid)
+         call read_serial(rtmp1(1,1),1,'ops/nb ',rtmp2,-1)
          mb=rtmp1(1,1)
          if (mb.lt.nb) then
             write (6,*) 'mb less than nb... ',mb
@@ -527,6 +527,7 @@ c-----------------------------------------------------------------------
       call bcast(gx,wdsize)
       call bcast(gy,wdsize)
       call bcast(gz,wdsize)
+      call bcast(podrat,wdsize)
 
       ! logicals
 
@@ -557,8 +558,12 @@ c-----------------------------------------------------------------------
       call bcast(ifpb,lsize)
       call bcast(ifeimc,lsize)
       call bcast(ifdecpl,lsize)
+<<<<<<< HEAD
       call bcast(ifproj,lsize)
       call bcast(ifpdump,lsize)
+=======
+      call bcast(ifcp,lsize)
+>>>>>>> mpar-fix
 
       return
       END
