@@ -424,7 +424,7 @@ c-----------------------------------------------------------------------
       return
       end
 c-----------------------------------------------------------------------
-      subroutine evalc(cu,cm,cl,uu)
+      subroutine evalc(cu,cm,cl,uu,tt)
 
       include 'SIZE'
       include 'TOTAL'
@@ -433,7 +433,7 @@ c-----------------------------------------------------------------------
       common /evalctmp/ ucft(0:lb)
 
       real cu(nb)
-      real uu(0:nb)
+      real uu(0:nb),tt(0:nb)
       real cl(ic1:ic2,jc1:jc2,kc1:kc2)
       real cm(ic1:ic2,jc1:jc2)
 
@@ -459,10 +459,10 @@ c-----------------------------------------------------------------------
 c           if ((kc2-kc1).lt.64.and.(jc2-jc1).lt.64
 c    $          .and.cfloc.eq.'NONE') then
                call mxm(cl,(ic2-ic1+1)*(jc2-jc1+1),
-     $                  u(kc1),(kc2-kc1+1),cm,1)
-               call mxm(cm,(ic2-ic1+1),uu(jc1),(jc2-jc1+1),cu(ic1),1)
+     $                  uu(kc1),(kc2-kc1+1),cm,1)
+               call mxm(cm,(ic2-ic1+1),tt(jc1),(jc2-jc1+1),cu(ic1),1)
             else
-               call copy(ucft,u,nb+1)
+               call copy(ucft,uu,nb+1)
 
                if (cfloc.eq.'CONV') then
                if (cftype.eq.'TFUN') then
@@ -475,9 +475,7 @@ c    $          .and.cfloc.eq.'NONE') then
                do k=kc1,kc2
                do j=jc1,jc2
                do i=ic1,ic2
-                  cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
-c                 if (k.eq.0.or.j.eq.0) 
-c    $               cu(i)=cu(i)+cl(i,j,k)*uu(j)*ucft(k)
+                  cu(i)=cu(i)+cl(i,j,k)*tt(j)*ucft(k)
                enddo
                enddo
                enddo
@@ -637,7 +635,7 @@ c-----------------------------------------------------------------------
 c     call deim_check(2)
 
       if (ifadvc(2)) then
-         if (rmode.eq.'CP ') then
+         if (ifcp) then
             if (ifcore) then
                call evalc4(tmp(1),cta,ctb,ctc,cp_tw,ctl,ctj0,ct0k,ut)
             else
@@ -645,7 +643,7 @@ c     call deim_check(2)
             endif
          else
             if (icmode.eq.0) then
-               call evalc(tmp(1),ctmp,ctl,ut)
+               call evalc(tmp(1),ctmp,ctl,u,ut)
             else if (icmode.eq.1) then
                call evalc_eim(tmp(1),u(1),ut(1),2)
 
@@ -653,7 +651,7 @@ c     call deim_check(2)
                   if (nio.eq.0) write (6,*) ad_step,i,tmp(i),'ct-deim'
                enddo
 
-               call evalc(tmp(1),ctmp,ctl,ut)
+               call evalc(tmp(1),ctmp,ctl,u,ut)
 
                do i=1,nb
                   if (nio.eq.0)
@@ -661,7 +659,7 @@ c     call deim_check(2)
                enddo
             else if (icmode.eq.-1) then
 
-               call evalc(tmp(1),ctmp,ctl,ut)
+               call evalc(tmp(1),ctmp,ctl,u,ut)
 
                do i=1,nb
                   if (nio.eq.0)
@@ -725,12 +723,12 @@ c-----------------------------------------------------------------------
       do i=1,nb
          rhs(i)=rhs(i)+s*au0(1+i)
       enddo
-      
+
       nnio=nio
       nio=-1
       if (mod(ad_step,ad_iostep).eq.0) nio=nid
-      
-      if (rmode.eq.'CP ') then
+
+      if (ifcp) then
          if (ifcore) then 
             call evalc4(tmp1(1),cua,cub,cuc,cp_uw,cul,cuj0,cu0k,u)
          else
@@ -738,7 +736,7 @@ c-----------------------------------------------------------------------
          endif 
       else
          if (icmode.eq.0) then
-            call evalc(tmp1(1),ctmp,cul,u)
+            call evalc(tmp1(1),ctmp,cul,u,u)
          else if (icmode.eq.1) then
             call evalc_eim(tmp1(1),u(1),ut(1),1)
 
@@ -746,14 +744,14 @@ c-----------------------------------------------------------------------
                if (nio.eq.0) write (6,*) ad_step,i,tmp1(i),'cu-deim'
             enddo
 
-            call evalc(tmp1(1),ctmp,cul,u)
+            call evalc(tmp1(1),ctmp,cul,u,u)
 
             do i=1,nb
                if (nio.eq.0)
      $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
             enddo
          else if (icmode.eq.-1) then
-            call evalc(tmp1(1),ctmp,cul,u)
+            call evalc(tmp1(1),ctmp,cul,u,u)
             do i=1,nb
                if (nio.eq.0)
      $            write (6,*) ad_step,i,tmp1(i),'cu-standard'
