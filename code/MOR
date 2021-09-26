@@ -30,8 +30,8 @@ c     parameters and common blocks for MOR
       common /mortsnap/ ts0(lx1*ly1*lz1*lelm,lst),
      $                  ss0(lx1*ly1*lz1*lelm,ldimt,lst)
 
-      common /morsnaptmp/ snaptmp(lx1*ly1*lz1*lelm,lsu,ldim)
-      common /morsnaptmp2/ snaptmp2(lx1*ly1*lz1*lelm,lsu,ldim)
+      common /morsnaptmp/ snaptmp(lx1*ly1*lz1*lelm,ldim,lsu)
+      common /morsnaptmp2/ snaptmp2(lx1*ly1*lz1*lelm,ldim,lsu)
 
       common /morforce/ fx(lx1*ly1*lz1*lelm),
      $                  fy(lx1*ly1*lz1*lelm),
