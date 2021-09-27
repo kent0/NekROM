@@ -1212,10 +1212,14 @@ c-----------------------------------------------------------------------
       include 'MOR'
 
       parameter (lt=lx1*ly1*lz1*lelt)
+      parameter (ltd=lxd*lyd*lzd*lelt)
 
       real cux(lt),cuy(lt),cuz(lt)
 
       common /scrcwk/ wk(lcloc),wk2(0:lub),cu(lt,ldim),wku(lt,ldim)
+
+      common /convect/
+     $                 u1v1(ltd),u2v1(ltd),u3v1(ltd)
 
       real cl(lcloc)
 
@@ -1233,6 +1237,7 @@ c-----------------------------------------------------------------------
 c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
 
       n=lx1*ly1*lz1*nelv
+      nd=lxd*lyd*lzd*nelv
 
       call lints(fnlint,fname,128)
       if (nid.eq.0) open (unit=100,file=fnlint)
@@ -1264,10 +1269,24 @@ c     call cpart(ic1,ic2,jc1,jc2,kc1,kc2,ncloc,nb,np,nid+1) ! new indexing
                   endif
                else
                   if (ifield.eq.1) then
-                     call setcnv_u(ub(1,j),vb(1,j),wb(1,j))
+                     if (k.eq.0) then
+                        call setcnv_u(ub(1,j),vb(1,j),wb(1,j))
+                        call copy(u1v(1,j),u1v1,nd)
+                        call copy(u2v(1,j),u2v1,nd)
+                        if (ldim.eq.3) call copy(u3v(1,j),u3v1,nd)
+                     else
+                        call copy(u1v1,u1v(1,j),nd)
+                        call copy(u2v1,u2v(1,j),nd)
+                        if (ldim.eq.3) call copy(u3v1,u3v(1,j),nd)
+                     endif
                      call cc(cu,ldim)
                   else
-                     call setcnv_u(tb(1,j),vb(1,j),wb(1,j))
+                     if (k.eq.0) then
+                        call setcnv_u(tb(1,j),vb(1,j),wb(1,j))
+                        call copy(u1v(1,j),u1v1,nd)
+                     else
+                        call copy(u1v1,u1v(1,j),nd)
+                     endif
                      call cc(cu,1)
                   endif
                endif

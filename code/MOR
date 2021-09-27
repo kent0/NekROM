@@ -7,6 +7,11 @@ c     parameters and common blocks for MOR
       common /morvisc/ unu(lx1*ly1*lz1*lelm,0:lub),
      $                 tnu(lx1*ly1*lz1*lelm,0:ltb)
 
+      common /morconvect/
+     $                    u1v(lxd*lyd*lzd*lelm,lsu),
+     $                    u2v(lxd*lyd*lzd*lelm,lsu),
+     $                    u3v(lxd*lyd*lzd*lelm,lsu)
+
       common /morbasis/ ub(lx1*ly1*lz1*lelm,0:lub),
      $                  vb(lx1*ly1*lz1*lelm,0:lub),
      $                  wb(lx1*ly1*lz1*lelm,0:lub),
