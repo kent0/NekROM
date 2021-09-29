@@ -43,8 +43,6 @@ c-----------------------------------------------------------------------
       endif
 
       if (ifaug) then
-         call pv2k(uk,us0,ub,vb,wb)
-
          n=lx1*ly1*lz1*nelv
 
          do i=1,ns
@@ -52,7 +50,10 @@ c-----------------------------------------------------------------------
             call copy(st3(1,2,i),us0(1,2,i),n)
             call copy(st3(1,3,i),us0(1,3,i),n)
 
-            call copy(rtmp1(2,1),uk(1,i),nb)
+            call pv2b(rtmp1,st3(1,1,i),st3(1,2,i),st3(1,3,i),ub,vb,wb)
+            rtmp1(1,1)=0.
+
+c           call copy(rtmp1(2,1),uk(1,i),nb)
             rtmp1(1,1)=0.
             call reconv(vxlag,vylag,vzlag,rtmp1)
             call sub2(st3(1,1,i),vxlag,n)
@@ -83,10 +84,8 @@ c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
             if (ldim.eq.3) call copy(st3(1,3,i),vzlag,n)
          enddo
 
-         call pv2k(uk,st3,ub,vb,wb)
-
          do i=1,ns
-            call copy(rtmp1(2,1),uk(1,i),nb)
+            call pv2b(rtmp1,st3(1,1,i),st3(1,2,i),st3(1,3,i),ub,vb,wb)
             rtmp1(1,1)=0.
             call reconv(vxlag,vylag,vzlag,rtmp1)
             call sub2(st3(1,1,i),vxlag,n)
@@ -185,10 +184,10 @@ c           enddo
 c        else
          do i=1,ns
             if (nio.eq.0) write (6,*) 'pv2k: ',i,'/',ns
-            nio=-1
+c           nio=-1
             call pv2b(ck(0,i),usnap(1,1,i),usnap(1,2,i),usnap(1,ldim,i),
      $           uub,vvb,wwb)
-            nio=nid
+c           nio=nid
          enddo
 c        endif
       else
