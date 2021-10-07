@@ -62,10 +62,19 @@ c-----------------------------------------------------------------------
 c           call evalcflds(vxlag,us0(1,1,i),us0(1,1,i),1,1)
 c           call evalcflds(vylag,us0(1,1,i),us0(1,2,i),1,1)
 c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
+            call copy(snaptmp(1,1,1),vxlag,n)
+            call copy(snaptmp(1,2,1),vylag,n)
+            if (ldim.eq.3) call copy(snaptmp(1,3,1),vzlag,n)
+
+            call add2(snaptmp(1,1,1),ub,n)
+            call add2(snaptmp(1,2,1),vb,n)
+            if (ldim.eq.3) call add2(snaptmp(1,3,1),wb,n)
 
             call evalcflds(vxlag,snaptmp,us0(1,1,i),1,1)
             call evalcflds(vylag,snaptmp,us0(1,2,i),1,1)
             if (ldim.eq.3) call evalcflds(vzlag,snaptmp,us0(1,3,i),1,1)
+
+            call opmask(vxlag,vylag,vzlag)
 
             ifield=1
             call dsavg(vxlag)
