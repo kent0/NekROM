@@ -50,6 +50,7 @@ c-----------------------------------------------------------------------
          do i=1,ns
             call copy(rtmp1(2,1),uk(1,i),nb)
             rtmp1(1,1)=0.
+            uuu(i)=vlsc2(rtmp1(1,1),rtmp1(1,1),nb+1)
             call reconv(vxlag,vylag,vzlag,rtmp1)
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
@@ -84,11 +85,24 @@ c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
          do i=1,ns
             call copy(rtmp1(2,1),uk(1,i),nb)
             rtmp1(1,1)=0.
+            ttt(i)=vlsc2(rtmp1(1,1),rtmp1(1,1),nb+1)
             call reconv(vxlag,vylag,vzlag,rtmp1)
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
             if (ldim.eq.3) call sub2(us0(1,3,i),vzlag,n)
          enddo
+
+         open (unit=12,file='ops/uuu')
+         do i=1,ns
+            write (12,*) uuu(i)
+         enddo
+         close (unit=12)
+
+         open (unit=12,file='ops/ttt')
+         do i=1,ns
+            write (12,*) ttt(i)
+         enddo
+         close (unit=12)
 
          call pod(uvwb(1,1,nb+1),eval,ug,us0,ldim,ips,nb,ns,ifpb,'gu  ')
 

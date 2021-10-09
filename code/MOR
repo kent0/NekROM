@@ -24,6 +24,7 @@ c     parameters and common blocks for MOR
 
       common /morcoef/ uk(0:lub,lsu),tk(0:ltb,lst),timek(lcs)
       common /morcoef2/ ukp(0:lub,lsu),tkp(0:ltb,lst)
+      common /morcoef3/ uuu(lsu),ttt(lst)
 
       common /morusnap/ us0(lx1*ly1*lz1*lelm,ldim,lsu)
       common /morpsnap/ prs(lx2*ly2*lz2*lelm,lsp)
