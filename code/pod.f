@@ -7,6 +7,7 @@ c-----------------------------------------------------------------------
       include 'MOR'
       include 'SOLN'
       include 'MASS'
+      include 'INPUT'
 
       if (nio.eq.0) write (6,*) 'inside setbases'
 
@@ -47,11 +48,13 @@ c-----------------------------------------------------------------------
 
          n=lx1*ly1*lz1*nelv
 
+         ifxyo=.true.
          do i=1,ns
             call copy(rtmp1(2,1),uk(1,i),nb)
             rtmp1(1,1)=0.
             uuu(i)=vlsc2(rtmp1(1,1),rtmp1(1,1),nb+1)
             call reconv(vxlag,vylag,vzlag,rtmp1)
+            call outpost(vxlag,vylag,vzlag,pr,t,'uuu')
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
             if (ldim.eq.3) call sub2(us0(1,3,i),vzlag,n)
@@ -96,6 +99,7 @@ c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
             rtmp1(1,1)=0.
             ttt(i)=vlsc2(rtmp1(1,1),rtmp1(1,1),nb+1)
             call reconv(vxlag,vylag,vzlag,rtmp1)
+            call outpost(vxlag,vylag,vzlag,pr,t,'ttt')
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
             if (ldim.eq.3) call sub2(us0(1,3,i),vzlag,n)
