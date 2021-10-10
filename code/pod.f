@@ -66,7 +66,7 @@ c-----------------------------------------------------------------------
      $         ub,vb,wb)
 
             call outpost(vxlag(1,1,1,1,2),vylag(1,1,1,1,2),
-               vzlag(1,1,1,1,2),pr,t,'uuu')
+     $         vzlag(1,1,1,1,2),pr,t,'uuu')
 
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
@@ -124,8 +124,7 @@ c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
      $         ub,vb,wb)
 
             call outpost(vxlag(1,1,1,1,2),vylag(1,1,1,1,2),
-               vzlag(1,1,1,1,2),pr,t,'uuu')
-            call outpost(vxlag,vylag,vzlag,pr,t,'ttt')
+     $         vzlag(1,1,1,1,2),pr,t,'ttt')
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
             if (ldim.eq.3) call sub2(us0(1,3,i),vzlag,n)
