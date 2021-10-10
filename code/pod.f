@@ -57,7 +57,17 @@ c-----------------------------------------------------------------------
                if (nio.eq.0) write (6,*) i,j,rtmp1(j,1),'uuu'
             enddo
             call reconv(vxlag,vylag,vzlag,rtmp1)
-            call outpost(vxlag,vylag,vzlag,pr,t,'uuu')
+            call opcopy(
+     $         vxlag(1,1,1,1,2),vylag(1,1,1,1,2),vzlag(1,1,1,1,2),
+     $         vxlag(1,1,1,1,1),vylag(1,1,1,1,1),vzlag(1,1,1,1,1))
+
+            call opadd2(
+     $         vxlag(1,1,1,1,2),vylag(1,1,1,1,2),vzlag(1,1,1,1,2),
+     $         ub,vb,wb)
+
+            call outpost(vxlag(1,1,1,1,2),vylag(1,1,1,1,2),
+               vzlag(1,1,1,1,2),pr,t,'uuu')
+
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
             if (ldim.eq.3) call sub2(us0(1,3,i),vzlag,n)
@@ -105,6 +115,16 @@ c           if (ldim.eq.3) call evalcflds(vzlag,us0(1,1,i),us0(1,3,i),1,1)
                if (nio.eq.0) write (6,*) i,j,rtmp1(j,1),'ttt'
             enddo
             call reconv(vxlag,vylag,vzlag,rtmp1)
+            call opcopy(
+     $         vxlag(1,1,1,1,2),vylag(1,1,1,1,2),vzlag(1,1,1,1,2),
+     $         vxlag(1,1,1,1,1),vylag(1,1,1,1,1),vzlag(1,1,1,1,1))
+
+            call opadd2(
+     $         vxlag(1,1,1,1,2),vylag(1,1,1,1,2),vzlag(1,1,1,1,2),
+     $         ub,vb,wb)
+
+            call outpost(vxlag(1,1,1,1,2),vylag(1,1,1,1,2),
+               vzlag(1,1,1,1,2),pr,t,'uuu')
             call outpost(vxlag,vylag,vzlag,pr,t,'ttt')
             call sub2(us0(1,1,i),vxlag,n)
             call sub2(us0(1,2,i),vylag,n)
