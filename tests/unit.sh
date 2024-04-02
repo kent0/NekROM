@@ -6,6 +6,8 @@ ls bas/bascyl0.f* > bas.list
 
 cp ../../data/cyl_rect/cyl0.f01000 r0.f00001
 
+$MOR_DIR/bin/dumphash
+
 fold_start makenek Makenek
 $SOURCE_ROOT/bin/makenek test
 fold_end makenek

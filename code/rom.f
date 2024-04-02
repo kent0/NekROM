@@ -17,11 +17,29 @@ c-----------------------------------------------------------------------
 
       common /romup/ rom_time
 
+      character*127 hash
+
       stime=dnekclock()
 
       if (icalld.eq.0) then
          rom_time=0.
          icalld=1
+         inquire (file='nekrom_hash.txt',exist=iftmp)
+         if (iftmp.and.nid.eq.0) then
+            call blank(hash,127)
+            open (unit=77,file='nekrom_hash.txt',status='old',err=199)
+            read (77,127,end=998) hash(1)
+            close (unit=77)
+            write (6,*) 'nekrom_hash:',hash
+         endif
+         inquire (file='nek5k_hash.txt',exist=iftmp)
+         if (iftmp.and.nid.eq.0) then
+            call blank(hash,127)
+            open (unit=77,file='nek5k_hash.txt',status='old',err=199)
+            read (77,127,end=998) hash(1)
+            close (unit=77)
+            write (6,*) 'nek5k_hash:',hash
+         endif
          call rom_setup
          if (ifcp) call cp_setup
       endif

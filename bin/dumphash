@@ -1,0 +1,10 @@
+#!/bin/bash
+
+git -C $MOR_DIR rev-parse HEAD > nekrom_hash.txt
+if [ -n "$NEK_SOURCE_ROOT" ]; then
+    git -C $NEK_SOURCE_ROOT rev-parse HEAD >> nek5k_hash.txt
+else
+    if [ -n "$SOURCE_ROOT" ]; then
+        git -C $SOURCE_ROOT rev-parse HEAD >> nek5k_hash.txt
+    fi
+fi
